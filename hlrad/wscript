@@ -1,0 +1,28 @@
+#! /usr/local/env python
+
+from waftools import waftools
+
+DEFINES = \
+[
+	"HLRAD"
+]
+
+def options(ctx):
+	pass
+
+def configure(ctx):
+	ctx.env.append_unique("DEFINES", DEFINES)
+
+def build(bld):
+	bld.load_envs()
+	bld.env = bld.all_envs[waftools.get_subproject_name(bld)]
+
+	parent = bld.path.find_node("..")
+	sources = parent.ant_glob("common/*.cpp")
+	sources += bld.path.ant_glob("*.cpp")
+
+	# idx needs to be set to avoid object files being overwritten by parallel compilations
+	bld.program(source=sources,
+				target="abrad",
+				includes=["../template", "../common"],
+				idx=4)
