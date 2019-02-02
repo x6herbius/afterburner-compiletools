@@ -1,11 +1,11 @@
 /*
- 
-    R A D I O S I T Y    -aka-    R A D 
 
-    Code based on original code from Valve Software, 
+    R A D I O S I T Y    -aka-    R A D
+
+    Code based on original code from Valve Software,
     Modified by Sean "Zoner" Cavanaugh (seanc@gearboxsoftware.com) with permission.
     Modified by Tony "Merl" Moore (merlinis@bigpond.net.au) [AJM]
-    
+
 */
 
 #ifdef SYSTEM_WIN32
@@ -263,7 +263,7 @@ vec3_t g_maxdiscardedpos = {0, 0, 0};
 #ifdef ZHLT_INFO_COMPILE_PARAMETERS
 // =====================================================================================
 //  GetParamsFromEnt
-//      this function is called from parseentity when it encounters the 
+//      this function is called from parseentity when it encounters the
 //      info_compile_parameters entity. each tool should have its own version of this
 //      to handle its own specific settings.
 // =====================================================================================
@@ -299,7 +299,7 @@ void            GetParamsFromEnt(entity_t* mapent)
     Log("%30s [ %-9s ]\n", "Verbose Compile Messages", g_verbose ? "on" : "off");
 
     // estimate(choices) :"Estimate Compile Times?" : 0 = [ 0: "Yes" 1: "No" ]
-    if (IntForKey(mapent, "estimate")) 
+    if (IntForKey(mapent, "estimate"))
     {
         g_estimate = true;
     }
@@ -321,30 +321,30 @@ void            GetParamsFromEnt(entity_t* mapent)
         Log("%30s [ %-9s ]\n", "Thread Priority", "low");
     }
 
-    // bounce(integer) : "Number of radiosity bounces" : 0 
+    // bounce(integer) : "Number of radiosity bounces" : 0
     iTmp = IntForKey(mapent, "bounce");
     if (iTmp)
     {
         g_numbounce = abs(iTmp);
         Log("%30s [ %-9s ]\n", "Number of radiosity bounces", ValueForKey(mapent, "bounce"));
     }
-    
+
 #ifdef HLRAD_HULLU
     iTmp = IntForKey(mapent, "customshadowwithbounce");
     if (iTmp)
-    {  
+    {
     	g_customshadow_with_bouncelight = true;
     	Log("%30s [ %-9s ]\n", "Custom Shadow with Bounce Light", ValueForKey(mapent, "customshadowwithbounce"));
     }
     iTmp = IntForKey(mapent, "rgbtransfers");
     if (iTmp)
-    {  
+    {
     	g_rgb_transfers = true;
     	Log("%30s [ %-9s ]\n", "RGB Transfers", ValueForKey(mapent, "rgbtransfers"));
     }
 #endif
 
-    // ambient(string) : "Ambient world light (0.0 to 1.0, R G B)" : "0 0 0" 
+    // ambient(string) : "Ambient world light (0.0 to 1.0, R G B)" : "0 0 0"
     //vec3_t          g_ambient = { DEFAULT_AMBIENT_RED, DEFAULT_AMBIENT_GREEN, DEFAULT_AMBIENT_BLUE };
     pszTmp = ValueForKey(mapent, "ambient");
     if (pszTmp)
@@ -381,7 +381,7 @@ void            GetParamsFromEnt(entity_t* mapent)
         }
     }
 
-    // smooth(integer) : "Smoothing threshold (in degrees)" : 0 
+    // smooth(integer) : "Smoothing threshold (in degrees)" : 0
     flTmp = FloatForKey(mapent, "smooth");
     if (flTmp)
     {
@@ -390,7 +390,7 @@ void            GetParamsFromEnt(entity_t* mapent)
         Log("%30s [ %-9s ]\n", "Smoothing threshold", ValueForKey(mapent, "smooth"));
     }
 
-    // dscale(integer) : "Direct Lighting Scale" : 1 
+    // dscale(integer) : "Direct Lighting Scale" : 1
     flTmp = FloatForKey(mapent, "dscale");
     if (flTmp)
     {
@@ -398,7 +398,7 @@ void            GetParamsFromEnt(entity_t* mapent)
         Log("%30s [ %-9s ]\n", "Direct Lighting Scale", ValueForKey(mapent, "dscale"));
     }
 
-    // chop(integer) : "Chop Size" : 64 
+    // chop(integer) : "Chop Size" : 64
     iTmp = IntForKey(mapent, "chop");
     if (iTmp)
     {
@@ -406,7 +406,7 @@ void            GetParamsFromEnt(entity_t* mapent)
         Log("%30s [ %-9s ]\n", "Chop Size", ValueForKey(mapent, "chop"));
     }
 
-    // texchop(integer) : "Texture Light Chop Size" : 32 
+    // texchop(integer) : "Texture Light Chop Size" : 32
     flTmp = FloatForKey(mapent, "texchop");
     if (flTmp)
     {
@@ -414,7 +414,7 @@ void            GetParamsFromEnt(entity_t* mapent)
         Log("%30s [ %-9s ]\n", "Texture Light Chop Size", ValueForKey(mapent, "texchop"));
     }
 
-    /* 
+    /*
     hlrad(choices) : "HLRAD" : 0 =
     [
         0 : "Off"
@@ -425,9 +425,9 @@ void            GetParamsFromEnt(entity_t* mapent)
     iTmp = IntForKey(mapent, "hlrad");
     if (iTmp == 0)
     {
-        Fatal(assume_TOOL_CANCEL, 
+        Fatal(assume_TOOL_CANCEL,
             "%s flag was not checked in info_compile_parameters entity, execution of %s cancelled", g_Program, g_Program);
-        CheckFatal();  
+        CheckFatal();
     }
     else if (iTmp == 1)
     {
@@ -438,7 +438,7 @@ void            GetParamsFromEnt(entity_t* mapent)
         g_extra = true;
     }
     Log("%30s [ %-9s ]\n", "Extra RAD", g_extra ? "on" : "off");
- 
+
     /*
     sparse(choices) : "Vismatrix Method" : 2 =
     [
@@ -742,7 +742,7 @@ static bool     PlacePatchInside(patch_t* patch)
 
 	patch->winding->getCenter (center);
 	found = false;
-	
+
 	VectorMA (center, PATCH_HUNT_OFFSET, plane->normal, point);
 #ifdef HLRAD_ACCURATEBOUNCE_REDUCEAREA
 	pointstested++;
@@ -924,7 +924,7 @@ static void     cutWindingWithGrid (patch_t *patch, const dplane_t *plA, const d
 	vec_t gridchopA;
 	vec_t gridchopB;
 	int numstrips;
-	
+
 	winding = new Winding (*patch->winding); // perform all the operations on the copy
 	chop = patch->chop;
 	chop = qmax (1.0, chop);
@@ -973,7 +973,7 @@ static void     cutWindingWithGrid (patch_t *patch, const dplane_t *plA, const d
 		}
 		gridstartB = (minB + maxB) / 2.0 - (gridsizeB / 2.0) * gridchopB;
 	}
-	
+
 	// cut the winding by the direction of plane A and save into windingArray
 	{
 		g_numwindings = 0;
@@ -1030,7 +1030,7 @@ static void     cutWindingWithGrid (patch_t *patch, const dplane_t *plA, const d
 		g_numwindings++;
 		winding = NULL;
 	}
-	
+
 	// cut by the direction of plane B
 	{
 		numstrips = g_numwindings;
@@ -1047,7 +1047,7 @@ static void     cutWindingWithGrid (patch_t *patch, const dplane_t *plA, const d
 
 				dist = gridstartB + j * gridchopB;
 				strip->Clip (plB->normal, dist, &front, &back);
-				
+
 				if (!front || front->WindingOnPlaneSide (plB->normal, dist, epsilon) == SIDE_ON) // ended
 				{
 					if (front)
@@ -1606,14 +1606,14 @@ static vec_t    getScale(const patch_t* const patch)
 		vec3_t			vecs_perpendicular[2];
 		vec_t			scale[2];
 		vec_t			dot;
-		
+
 		// snap texture "vecs" to faceplane without affecting texture alignment
 		for (int x = 0; x < 2; x++)
 		{
 			dot = DotProduct (faceplane->normal, tx->vecs[x]);
 			VectorMA (tx->vecs[x], -dot, faceplane->normal, vecs_perpendicular[x]);
 		}
-		
+
 		scale[0] = 1 / qmax (NORMAL_EPSILON, VectorLength (vecs_perpendicular[0]));
 		scale[1] = 1 / qmax (NORMAL_EPSILON, VectorLength (vecs_perpendicular[1]));
 
@@ -1653,7 +1653,7 @@ static vec_t    getScale(const patch_t* const patch)
 static bool		getEmitMode (const patch_t *patch)
 {
 	bool emitmode = false;
-	vec_t value = 
+	vec_t value =
 #ifdef HLRAD_REFLECTIVITY
 		DotProduct (patch->baselight, patch->texturereflectivity) / 3
 #else
@@ -2395,7 +2395,7 @@ static void     MakePatches()
 
 #ifndef HLRAD_OPAQUE_NODE
 #ifdef HLRAD_OPACITY // AJM
-        float         l_opacity = 0.0f; // decimal percentage 
+        float         l_opacity = 0.0f; // decimal percentage
 #endif
 #endif
 
@@ -2465,7 +2465,7 @@ static void     MakePatches()
 	// Check for colored transparency/custom shadows
         VectorFill(d_transparency, 1.0);
         b_transparency = false;
-        
+
         if (*(s = ValueForKey(ent, "zhlt_customshadow")))
         {
         	double r1 = 1.0, g1 = 1.0, b1 = 1.0, tmp = 1.0;
@@ -2474,7 +2474,7 @@ static void     MakePatches()
         		if(r1<0.0) r1 = 0.0;
         		if(g1<0.0) g1 = 0.0;
         		if(b1<0.0) b1 = 0.0;
-        		
+
         		d_transparency[0] = r1;
         		d_transparency[1] = g1;
         		d_transparency[2] = b1;
@@ -2483,7 +2483,7 @@ static void     MakePatches()
         	else if (sscanf(s, "%lf", &tmp) == 1) //Greyscale version
         	{
         		if(tmp<0.0) tmp = 0.0;
-        		
+
         		VectorFill(d_transparency, tmp);
         		b_transparency = true;
         	}
@@ -2496,7 +2496,7 @@ static void     MakePatches()
             VectorSubtract(light_origin, model_center, origin);
         }
 
-#ifdef ZHLT_TEXLIGHT        
+#ifdef ZHLT_TEXLIGHT
 		//LRC:
 		if (*(s = ValueForKey(ent, "style")))
 		{
@@ -2603,7 +2603,7 @@ static void     MakePatches()
 #ifdef HLRAD_OPAQUE_STYLE
 						, opaquestyle
 #endif
-						); 
+						);
                 }
             }
 #endif
@@ -4006,7 +4006,7 @@ static void     RadWorld()
 #endif
 
     Log("\n");
-	
+
 #ifdef HLRAD_GROWSAMPLE
 	// generate a position map for each face
 	NamedRunThreadsOnIndividual(g_numfaces, g_estimate, FindFacePositions);
@@ -4107,7 +4107,7 @@ static void     RadWorld()
 #ifdef HLRAD_OPAQUE_STYLE_BOUNCE
 	FreeStyleArrays ();
 #endif
-	
+
 #ifdef HLRAD_LOCALTRIANGULATION
 	NamedRunThreadsOnIndividual (g_numfaces, g_estimate, CreateTriangulations);
 
@@ -4273,8 +4273,8 @@ static void     Usage()
     //Log("-= End of unofficial features! =-\n\n" );
 
 #endif
-    // ------------------------------------------------------------------------  
-    
+    // ------------------------------------------------------------------------
+
 #ifdef HLRAD_HULLU
     Log("   -customshadowwithbounce : Enables custom shadows with bounce light\n");
     Log("   -rgbtransfers           : Enables RGB Transfers (for custom shadows)\n\n");
@@ -4486,7 +4486,7 @@ static void     Settings()
     safe_snprintf(buf2, sizeof(buf2), "%3.3f", DEFAULT_TEXLIGHTGAP);
     Log("global texlight gap  [ %17s ] [ %17s ]\n", buf1, buf2);
 #endif
-    
+
     // ------------------------------------------------------------------------
     // Changes by Adam Foster - afoster@compsoc.man.ac.uk
     // replaces the old stuff for displaying current values for gamma and lightscale
@@ -4555,7 +4555,7 @@ static void     Settings()
     Log("\n");
     Log("custom shadows with bounce light\n"
         "                     [ %17s ] [ %17s ]\n", g_customshadow_with_bouncelight ? "on" : "off", DEFAULT_CUSTOMSHADOW_WITH_BOUNCELIGHT ? "on" : "off");
-    Log("rgb transfers        [ %17s ] [ %17s ]\n", g_rgb_transfers ? "on" : "off", DEFAULT_RGB_TRANSFERS ? "on" : "off"); 
+    Log("rgb transfers        [ %17s ] [ %17s ]\n", g_rgb_transfers ? "on" : "off", DEFAULT_RGB_TRANSFERS ? "on" : "off");
 #endif
 
 #ifdef HLRAD_TRANSTOTAL_HACK
@@ -4617,7 +4617,7 @@ static void     Settings()
 // AJM: added in
 // =====================================================================================
 //  ReadInfoTexlights
-//      try and parse texlight info from the info_texlights entity 
+//      try and parse texlight info from the info_texlights entity
 // =====================================================================================
 void            ReadInfoTexlights()
 {
@@ -4632,7 +4632,7 @@ void            ReadInfoTexlights()
     for (k = 0; k < g_numentities; k++)
     {
         mapent = &g_entities[k];
-        
+
         if (strcmp(ValueForKey(mapent, "classname"), "info_texlights"))
             continue;
 
@@ -4644,15 +4644,15 @@ void            ReadInfoTexlights()
 
         for (ep = mapent->epairs; ep; ep = ep->next)
         {
-            if (    !strcmp(ep->key, "classname") 
+            if (    !strcmp(ep->key, "classname")
                  || !strcmp(ep->key, "origin")
                )
                 continue; // we dont care about these keyvalues
 
             values = sscanf(ep->value, "%f %f %f %f", &r, &g, &b, &i);
-            
+
             if (values == 1)
-            {  
+            {
                 g = b = r;
             }
             else if (values == 4) // use brightness value.
@@ -4745,7 +4745,7 @@ void            LoadRadFiles(const char* const mapname, const char* const user_r
             }
         }
     }
-   
+
     // Look for mapname.rad in mapdir
     safe_strncpy(mapname_lights, mapdir, _MAX_PATH);
     safe_strncat(mapname_lights, mapfile, _MAX_PATH);
@@ -4832,7 +4832,7 @@ int             main(const int argc, char** argv)
     const char*     user_lights = NULL;
     char            temp[_MAX_PATH];
 
-    g_Program = "hlrad";
+    g_Program = "abrad";
 
 #ifdef ZHLT_PARAMFILE
 	int argcold = argc;
@@ -5844,7 +5844,7 @@ int             main(const int argc, char** argv)
 		g_direct_scale = 0.0;
 	}
 #endif
-    
+
     if (!g_visdatasize)
     {
 #ifdef HLRAD_WITHOUTVIS

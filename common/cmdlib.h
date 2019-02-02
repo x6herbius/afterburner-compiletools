@@ -11,7 +11,8 @@
 //#define MODIFICATIONS_STRING "Submit detailed bug reports to (zoner@gearboxsoftware.com)\n"
 //#define MODIFICATIONS_STRING "Submit detailed bug reports to (merlinis@bigpond.net.au)\n"
 //#define MODIFICATIONS_STRING "Submit detailed bug reports to (amckern@yahoo.com)\n"
-#define MODIFICATIONS_STRING "Submit detailed bug reports to (vluzacn@163.com)\n" //--vluzacn
+//#define MODIFICATIONS_STRING "Submit detailed bug reports to (vluzacn@163.com)\n" //--vluzacn
+#define MODIFICATIONS_STRING "Submit bug reports via https://github.com/x6herbius/afterburner-compiletools/issues\n"
 
 #ifdef _DEBUG
 #define ZHLT_VERSIONSTRING "v3.4 dbg"

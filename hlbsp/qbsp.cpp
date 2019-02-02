@@ -1459,7 +1459,7 @@ static bool     ProcessModel()
 #endif
         nodes = SolidBSP(surfs,
 #ifdef ZHLT_DETAILBRUSH
-			detailbrushes, 
+			detailbrushes,
 #endif
 			modnum==0);
         if (g_nummodels == 1 && !g_nofill)                   // assume non-world bmodels are simple
@@ -1518,10 +1518,10 @@ static bool     ProcessModel()
 		{
 			ent = NULL;
 		}
-		Warning ("Empty solid entity: model %d (entity: classname \"%s\", origin \"%s\", targetname \"%s\")", 
-			g_nummodels - 1, 
-			(ent? ValueForKey (ent, "classname"): "unknown"), 
-			(ent? ValueForKey (ent, "origin"): "unknown"), 
+		Warning ("Empty solid entity: model %d (entity: classname \"%s\", origin \"%s\", targetname \"%s\")",
+			g_nummodels - 1,
+			(ent? ValueForKey (ent, "classname"): "unknown"),
+			(ent? ValueForKey (ent, "origin"): "unknown"),
 			(ent? ValueForKey (ent, "targetname"): "unknown"));
 		VectorClear (model->mins); // fix "backward minsmaxs" in HL
 		VectorClear (model->maxs);
@@ -1533,11 +1533,11 @@ static bool     ProcessModel()
 		{
 			ent = NULL;
 		}
-		Warning ("No visible brushes in solid entity: model %d (entity: classname \"%s\", origin \"%s\", targetname \"%s\", range (%.0f,%.0f,%.0f) - (%.0f,%.0f,%.0f))", 
-			g_nummodels - 1, 
-			(ent? ValueForKey (ent, "classname"): "unknown"), 
-			(ent? ValueForKey (ent, "origin"): "unknown"), 
-			(ent? ValueForKey (ent, "targetname"): "unknown"), 
+		Warning ("No visible brushes in solid entity: model %d (entity: classname \"%s\", origin \"%s\", targetname \"%s\", range (%.0f,%.0f,%.0f) - (%.0f,%.0f,%.0f))",
+			g_nummodels - 1,
+			(ent? ValueForKey (ent, "classname"): "unknown"),
+			(ent? ValueForKey (ent, "origin"): "unknown"),
+			(ent? ValueForKey (ent, "targetname"): "unknown"),
 			model->mins[0], model->mins[1], model->mins[2], model->maxs[0], model->maxs[1], model->maxs[2]);
 	}
 #endif
@@ -1839,7 +1839,7 @@ int             main(const int argc, char** argv)
     double          start, end;
     const char*     mapname_from_arg = NULL;
 
-    g_Program = "hlbsp";
+    g_Program = "abbsp";
 
 #ifdef ZHLT_PARAMFILE
 	int argcold = argc;
