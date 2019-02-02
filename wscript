@@ -63,6 +63,54 @@ PLATFORM_CONFIG = \
 			"-floop-interchange",
 			"-mfpmath=sse -g"
 		]
+	},
+
+	"darwin":
+	{
+		"DEFINES":
+		[
+			"SYSTEM_POSIX",
+			"HAVE_SYS_TIME_H",
+			"HAVE_UNISTD_H",
+			"HAVE_SYS_STAT_H",
+			"HAVE_FCNTL_H",
+			"HAVE_SYS_RESOURCE_H",
+			"_strdup=strdup",
+			"_strlwr=strlwr",
+			"_strupr=strupr",
+			"stricmp=strcasecmp",
+			"_unlink=unlink",
+			"_open=open",
+			"_read=read",
+			"_close=close",
+			"VERSION_LINUX"
+		],
+
+		"DEFINES_64":
+		[
+			"VERSION_64BIT"
+		],
+
+		"LINKFLAGS":
+		[
+			"-pthread"
+		],
+
+		"CFLAGS":
+		[
+			"-Wint-to-pointer-cast",
+			"-Ofast",
+			"-funsafe-math-optimizations",
+			"-funsafe-loop-optimizations",
+			"-ffast-math",
+			"-fgraphite-identity",
+			"-march=native",
+			"-mtune=native",
+			"-msse4",
+			"-mavx",
+			"-floop-interchange",
+			"-mfpmath=sse -g"
+		]
 	}
 }
 

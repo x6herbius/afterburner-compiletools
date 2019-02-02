@@ -6,10 +6,10 @@
 #pragma once
 #endif
 
-#include <malloc.h>
-
 /////////////////////////////
 #ifdef SYSTEM_WIN32
+
+#include <malloc.h>
 
 #define alloca      _alloca
 
@@ -47,6 +47,8 @@
 
 /////////////////////////////
 #ifdef SYSTEM_POSIX
+#include <stdlib.h>
+
 #define _MAX_PATH  4096
 #define _MAX_DRIVE 4096
 #define _MAX_DIR   4096
