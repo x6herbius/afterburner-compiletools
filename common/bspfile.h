@@ -26,9 +26,9 @@
 
 #define MAX_MAP_PLANES		65536 // TODO: This can be larger, because although faces can only use plane 0~32767, clipnodes can use plane 0-65535. --vluzacn
 #define MAX_INTERNAL_MAP_PLANES	(512*1024)
-// (from email): I have been building a rather complicated map, and using your latest 
+// (from email): I have been building a rather complicated map, and using your latest
 // tools (1.61) it seemed to compile fine.  However, in game, the engine was dropping
-// a lot of faces from almost every FUNC_WALL, and also caused a strange texture 
+// a lot of faces from almost every FUNC_WALL, and also caused a strange texture
 // phenomenon in software mode (see attached screen shot).  When I compiled with v1.41,
 // I noticed that it hit the MAX_MAP_PLANES limit of 32k.  After deleting some brushes
 // I was able to bring the map under the limit, and all of the previous errors went away.
@@ -114,7 +114,11 @@
 //=============================================================================
 
 #ifdef ZHLT_XASH2
+#ifdef ZHLT_AFTERBURNER
+#define BSPVERSION		43
+#else
 #define BSPVERSION		31
+#endif	// ZHLT_AFTERBURNER
 #else
 #define BSPVERSION		30
 #endif
@@ -211,7 +215,7 @@ typedef struct
 {
 	int		id;		// must be little endian XASH
 	int		version;
-	lump_t		lumps[EXTRA_LUMPS];	
+	lump_t		lumps[EXTRA_LUMPS];
 } dextrahdr_t;
 #endif
 

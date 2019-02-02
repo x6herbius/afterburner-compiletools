@@ -15,9 +15,9 @@
 #define MODIFICATIONS_STRING "Submit bug reports via https://github.com/x6herbius/afterburner-compiletools/issues\n"
 
 #ifdef _DEBUG
-#define ZHLT_VERSIONSTRING "v3.4 dbg"
+#define ZHLT_VERSIONSTRING "v3.5 dbg"
 #else
-#define ZHLT_VERSIONSTRING "v3.4"
+#define ZHLT_VERSIONSTRING "v3.5"
 #endif
 
 #define HACK_VERSIONSTRING "VL34" //--vluzacn
@@ -86,6 +86,7 @@
 #define ZHLT_XASH // build the compiler for Xash engine //--vluzacn
 	#ifdef ZHLT_XASH
 #define ZHLT_XASH2 // build the compiler for Xash engine with change in bsp format //--vluzacn
+#define ZHLT_AFTERBURNER
 	#endif
 #define ZHLT_WRITE_MODEL_ORIGIN // g-cont. store into dmodel_t their real origins
 #define ZHLT_CALC_AMBIENT_SOUNDS // g-cont. calc auto-ambient sounds like Quake1

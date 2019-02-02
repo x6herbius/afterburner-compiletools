@@ -673,7 +673,11 @@ void Banner()
 #endif
 		" (%s)\n", g_Program, __DATE__);
 #if defined(ZHLT_XASH2)
+#if defined(ZHLT_AFTERBURNER)
 	Log ("Special edition for Afterburner with change in BSP format\n");
+#else
+	Log ("Special edition for Xash with change in BSP format\n");
+#endif	// ZHLT_AFTERBURNER
 #elif defined(ZHLT_XASH)
 	Log("Special edition for Xash\n");
 #endif
