@@ -124,6 +124,12 @@
 #endif
 #define TOOLVERSION		2
 
+#ifdef ZHLT_AFTERBURNER
+#define MAX_TEXTURE_NAME_LENGTH 80
+#else
+#define MAX_TEXTURE_NAME_LENGTH 16
+#endif
+
 #ifdef ZHLT_PARANOIA_BSP
 #define IDEXTRAHEADER	(('H'<<24)+('S'<<16)+('A'<<8)+'X') // little-endian "XASH"
 #define EXTRA_VERSION	4	// ver. 1 was occupied by old versions of XashXT, ver. 2 was occupied by old vesrions of P2:savior
@@ -228,7 +234,7 @@ typedef struct
 #define MIPLEVELS   4
 typedef struct miptex_s
 {
-	char		name[16];
+	char		name[MAX_TEXTURE_NAME_LENGTH];
 	unsigned		width, height;
 	unsigned		offsets[MIPLEVELS];	// four mip maps stored
 } miptex_t;

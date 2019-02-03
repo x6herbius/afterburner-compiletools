@@ -1523,7 +1523,7 @@ int ParseImplicitTexinfoFromTexture( int miptex )
 	int offset;
 	int size;
 	miptex_t *mt;
-	char name[16];
+	char name[MAX_TEXTURE_NAME_LENGTH];
 
 	if (miptex < 0 || miptex >= numtextures)
 	{

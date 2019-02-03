@@ -547,7 +547,7 @@ static void CQ_SelectPartition (cq_node_t *node)
 			bucketsizes[j]++;
 			CQ_VectorAdd (bucketsums[j], nodepoints[i], bucketsums[j]);
 		}
-		
+
 		int min = 256;
 		int max = -1;
 		count = 0;
@@ -973,7 +973,7 @@ static void GetLight (dface_t *face, const int texsize[2], double x, double y, v
 	dx = qmax (0, qmin (dx, 1));
 	dy = y - iy;
 	dy = qmax (0, qmin (dy, 1));
-	
+
 	// do bilinear interpolation
 	vec3_t light00, light10, light01, light11;
 	GetLightInt (face, texsize, ix, iy, light00);
@@ -989,13 +989,13 @@ static void GetLight (dface_t *face, const int texsize[2], double x, double y, v
 	VectorMA (light, dx, light1, light);
 }
 
-static bool GetValidTextureName (int miptex, char name[16])
+static bool GetValidTextureName (int miptex, char* name, unsigned int length)
 {
 	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
 	int offset;
 	int size;
 	miptex_t *mt;
-	
+
 	if (miptex < 0 || miptex >= numtextures)
 	{
 		return false;
@@ -1009,13 +1009,13 @@ static bool GetValidTextureName (int miptex, char name[16])
 	}
 
 	mt = (miptex_t *)&g_dtexdata[offset];
-	safe_strncpy (name, mt->name, 16);
+	safe_strncpy (name, mt->name, length);
 
 	if (strcmp (name, mt->name))
 	{
 		return false;
 	}
-	
+
 	if (strlen (name) >= 5 && !strncasecmp (&name[1], "_rad", 4))
 	{
 		return false;
@@ -1054,7 +1054,7 @@ void EmbedLightmapInTextures ()
 
 		int max_surface_extent = GetSurfaceExtent( f );
 		int texture_step = GetTextureStep( f );
-		
+
 		if (f->lightofs == -1) // some faces don't have lightmap
 		{
 			continue;
@@ -1063,12 +1063,12 @@ void EmbedLightmapInTextures ()
 		{
 			continue;
 		}
-		
+
 		entity_t *ent = g_face_entity[i];
 		int originaltexinfonum = f->texinfo;
 		texinfo_t *originaltexinfo = &g_texinfo[originaltexinfonum];
-		char texname[16];
-		if (!GetValidTextureName (originaltexinfo->miptex, texname))
+		char texname[MAX_TEXTURE_NAME_LENGTH];
+		if (!GetValidTextureName (originaltexinfo->miptex, texname, sizeof(texname)))
 		{
 			continue;
 		}
@@ -1392,7 +1392,7 @@ void EmbedLightmapInTextures ()
 		// emit a texture
 
 		int miptexsize;
-		
+
 		miptexsize = (int)sizeof (miptex_t);
 		for (miplevel = 0; miplevel < MIPLEVELS; miplevel++)
 		{
@@ -1493,7 +1493,7 @@ void EmbedLightmapInTextures ()
 		free (miptex);
 
 		CQ_FreeSearchTree (palettetree);
-		
+
 		free (texture);
 		for (miplevel = 0; miplevel < MIPLEVELS; miplevel++)
 		{
