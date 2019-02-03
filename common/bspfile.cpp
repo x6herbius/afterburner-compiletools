@@ -13,7 +13,7 @@
 int		g_max_map_miptex = DEFAULT_MAX_MAP_MIPTEX;
 int		g_max_map_lightdata = DEFAULT_MAX_MAP_LIGHTDATA;
 bool		g_found_extradata = false;
-	
+
 int		g_nummodels;
 dmodel_t		g_dmodels[MAX_MAP_MODELS];
 int		g_dmodels_checksum;
@@ -114,7 +114,7 @@ int		g_dworldlights_checksum;
 #endif
 
 // can be overrided from hlcsg
-vec3_t g_hull_size[MAX_MAP_HULLS][2] = 
+vec3_t g_hull_size[MAX_MAP_HULLS][2] =
 {
 	{ // 0x0x0
 	{ 0, 0, 0 },	{ 0, 0, 0 }
@@ -234,7 +234,7 @@ void DecompressVis( const byte* src, byte* const dest, const unsigned int dest_l
 			src++;
 			continue;
 		}
-		
+
 #ifdef ZHLT_DecompressVis_FIX
 		hlassume (&src[1] - g_dvisdata < g_visdatasize, assume_DECOMPRESSVIS_OVERFLOW);
 #endif
@@ -272,7 +272,7 @@ static void SwapBSPFile( const bool todisk )
 	dmodel_t*		d;
 	dmiptexlump_t*	mtl;
 
-	// models       
+	// models
 	for( i = 0; i < g_nummodels; i++ )
 	{
 		d = &g_dmodels[i];
@@ -307,7 +307,7 @@ static void SwapBSPFile( const bool todisk )
 
 	//
 	// planes
-	//      
+	//
 	for( i = 0; i < g_numplanes; i++ )
 	{
 		for( j = 0; j < 3; j++ )
@@ -321,7 +321,7 @@ static void SwapBSPFile( const bool todisk )
 
 	//
 	// texinfos
-	//      
+	//
 	for( i = 0; i < g_numtexinfo; i++ )
 	{
 		for( j = 0; j < 8; j++ )
@@ -468,7 +468,7 @@ static void SwapBSPFile( const bool todisk )
 		g_dfaceinfo[i].texture_step = LittleShort( g_dfaceinfo[i].texture_step );
 		g_dfaceinfo[i].max_extent = LittleShort( g_dfaceinfo[i].max_extent );
 		g_dfaceinfo[i].groupid = LittleShort( g_dfaceinfo[i].groupid );
-	} 
+	}
 
 	//
 	// normals
@@ -545,7 +545,7 @@ static int CopyLump( int lump, void *dest, int size, const dheader_t *header )
 	{
 		Error( "LoadBSPFile: odd lump size" );
 	}
-	
+
 	// special handling for tex and lightdata to keep things from exploding - KGP
 	if( lump == LUMP_TEXTURES && dest == (void*)g_dtexdata )
 		hlassume( g_max_map_miptex > length, assume_MAX_MAP_MIPTEX );
@@ -679,7 +679,7 @@ void LoadBSPImage( dheader_t* const header )
 
 	//
 	// swap everything
-	//      
+	//
 	SwapBSPFile( false );
 
 	g_dmodels_checksum = FastChecksum( g_dmodels, g_nummodels * sizeof( g_dmodels[0] ));
@@ -701,7 +701,7 @@ void LoadBSPImage( dheader_t* const header )
 	g_dmarksurfaces_checksum = FastChecksum( g_dmarksurfaces, g_nummarksurfaces * sizeof( g_dmarksurfaces[0] ));
 	g_dsurfedges_checksum = FastChecksum( g_dsurfedges, g_numsurfedges * sizeof( g_dsurfedges[0] ));
 	g_dedges_checksum = FastChecksum( g_dedges, g_numedges * sizeof( g_dedges[0] ));
-	g_dtexdata_checksum = FastChecksum( g_dtexdata, g_numedges * sizeof( g_dtexdata[0] ));
+	g_dtexdata_checksum = FastChecksum( g_dtexdata, g_texdatasize * sizeof( g_dtexdata[0] ));
 	g_dvisdata_checksum = FastChecksum( g_dvisdata, g_visdatasize * sizeof( g_dvisdata[0] ));
 	g_dlightdata_checksum = FastChecksum( g_dlightdata, g_lightdatasize * sizeof( g_dlightdata[0] ));
 	g_dentdata_checksum = FastChecksum( g_dentdata, g_entdatasize * sizeof( g_dentdata[0] ));
@@ -778,7 +778,7 @@ void WriteBSPFile( const char* const filename )
 #ifdef ZHLT_PARANOIA_BSP
 	SafeWrite( bspfile, extrahdr, sizeof( dextrahdr_t ));	// overwritten later
 #endif
-	//       LUMP TYPE          DATA             LENGTH                                  HEADER  BSPFILE   
+	//       LUMP TYPE          DATA             LENGTH                                  HEADER  BSPFILE
 	AddLump( LUMP_PLANES,       g_dplanes,       g_numplanes * sizeof( dplane_t ),       header, bspfile );
 	AddLump( LUMP_LEAFS,        g_dleafs,        g_numleafs * sizeof( dleaf_t),          header, bspfile );
 	AddLump( LUMP_VERTEXES,     g_dvertexes,     g_numvertexes * sizeof( dvertex_t ),    header, bspfile );
@@ -818,7 +818,7 @@ void WriteBSPFile( const char* const filename )
 //    Log( "num extra faces %i, num faces %i, num worldlights %i, num ambient lights %i, num extra leafs %i, num leafs %i\n",
 //    g_numfaces_extra, g_numfaces, g_numworldlights, g_numleaflights, g_numleafdata, g_numleafs );
 
-	//            LUMP TYPE          DATA             LENGTH                                      EXTRAHDR  BSPFILE 
+	//            LUMP TYPE          DATA             LENGTH                                      EXTRAHDR  BSPFILE
 	AddExtraLump( LUMP_VERTNORMALS,  g_dnormals,      g_numnormals * sizeof( dnormal_t ),         extrahdr, bspfile );
 	AddExtraLump( LUMP_LIGHTVECS,    g_ddeluxdata,    g_deluxdatasize,                            extrahdr, bspfile );
 	AddExtraLump( LUMP_CUBEMAPS,     g_dcubemaps,     g_numcubemaps * sizeof( dcubemap_t ),       extrahdr, bspfile );
@@ -915,7 +915,7 @@ bool CalcFaceExtents_test ()
 	// If the test failed, please check:
 	//   1. whether the calculation is performed on FPU
 	//   2. whether the register precision is too low
-		
+
 	CorrectFPUPrecision ();
 
 	ok = true;
@@ -1524,7 +1524,7 @@ int ParseImplicitTexinfoFromTexture( int miptex )
 	int size;
 	miptex_t *mt;
 	char name[16];
-	
+
 	if (miptex < 0 || miptex >= numtextures)
 	{
 		Warning ("ParseImplicitTexinfoFromTexture: internal error: invalid texture number %d.", miptex);
@@ -1540,7 +1540,7 @@ int ParseImplicitTexinfoFromTexture( int miptex )
 
 	mt = (miptex_t *)&g_dtexdata[offset];
 	safe_strncpy (name, mt->name, 16);
-	
+
 	if (!(strlen (name) >= 6 && !strncasecmp (&name[1], "_rad", 4) && '0' <= name[5] && name[5] <= '9'))
 	{
 		return -1;
@@ -2256,7 +2256,7 @@ void            GetVectorForKey(const entity_t* const ent, const char* const key
 
 // =====================================================================================
 //  FindTargetEntity
-//      
+//
 // =====================================================================================
 entity_t *FindTargetEntity(const char* const target)
 {
@@ -2298,7 +2298,7 @@ void CDECL dtexdata_free( void )
 
 // =====================================================================================
 //  GetTextureByNumber
-//      Touchy function, can fail with a page fault if all the data isnt kosher 
+//      Touchy function, can fail with a page fault if all the data isnt kosher
 //      (i.e. map was compiled with missing textures)
 // =====================================================================================
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
