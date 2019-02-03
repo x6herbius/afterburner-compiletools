@@ -872,7 +872,7 @@ bool            CheckFaceForNull(const face_t* const f)
 	if (f->contents == CONTENTS_SKY)
     {
 		const char *name = GetTextureByNumber (f->texturenum);
-        if (strncasecmp(name, "sky", 3)) // for env_rain
+        if (strncasecmp(name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1)) // for env_rain
 			return true;
     }
 #endif
@@ -881,7 +881,7 @@ bool            CheckFaceForNull(const face_t* const f)
     {
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
 		const char *name = GetTextureByNumber (f->texturenum);
-		if (!strncasecmp(name, "null", 4))
+		if (!strncasecmp(name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1))
 			return true;
 		return false;
 #else
@@ -893,10 +893,10 @@ bool            CheckFaceForNull(const face_t* const f)
         ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
         miptex = (miptex_t*)(&g_dtexdata[ofs]);
 
-        if (!strcasecmp(miptex->name, "null"))
+        if (!strcasecmp(miptex->name, SPECIALTEX_NULL))
             return true;
 	#ifdef HLCSG_CUSTOMHULL
-        else if (!strncasecmp(miptex->name, "null", 4))
+        else if (!strncasecmp(miptex->name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1))
             return true;
 	#else
         else
@@ -916,7 +916,7 @@ bool            CheckFaceForEnv_Sky(const face_t* const f)
 {
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
 	const char *name = GetTextureByNumber (f->texturenum);
-	if (!strncasecmp (name, "env_sky", 7))
+	if (!strncasecmp (name, SPECIALTEX_ENV_SKY, sizeof(SPECIALTEX_ENV_SKY) - 1))
 		return true;
 	return false;
 #else
@@ -928,7 +928,7 @@ bool            CheckFaceForEnv_Sky(const face_t* const f)
         ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
         miptex = (miptex_t*)(&g_dtexdata[ofs]);
 
-        if (!strcasecmp(miptex->name, "env_sky"))
+        if (!strcasecmp(miptex->name, SPECIALTEX_ENV_SKY))
             return true;
         else
             return false;
@@ -945,7 +945,7 @@ bool            CheckFaceForHint(const face_t* const f)
 {
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
 	const char *name = GetTextureByNumber (f->texturenum);
-	if (!strncasecmp (name, "hint", 4))
+	if (!strncasecmp (name, SPECIALTEX_HINT, sizeof(SPECIALTEX_HINT) - 1))
 		return true;
 	return false;
 #else
@@ -957,7 +957,7 @@ bool            CheckFaceForHint(const face_t* const f)
     ofs = ((dmiptexlump_t *)g_dtexdata)->dataofs[info->miptex];
     miptex = (miptex_t *)(&g_dtexdata[ofs]);
 
-    if (!strcasecmp(miptex->name, "hint"))
+    if (!strcasecmp(miptex->name, SPECIALTEX_HINT))
     {
         return true;
     }
@@ -976,7 +976,7 @@ bool            CheckFaceForSkip(const face_t* const f)
 {
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
 	const char *name = GetTextureByNumber (f->texturenum);
-	if (!strncasecmp (name, "skip", 4))
+	if (!strncasecmp (name, SPECIALTEX_SKIP, sizeof(SPECIALTEX_SKIP) - 1))
 		return true;
 	return false;
 #else
@@ -988,7 +988,7 @@ bool            CheckFaceForSkip(const face_t* const f)
     ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
     miptex = (miptex_t*)(&g_dtexdata[ofs]);
 
-    if (!strcasecmp(miptex->name, "skip"))
+    if (!strcasecmp(miptex->name, SPECIALTEX_SKIP))
     {
         return true;
     }
@@ -1119,7 +1119,7 @@ static surfchain_t* ReadSurfs(FILE* file)
 		}
 #endif
 
-        if (!strcasecmp(GetTextureByNumber(g_texinfo), "skip"))
+        if (!strcasecmp(GetTextureByNumber(g_texinfo), SPECIALTEX_SKIP))
         {
             Verbose("ReadSurfs (line %i): skipping a surface", line);
 

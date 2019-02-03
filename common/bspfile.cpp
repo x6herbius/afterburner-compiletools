@@ -1179,8 +1179,10 @@ int CountBlocks ()
 #else
 		const char *texname =  GetTextureByNumber (f->texinfo);
 #endif
-		if (!strncmp (texname, "sky", 3) //sky, no lightmap allocation.
-			|| !strncmp (texname, "!", 1) || !strncasecmp (texname, "water", 5) || !strncasecmp (texname, "laser", 5) //water, no lightmap allocation.
+		if (!strncmp (texname, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1) //sky, no lightmap allocation.
+			|| !strncmp (texname, "!", 1)
+			|| !strncasecmp (texname, SPECIALTEX_WATER, sizeof(SPECIALTEX_WATER) - 1)
+			|| !strncasecmp (texname, SPECIALTEX_LASER, sizeof(SPECIALTEX_LASER) - 1) //water, no lightmap allocation.
 #ifdef ZHLT_EMBEDLIGHTMAP
 			|| (g_texinfo[ParseTexinfoForFace (f)].flags & TEX_SPECIAL) //aaatrigger, I don't know.
 #else

@@ -90,7 +90,7 @@ void CalcAmbientSounds( void )
 				ofs = ((dmiptexlump_t *)g_dtexdata)->dataofs[info->miptex];
 				miptex = (miptex_t *)(&g_dtexdata[ofs]);
 
-				if( !Q_strnicmp( miptex->name, "sky", 3 ))
+				if( !Q_strnicmp( miptex->name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1 ))
 				{
 					ambient_type = AMBIENT_SKY;
 				}
@@ -108,7 +108,7 @@ void CalcAmbientSounds( void )
 					{
 						ambient_type = AMBIENT_LAVA;
 					}
-					else 
+					else
 					{
 						continue;
 					}

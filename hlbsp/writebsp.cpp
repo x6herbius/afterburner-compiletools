@@ -733,7 +733,7 @@ static void RemoveCoveredFaces_r (node_t *node)
 		}
 		return;
 	}
-	
+
 	// this is a node
 	for (face_t *f = node->faces; f; f = f->next)
 	{
@@ -980,8 +980,8 @@ void            FinishBSPFile()
 			free (Used);
 			free (Map);
 		}
-		Log ("Reduced %d planes to %d\n", g_numplanes, gNumMappedPlanes);
 #endif
+		Log ("Reduced %d planes to %d\n", g_numplanes, gNumMappedPlanes);
 		for(int counter = 0; counter < gNumMappedPlanes; counter++)
 		{
 			g_dplanes[counter] = gMappedPlanes[counter];
@@ -1131,7 +1131,7 @@ void            FinishBSPFile()
 #endif
 	}
 #endif
-	
+
 #ifdef ZHLT_HIDDENSOUNDTEXTURE
 	for (int i = 0; i < g_numtexinfo; i++)
 	{

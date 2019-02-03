@@ -1422,7 +1422,7 @@ void ReadCustomChopValue()
 			{
 				if (strcasecmp (ep->key, texname))
 					continue;
-				if (!strcasecmp (ep->key, "origin"))
+				if (!strcasecmp (ep->key, SPECIALTEX_ORIGIN))
 					continue;
 				if (atof (ep->value) <= 0)
 					continue;
@@ -1465,7 +1465,7 @@ void ReadCustomSmoothValue()
 			{
 				if (strcasecmp (ep->key, texname))
 					continue;
-				if (!strcasecmp (ep->key, "origin"))
+				if (!strcasecmp (ep->key, SPECIALTEX_ORIGIN))
 					continue;
 				g_smoothvalues[i] = cos(atof (ep->value) * (Q_PI / 180.0));
 				Developer (DEVELOPER_LEVEL_MESSAGE, "info_smoothvalue: %s = %f\n", texname, atof (ep->value));
@@ -1501,7 +1501,7 @@ void ReadTranslucentTextures()
 			{
 				if (strcasecmp (ep->key, texname))
 					continue;
-				if (!strcasecmp (ep->key, "origin"))
+				if (!strcasecmp (ep->key, SPECIALTEX_ORIGIN))
 					continue;
 				double r, g, b;
 				int count;
@@ -1565,7 +1565,7 @@ void ReadLightingCone ()
 			{
 				if (strcasecmp (ep->key, texname))
 					continue;
-				if (!strcasecmp (ep->key, "origin"))
+				if (!strcasecmp (ep->key, SPECIALTEX_ORIGIN))
 					continue;
 				double power, scale;
 				int count;

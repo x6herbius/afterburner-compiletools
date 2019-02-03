@@ -1075,7 +1075,7 @@ void EmbedLightmapInTextures ()
 		{
 			continue;
 		}
-		if (!strncmp (texname, "sky", 3)
+		if (!strncmp (texname, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1)
 			|| originaltexinfo->flags & TEX_SPECIAL) // skip special surfaces
 		{
 			continue;

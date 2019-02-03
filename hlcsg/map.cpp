@@ -197,9 +197,9 @@ static void CopySKYtoCLIP( const brush_t* const b )
 
 		*side = g_brushsides[b->firstside + i];
 #ifdef HLCSG_CUSTOMHULL
-		safe_strncpy( side->td.name, "NULL", sizeof( side->td.name ));
+		safe_strncpy( side->td.name, BRUSHKEY_NULL, sizeof( side->td.name ));
 #else
-		safe_strncpy( side->td.name, "CLIP", sizeof( side->td.name ));
+		safe_strncpy( side->td.name, BRUSHKEY_CLIP, sizeof( side->td.name ));
 #endif
 		for( j = 0; j < NUM_HULLS; j++ )
 		{
@@ -422,9 +422,9 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 			{
 				Error( "Parsing Entity %i, Brush %i, Side %i : Expecting '(' got '%s'",
 #ifdef HLCSG_COUNT_NEW
-					b->originalentitynum, b->originalbrushnum, 
+					b->originalentitynum, b->originalbrushnum,
 #else
-					b->entitynum, b->brushnum, 
+					b->entitynum, b->brushnum,
 #endif
 					b->numsides, g_token );
 			}
@@ -441,9 +441,9 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 			{
 				Error("Parsing Entity %i, Brush %i, Side %i : Expecting ')' got '%s'",
 #ifdef HLCSG_COUNT_NEW
-					b->originalentitynum, b->originalbrushnum, 
+					b->originalentitynum, b->originalbrushnum,
 #else
-					b->entitynum, b->brushnum, 
+					b->entitynum, b->brushnum,
 #endif
 					b->numsides, g_token );
 			}
@@ -453,25 +453,25 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 		GetToken( false );
 		_strupr( g_token );
 #ifdef HLCSG_CUSTOMHULL
-		if( !strncasecmp( g_token, "NOCLIP", 6 ) || !strncasecmp( g_token, "NULLNOCLIP", 10 ))
+		if( !strncasecmp( g_token, BRUSHKEY_NOCLIP, sizeof(BRUSHKEY_NOCLIP) - 1 ) || !strncasecmp( g_token, BRUSHKEY_NULLNOCLIP, sizeof(BRUSHKEY_NULLNOCLIP) - 1 ))
 		{
-			strcpy( g_token, "NULL" );
+			strcpy( g_token, BRUSHKEY_NULL );
 			b->noclip = true;
 		}
 
 		if( !strncasecmp( g_token, "BEVELBRUSH", 10 ))
 		{
-			strcpy( g_token, "NULL" );
+			strcpy( g_token, BRUSHKEY_NULL );
 			b->bevel = true;
 		}
 
-		if( !strncasecmp( g_token, "BEVEL", 5 ))
+		if( !strncasecmp( g_token, BRUSHKEY_BEVEL, sizeof(BRUSHKEY_BEVEL) - 1 ))
 		{
-			strcpy( g_token, "NULL" );
+			strcpy( g_token, BRUSHKEY_NULL );
 			side->bevel = true;
 		}
 
-		if( !strncasecmp( g_token, "CLIP", 4 ))
+		if( !strncasecmp( g_token, BRUSHKEY_CLIP, sizeof(BRUSHKEY_CLIP) - 1 ))
 		{
 			int	h;
 
@@ -492,9 +492,9 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 				b->bevel = true;
 			}
 #ifdef HLCSG_PASSBULLETSBRUSH
-			strcpy( g_token, "SKIP" );
+			strcpy( g_token, BRUSHKEY_SKIP );
 #else
-			strcpy( g_token, "NULL" );
+			strcpy( g_token, BRUSHKEY_NULL );
 #endif
 		}
 #endif
@@ -603,9 +603,9 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 				aa = bb = cc = 0;
 				Warning( "Degenerate QuArK-style brush texture : Entity %i, Brush %i @ (%f,%f,%f) (%f,%f,%f) (%f,%f,%f)",
 #ifdef HLCSG_COUNT_NEW
-					b->originalentitynum, b->originalbrushnum, 
+					b->originalentitynum, b->originalbrushnum,
 #else
-					b->entitynum, b->brushnum, 
+					b->entitynum, b->brushnum,
 #endif
 					side->planepts[0][0], side->planepts[0][1], side->planepts[0][2],
 					side->planepts[1][0], side->planepts[1][1], side->planepts[1][2],
@@ -657,9 +657,9 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 	for( j = 0; j < b->numsides; j++ )
 	{
 		side = &g_brushsides[b->firstside + j];
-		if( nullify && strncasecmp( side->td.name, "BEVEL", 5 ) && strncasecmp( side->td.name, "ORIGIN", 6 )
+		if( nullify && strncasecmp( side->td.name, BRUSHKEY_BEVEL, sizeof(BRUSHKEY_BEVEL) - 1 ) && strncasecmp( side->td.name, BRUSHKEY_ORIGIN, sizeof(BRUSHKEY_ORIGIN) - 1 )
 #ifdef HLCSG_ALLOWHINTINENTITY
-			&& strncasecmp( side->td.name,"HINT", 4 ) && strncasecmp( side->td.name, "SKIP", 4 )
+			&& strncasecmp( side->td.name,BRUSHKEY_HINT, sizeof(BRUSHKEY_HINT) - 1 ) && strncasecmp( side->td.name, BRUSHKEY_SKIP, sizeof(BRUSHKEY_SKIP) - 1 )
 #endif
 #ifdef HLCSG_HLBSP_SOLIDHINT
 			&& strncasecmp( side->td.name, "SOLIDHINT", 9 )
@@ -671,11 +671,11 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 			&& strncasecmp( side->td.name, "BOUNDINGBOX", 11 )
 #endif
 #ifdef HLCSG_CUSTOMCONTENT
-			&& strncasecmp( side->td.name, "CONTENT", 7 ) && strncasecmp( side->td.name, "SKY", 3 )
+			&& strncasecmp( side->td.name, BRUSHKEY_CUSTOMCONTENT_PREFIX, sizeof(BRUSHKEY_CUSTOMCONTENT_PREFIX) - 1 ) && strncasecmp( side->td.name, BRUSHKEY_SKY, sizeof(BRUSHKEY_SKY) - 1 )
 #endif
 			)
 		{
-			safe_strncpy( side->td.name, "NULL", sizeof( side->td.name ));
+			safe_strncpy( side->td.name, BRUSHKEY_NULL, sizeof( side->td.name ));
 		}
 	}
 #endif
@@ -686,7 +686,7 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 		side = &g_brushsides[b->firstside + j];
 		if( !strncasecmp( side->td.name, "SPLITFACE", 9 ))
 		{
-			strcpy( side->td.name, "SKIP" );
+			strcpy( side->td.name, BRUSHKEY_SKIP );
 		}
 	}
 #endif
@@ -694,9 +694,9 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 	for( j = 0; j < b->numsides; j++ )
 	{
 		side = &g_brushsides[b->firstside + j];
-		if( !strncasecmp( side->td.name, "CONTENT", 7 ))
+		if( !strncasecmp( side->td.name, BRUSHKEY_CUSTOMCONTENT_PREFIX, sizeof(BRUSHKEY_CUSTOMCONTENT_PREFIX) - 1 ))
 		{
-			strcpy( side->td.name, "NULL" );
+			strcpy( side->td.name, BRUSHKEY_NULL );
 		}
 	}
 #endif
@@ -706,9 +706,9 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 		for( j = 0; j < b->numsides; j++ )
 		{
 			side = &g_brushsides[b->firstside + j];
-			if( !strncasecmp( side->td.name, "AAATRIGGER", 10 ))
+			if( !strncasecmp( side->td.name, BRUSHKEY_AAATRIGGER, sizeof(BRUSHKEY_AAATRIGGER) - 1 ))
 			{
-				strcpy( side->td.name, "NULL" );
+				strcpy( side->td.name, BRUSHKEY_NULL );
 			}
 		}
 	}
@@ -750,7 +750,7 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 		{
 			VectorAdd( b->hulls[0].bounds.m_Mins, b->hulls[0].bounds.m_Maxs, origin );
 			VectorScale( origin, 0.5, origin );
-    
+
 			safe_snprintf( string, MAXTOKEN, "%i %i %i", (int)origin[0], (int)origin[1], (int)origin[2] );
 			SetKeyValue( &g_entities[b->entitynum], "origin", string );
 		}
@@ -823,7 +823,7 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 		{
 			VectorCopy( b->hulls[0].bounds.m_Mins, mins );
 			VectorCopy( b->hulls[0].bounds.m_Maxs, maxs );
-	
+
 			safe_snprintf( string, MAXTOKEN, "%.0f %.0f %.0f %.0f %.0f %.0f", mins[0], mins[1], mins[2], maxs[0], maxs[1], maxs[2] );
 			SetKeyValue( &g_entities[b->entitynum], "zhlt_minsmaxs", string );
 		}
@@ -846,7 +846,7 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 		for( j = 0; j < newb->numsides; j++ )
 		{
 			side = &g_brushsides[newb->firstside + j];
-			strcpy( side->td.name, "NULL" );
+			strcpy( side->td.name, BRUSHKEY_NULL );
 		}
 	}
 #endif
@@ -860,13 +860,13 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 		{
 			side = &g_brushsides[b->firstside + j];
 
-			if( !strncasecmp( side->td.name, "NULL", 4 ))
+			if( !strncasecmp( side->td.name, BRUSHKEY_NULL, sizeof(BRUSHKEY_NULL) - 1 ))
 			{
 				// this is not supposed to be a HINT brush, so remove all invisible faces from hull 0.
-				strcpy( side->td.name, "SKIP" );
+				strcpy( side->td.name, BRUSHKEY_SKIP );
 			}
 
-			if( strncasecmp( side->td.name, "SKIP", 4 ))
+			if( strncasecmp( side->td.name, BRUSHKEY_SKIP, sizeof(BRUSHKEY_SKIP) - 1 ))
 				mixed = true;
 		}
 
@@ -880,7 +880,7 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 		for( j = 0; j < b->numsides; j++ )
 		{
 			side = &g_brushsides[b->firstside + j];
-			strcpy( side->td.name, "NULL" );
+			strcpy( side->td.name, BRUSHKEY_NULL );
 		}
 	}
 #endif
@@ -1012,11 +1012,11 @@ bool ParseMapEntity( void )
 
 	if( strcmp( g_token, "{" ))
 	{
-		Error( "Parsing Entity %i, expected '{' got '%s'", 
+		Error( "Parsing Entity %i, expected '{' got '%s'",
 #ifdef HLCSG_COUNT_NEW
-			g_numparsedentities, 
+			g_numparsedentities,
 #else
-			this_entity, 
+			this_entity,
 #endif
 			g_token );
 	}
@@ -1109,7 +1109,7 @@ bool ParseMapEntity( void )
 	if( *ValueForKey( mapent, "zhlt_usemodel" ))
 	{
 		if( !*ValueForKey( mapent, "origin" ))
-			Warning( "Entity %i: 'zhlt_usemodel' requires the entity to have an origin brush.", 
+			Warning( "Entity %i: 'zhlt_usemodel' requires the entity to have an origin brush.",
 #ifdef HLCSG_COUNT_NEW
 				g_numparsedentities
 #else
@@ -1283,7 +1283,7 @@ bool ParseMapEntity( void )
 
 						if( zeroscale )
 						{
-							Error( "Entity %i, Brush %i: invalid texture scale.\n", 
+							Error( "Entity %i, Brush %i: invalid texture scale.\n",
 	#ifdef HLCSG_COUNT_NEW
 								brush->originalentitynum, brush->originalbrushnum
 	#else
@@ -1384,7 +1384,7 @@ bool ParseMapEntity( void )
 
 #ifndef HLCSG_HLBSP_ALLOWEMPTYENTITY
 	if( mapent->numbrushes && all_clip )
-		Fatal( assume_NO_VISIBILE_BRUSHES, "Entity %i has no visible brushes\n", 
+		Fatal( assume_NO_VISIBILE_BRUSHES, "Entity %i has no visible brushes\n",
 #ifdef HLCSG_COUNT_NEW
 			g_numparsedentities
 #else
@@ -1428,9 +1428,9 @@ bool ParseMapEntity( void )
 
 		Error( "Entity %i, contains ONLY an origin brush near (%.0f,%.0f,%.0f)\n",
 #ifdef HLCSG_COUNT_NEW
-			g_numparsedentities, 
+			g_numparsedentities,
 #else
-			this_entity, 
+			this_entity,
 #endif
 			hull->bounds.m_Mins[0], hull->bounds.m_Mins[1], hull->bounds.m_Mins[2]);
 	}
@@ -1513,9 +1513,9 @@ bool ParseMapEntity( void )
 
 		// save off cubemaps
 		dcubemap_t *pCubemap = &g_dcubemaps[g_numcubemaps];
-		pCubemap->origin[0] = (short)mapent->origin[0];	
-		pCubemap->origin[1] = (short)mapent->origin[1];	
-		pCubemap->origin[2] = (short)mapent->origin[2];	
+		pCubemap->origin[0] = (short)mapent->origin[0];
+		pCubemap->origin[1] = (short)mapent->origin[1];
+		pCubemap->origin[2] = (short)mapent->origin[2];
 		pCubemap->size = (short)IntForKey( mapent, "cubemapsize" );
 		DeleteCurrentEntity( mapent );
 		g_numcubemaps++;
@@ -1547,11 +1547,11 @@ bool ParseMapEntity( void )
 
 		if( strncmp( classname, "light", 5 ))
 		{
-			Warning( "Entity %i (classname \"%s\"): origin outside +/-%.0f: (%.0f,%.0f,%.0f)", 
+			Warning( "Entity %i (classname \"%s\"): origin outside +/-%.0f: (%.0f,%.0f,%.0f)",
 #ifdef HLCSG_COUNT_NEW
-				g_numparsedentities, 
+				g_numparsedentities,
 #else
-				this_entity, 
+				this_entity,
 #endif
 				classname, (double)ENGINE_ENTITY_RANGE, mapent->origin[0], mapent->origin[1], mapent->origin[2] );
 		}
@@ -1628,7 +1628,7 @@ void LoadMapFile( const char* const filename )
 
 	for (i = g_entities[0].firstbrush; i < g_entities[0].firstbrush + g_entities[0].numbrushes; i++)
 	{
-		Log("worldspawn brush %i: contents %s\n", i, ContentsToString((contents_t)g_mapbrushes[i].contents)); 
+		Log("worldspawn brush %i: contents %s\n", i, ContentsToString((contents_t)g_mapbrushes[i].contents));
 	}
 	*/
 
@@ -1643,7 +1643,7 @@ void LoadMapFile( const char* const filename )
 	Verbose( "%5i map entities \n", g_numentities - num_engine_entities );
 	Verbose( "%5i engine entities\n", num_engine_entities );
 
-	// AJM: added in 
+	// AJM: added in
 #ifdef HLCSG_AUTOWAD
 #ifndef HLCSG_AUTOWAD_TEXTURELIST_FIX
 #ifdef HLCSG_ONLYENTS_NOWADCHANGE

@@ -28,7 +28,7 @@ static tnode_t* tnode_p;
 /*
  * ==============
  * MakeTnode
- * 
+ *
  * Converts the disk node structure into the efficient tracing structure
  * ==============
  */
@@ -71,7 +71,7 @@ static void     MakeTnode(const int nodenum)
 /*
  * =============
  * MakeTnodes
- * 
+ *
  * Loads the node structure out of a .bsp file to be used for light occlusion
  * =============
  */
@@ -82,37 +82,37 @@ static void     MakeTnode(const int nodenum)
  void cls( HANDLE hConsole )
  {
     COORD coordScreen = { 0, 0 };    /* here's where we'll home the
-                                        cursor */ 
+                                        cursor */
     BOOL bSuccess;
     DWORD cCharsWritten;
-    CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */ 
+    CONSOLE_SCREEN_BUFFER_INFO csbi; /* to get buffer info */
     DWORD dwConSize;                 /* number of character cells in
-                                        the current buffer */ 
+                                        the current buffer */
 
-    /* get the number of character cells in the current buffer */ 
+    /* get the number of character cells in the current buffer */
 
     bSuccess = GetConsoleScreenBufferInfo( hConsole, &csbi );
     PERR( bSuccess, "GetConsoleScreenBufferInfo" );
     dwConSize = csbi.dwSize.X * csbi.dwSize.Y;
 
-    /* fill the entire screen with blanks */ 
+    /* fill the entire screen with blanks */
 
     bSuccess = FillConsoleOutputCharacter( hConsole, (TCHAR) ' ',
        dwConSize, coordScreen, &cCharsWritten );
     PERR( bSuccess, "FillConsoleOutputCharacter" );
 
-    /* get the current text attribute */ 
+    /* get the current text attribute */
 
     bSuccess = GetConsoleScreenBufferInfo( hConsole, &csbi );
     PERR( bSuccess, "ConsoleScreenBufferInfo" );
 
-    /* now set the buffer's attributes accordingly */ 
+    /* now set the buffer's attributes accordingly */
 
     bSuccess = FillConsoleOutputAttribute( hConsole, csbi.wAttributes,
        dwConSize, coordScreen, &cCharsWritten );
     PERR( bSuccess, "FillConsoleOutputAttribute" );
 
-    /* put the cursor at (0, 0) */ 
+    /* put the cursor at (0, 0) */
 
     bSuccess = SetConsoleCursorPosition( hConsole, coordScreen );
     PERR( bSuccess, "SetConsoleCursorPosition" );
@@ -151,7 +151,7 @@ void ViewTNode ()
 					if (nodes[i] == CONTENTS_SOLID)
 						cprintf ("SOLID");
 					else if (nodes[i] == CONTENTS_SKY)
-						cprintf ("SKY");
+						cprintf (BRUSHKEY_SKY);
 					else if (nodes[i] < 0)
 						cprintf ("EMPTY (%d)", nodes[i]);
 					else
@@ -372,14 +372,14 @@ int TestLine_r( const int node, float p1f, float p2f, const vec3_t start, const 
 		VectorCopy (start, skyhit);
 	}
 #endif
-	if (   (node == CONTENTS_SOLID) 
-        || (node == CONTENTS_SKY  ) 
+	if (   (node == CONTENTS_SOLID)
+        || (node == CONTENTS_SKY  )
       /*|| (node == CONTENTS_NULL ) */
        )
 		return node;
 
     if (node < 0)
-        return CONTENTS_EMPTY; 
+        return CONTENTS_EMPTY;
 #endif
 
     tnode = &tnodes[node];

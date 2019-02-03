@@ -51,7 +51,7 @@ static void UpdateStatus(void)
 			Log("%d...",g_numProcessed);
 		}
 	}
-}	
+}
 
 // =====================================================================================
 //  FaceSide
@@ -982,7 +982,7 @@ static surface_t* ChoosePlaneFromList(surface_t* surfaces, const vec3_t mins, co
             l = plane->type;
 
             if (l <= last_axial)
-            {                                              // axial aligned                                                
+            {                                              // axial aligned
                 //
                 // calculate the split metric along axis l
                 //
@@ -1136,7 +1136,7 @@ static surface_t* SelectPartition(surface_t* surfaces, const node_t* const node,
 #ifdef HLBSP_ChooseMidPlane_FIX
 	if (usemidsplit)
 	{
-		surface_t *s = ChooseMidPlaneFromList(surfaces, 
+		surface_t *s = ChooseMidPlaneFromList(surfaces,
 #ifdef HLBSP_MAXNODESIZE_SKYBOX
 			validmins, validmaxs
 #else
@@ -1158,7 +1158,7 @@ static surface_t* SelectPartition(surface_t* surfaces, const node_t* const node,
     if (usemidsplit)
     {
         // do fast way for clipping hull
-        return ChooseMidPlaneFromList(surfaces, 
+        return ChooseMidPlaneFromList(surfaces,
 #ifdef HLBSP_MAXNODESIZE_SKYBOX
 			validmins, validmaxs
 #else
@@ -1409,7 +1409,7 @@ static void     SplitNodeSurfaces(surface_t* surfaces, const node_t* const node)
 
     frontlist = NULL;
     backlist = NULL;
-	
+
     for (p = surfaces; p; p = next)
     {
         next = p->next;
@@ -1622,7 +1622,7 @@ static void FreeLeafBrushes (node_t *leaf)
 
 // =====================================================================================
 //  LinkLeafFaces
-//      Determines the contents of the leaf and creates the final list of original faces 
+//      Determines the contents of the leaf and creates the final list of original faces
 //      that have some fragment inside this leaf
 // =====================================================================================
 #ifdef HLBSP_MAX_LEAF_FACES
@@ -1641,13 +1641,13 @@ const char*     ContentsToString(int contents)
     case CONTENTS_SOLID:
         return "SOLID";
     case CONTENTS_WATER:
-        return "WATER";
+        return BRUSHKEY_WATER;
     case CONTENTS_SLIME:
         return "SLIME";
     case CONTENTS_LAVA:
         return "LAVA";
     case CONTENTS_SKY:
-        return "SKY";
+        return BRUSHKEY_SKY;
     case CONTENTS_CURRENT_0:
         return "CURRENT_0";
     case CONTENTS_CURRENT_90:
@@ -1739,18 +1739,18 @@ static void     LinkLeafFaces(surface_t* planelist, node_t* leafnode)
 		{
 			ent = NULL;
 		}
-		Warning ("Ambiguous leafnode content ( %s and %s ) at (%.0f,%.0f,%.0f)-(%.0f,%.0f,%.0f) in hull %d of model %d (entity: classname \"%s\", origin \"%s\", targetname \"%s\")", 
-			ContentsToString (ContentsForRank(r)), ContentsToString (ContentsForRank(rank)), 
-			leafnode->mins[0], leafnode->mins[1], leafnode->mins[2], leafnode->maxs[0], leafnode->maxs[1], leafnode->maxs[2], 
-			g_hullnum, g_nummodels - 1, 
-			(ent? ValueForKey (ent, "classname"): "unknown"), 
-			(ent? ValueForKey (ent, "origin"): "unknown"), 
+		Warning ("Ambiguous leafnode content ( %s and %s ) at (%.0f,%.0f,%.0f)-(%.0f,%.0f,%.0f) in hull %d of model %d (entity: classname \"%s\", origin \"%s\", targetname \"%s\")",
+			ContentsToString (ContentsForRank(r)), ContentsToString (ContentsForRank(rank)),
+			leafnode->mins[0], leafnode->mins[1], leafnode->mins[2], leafnode->maxs[0], leafnode->maxs[1], leafnode->maxs[2],
+			g_hullnum, g_nummodels - 1,
+			(ent? ValueForKey (ent, "classname"): "unknown"),
+			(ent? ValueForKey (ent, "origin"): "unknown"),
 			(ent? ValueForKey (ent, "targetname"): "unknown"));
 		for (surface_t *surf2 = planelist; surf2; surf2 = surf2->next)
 		{
 			for (face_t *f2 = surf2->faces; f2; f2 = f2->next)
 			{
-				Developer (DEVELOPER_LEVEL_SPAM, "content = %d plane = %d normal = (%g,%g,%g)\n", f2->contents, f2->planenum, 
+				Developer (DEVELOPER_LEVEL_SPAM, "content = %d plane = %d normal = (%g,%g,%g)\n", f2->contents, f2->planenum,
 					g_dplanes[f2->planenum].normal[0], g_dplanes[f2->planenum].normal[1], g_dplanes[f2->planenum].normal[2]);
 				for (int i = 0; i < f2->numpoints; i++)
 				{
@@ -1800,7 +1800,7 @@ static void MakeLeaf (node_t *leafnode)
 	int				nummarkfaces;
 	face_t			*markfaces[MAX_LEAF_FACES + 1];
 	surface_t		*surf;
-	face_t			*f;	
+	face_t			*f;
 
     leafnode->planenum = -1;
 
@@ -1862,7 +1862,7 @@ static void MakeLeaf (node_t *leafnode)
 
 // =====================================================================================
 //  MakeNodePortal
-//      Create the new portal by taking the full plane winding for the cutting plane and 
+//      Create the new portal by taking the full plane winding for the cutting plane and
 //      clipping it by all of the planes from the other portals.
 //      Each portal tracks the node that created it, so unused nodes can be removed later.
 // =====================================================================================
@@ -1908,7 +1908,7 @@ static void     MakeNodePortal(node_t* node)
 #endif
         {
 #ifdef ZHLT_WINDING_RemoveColinearPoints_VL
-			Developer (DEVELOPER_LEVEL_WARNING, 
+			Developer (DEVELOPER_LEVEL_WARNING,
 #else
             Warning(
 #endif
@@ -2022,7 +2022,7 @@ static void     SplitNodePortals(node_t *node)
 
 // =====================================================================================
 //  CalcNodeBounds
-//      Determines the boundaries of a node by minmaxing all the portal points, whcih 
+//      Determines the boundaries of a node by minmaxing all the portal points, whcih
 //      completely enclose the node.
 //      Returns true if the node should be midsplit.(very large)
 // =====================================================================================
@@ -2319,13 +2319,13 @@ static void     BuildBspTree_r(node_t* node)
 
 // =====================================================================================
 //  SolidBSP
-//      Takes a chain of surfaces plus a split type, and returns a bsp tree with faces 
+//      Takes a chain of surfaces plus a split type, and returns a bsp tree with faces
 //      off the nodes.
 //      The original surface chain will be completely freed.
 // =====================================================================================
-node_t*         SolidBSP(const surfchain_t* const surfhead, 
+node_t*         SolidBSP(const surfchain_t* const surfhead,
 #ifdef ZHLT_DETAILBRUSH
-						 brush_t *detailbrushes, 
+						 brush_t *detailbrushes,
 #endif
 						 bool report_progress)
 {

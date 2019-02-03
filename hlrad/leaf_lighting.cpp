@@ -18,13 +18,13 @@ vec_t g_anorms[NUMVERTEXNORMALS][3] =
 #include "anorms.h"
 };
 
-static vec3_t g_BoxDirections[6] = 
+static vec3_t g_BoxDirections[6] =
 {
-	{  1,  0,  0 }, 
+	{  1,  0,  0 },
 	{ -1,  0,  0 },
-	{  0,  1,  0 }, 
-	{  0, -1,  0 }, 
-	{  0,  0,  1 }, 
+	{  0,  1,  0 },
+	{  0, -1,  0 },
+	{  0,  0,  1 },
 	{  0,  0, -1 },
 };
 
@@ -72,7 +72,7 @@ static void BuildGammaTable( void )
 	float	g = bound( 0.5f, GAMMA, 3.0f );
 
 	g = 1.0 / g;
-	g1 = GAMMA * g; 
+	g1 = GAMMA * g;
 	g3 = 0.125f;
 
 	for( i = 0; i < 1024; i++ )
@@ -86,7 +86,7 @@ static void BuildGammaTable( void )
 		else f = 0.125 + (( f - g3 ) / ( 1.0 - g3 )) * 0.875;
 
 		// convert linear space to desired gamma space
-		inf = 255 * pow( f, g ); 
+		inf = 255 * pow( f, g );
 		lineartoscreen[i] = bound( 0, inf, 255 );
 	}
 }
@@ -170,7 +170,7 @@ void AddEmitSurfaceLights( const vec3_t vStart, vec3_t lightBoxColor[6] )
 				VectorMA( lightBoxColor[i], (t * ratio), wl->intensity, lightBoxColor[i] );
 			}
 		}
-	}	
+	}
 }
 
 static void CalcFaceExtents( dface_t *surf, float texturemins[2], float extents[2] )
@@ -238,7 +238,7 @@ static bool R_GetDirectLightFromSurface( dface_t *surf, const vec3_t point, ligh
 	{
 		const char *texname =  GetTextureByNumber(surf->texinfo);
 
-		if( !Q_strnicmp( texname, "sky", 3 ))
+		if( !Q_strnicmp( texname, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1 ))
 			info->hitsky = true;
 		return false; // no lightmaps
 	}
@@ -289,7 +289,7 @@ static bool R_GetDirectLightFromSurface( dface_t *surf, const vec3_t point, ligh
 
 	return true;
 }
-	
+
 /*
 =================
 R_RecursiveLightPoint
@@ -317,7 +317,7 @@ static bool R_RecursiveLightPoint( const int nodenum, float p1f, float p2f, cons
 	float midf = p1f + ( p2f - p1f ) * frac;
 	VectorLerp( start, frac, end, mid );
 
-	// co down front side	
+	// co down front side
 	if( R_RecursiveLightPoint( node->children[side], p1f, midf, start, mid, info ))
 		return true; // hit something
 
@@ -397,7 +397,7 @@ static void ComputeLightmapColorFromPoint( lightpoint_t *info, dworldlight_t* pS
 }
 
 //-----------------------------------------------------------------------------
-// Computes ambient lighting along a specified ray.  
+// Computes ambient lighting along a specified ray.
 // Ray represents a cone, tanTheta is the tan of the inner cone angle
 //-----------------------------------------------------------------------------
 void CalcRayAmbientLighting( const vec3_t vStart, const vec3_t vEnd, dworldlight_t *pSkyLight, float tanTheta, vec3_t radcolor )
@@ -420,10 +420,10 @@ void CalcRayAmbientLighting( const vec3_t vStart, const vec3_t vEnd, dworldlight
 
 	// until 20" we use the point sample, then blend in the average until we're covering 40"
 	// This is attempting to model the ray as a cone - in the ideal case we'd simply sample all
-	// luxels in the intersection of the cone with the surface.  Since we don't have surface 
+	// luxels in the intersection of the cone with the surface.  Since we don't have surface
 	// neighbor information computed we'll just approximate that sampling with a blend between
 	// a point sample and the face average.
-	// This yields results that are similar in that aliasing is reduced at distance while 
+	// This yields results that are similar in that aliasing is reduced at distance while
 	// point samples provide accuracy for intersections with near geometry
 	float scaleAvg = RemapValClamped( dist, 20, 40, 0.0f, 1.0f );
 
@@ -478,7 +478,7 @@ void ComputeAmbientFromSphericalSamples( const vec3_t p1, vec3_t lightBoxColor[6
 				t += c;
 			}
 		}
-		
+
 		VectorScale( lightBoxColor[j], ( 1.0 / t ), lightBoxColor[j] );
 	}
 
@@ -655,7 +655,7 @@ bool CastRayInLeaf( const vec3_t start, const vec3_t end, int leafIndex, float *
 
 // Generate a random point in the leaf's bounding volume
 // reject any points that aren't actually in the leaf
-// do a couple of tracing heuristics to eliminate points that are inside detail brushes 
+// do a couple of tracing heuristics to eliminate points that are inside detail brushes
 // or underneath displacement surfaces in the leaf
 // return once we have a valid point, use the center if one can't be computed quickly
 void GenerateLeafSamplePosition( int leafIndex, ambientlocallist_t *list, const leafplanes_t *leafPlanes, vec3_t samplePosition )
@@ -706,7 +706,7 @@ void GenerateLeafSamplePosition( int leafIndex, ambientlocallist_t *list, const 
 
 			if ( d < DIST_EPSILON )
 			{
-				// not inside the leaf, try again 
+				// not inside the leaf, try again
 				bValid = false;
 				break;
 			}
@@ -930,9 +930,9 @@ void Mod_LeafAmbientColorAtPos( vec3_t pOut[6], const vec3_t pos, ambientlocalli
 		if ( i == skipIndex )
 			continue;
 
-		// do an inverse squared distance weighted average of the samples to reconstruct 
+		// do an inverse squared distance weighted average of the samples to reconstruct
 		// the original function
-		VectorSubtract( list->samples[i].pos, pos, vDelta ); 
+		VectorSubtract( list->samples[i].pos, pos, vDelta );
 		float dist = DotProduct( vDelta, vDelta );
 		float factor = 1.0f / (dist + 1.0f);
 		totalFactor += factor;
@@ -1003,7 +1003,7 @@ void ComputeAmbientForLeaf( int leafID, ambientlocallist_t *list )
 	if ( g_dleafs[leafID].contents == CONTENTS_SOLID )
 	{
 		// don't generate any samples in solid leaves
-		// NOTE: We copy the nearest non-solid leaf 
+		// NOTE: We copy the nearest non-solid leaf
 		// sample pointers into this leaf at the end
 		return;
 	}
@@ -1053,7 +1053,7 @@ static void LeafAmbientLightingSingle( int leafID )
 	if ( g_dleafs[leafID].contents == CONTENTS_SOLID )
 	{
 		// don't generate any samples in solid leaves
-		// NOTE: We copy the nearest non-solid leaf 
+		// NOTE: We copy the nearest non-solid leaf
 		// sample pointers into this leaf at the end
 		return;
 	}
@@ -1079,11 +1079,11 @@ void ComputeLeafAmbientLighting( void )
 	for ( i = 0; i < g_numworldlights; i++ )
 	{
 		dworldlight_t *wl = &g_dworldlights[i];
-		
+
 		if ( IsLeafAmbientSurfaceLight( wl ) )
 			wl->flags |= DWL_FLAGS_INAMBIENTCUBE;
 		else wl->flags &= ~DWL_FLAGS_INAMBIENTCUBE;
-	
+
 		if ( wl->emittype == emit_surface )
 			nSurfaceLights++;
 

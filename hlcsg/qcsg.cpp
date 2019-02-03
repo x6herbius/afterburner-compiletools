@@ -548,7 +548,7 @@ static void     SaveOutside(const brush_t* const b, const int hull, bface_t* out
 		backnull = false;
 		if (mirrorcontents == CONTENTS_TOEMPTY)
 		{
-			if (strncasecmp (texname, "SKIP", 4) && strncasecmp (texname, "HINT", 4)
+			if (strncasecmp (texname, BRUSHKEY_SKIP, sizeof(BRUSHKEY_SKIP) - 1) && strncasecmp (texname, BRUSHKEY_HINT, sizeof(BRUSHKEY_HINT) - 1)
 	#ifdef HLCSG_HLBSP_SOLIDHINT
 				&& strncasecmp (texname, "SOLIDHINT", 9)
 	#endif
@@ -619,7 +619,7 @@ static void     SaveOutside(const brush_t* const b, const int hull, bface_t* out
 
 			if (texinfo != -1 // nullified textures (NULL, BEVEL, aaatrigger, etc.)
 				&& !(tex->flags & TEX_SPECIAL) // sky
-				&& strncasecmp (texname, "SKIP", 4) && strncasecmp (texname, "HINT", 4) // HINT and SKIP will be nullified only after hlbsp
+				&& strncasecmp (texname, BRUSHKEY_SKIP, sizeof(BRUSHKEY_SKIP) - 1) && strncasecmp (texname, BRUSHKEY_HINT, sizeof(BRUSHKEY_HINT) - 1) // HINT and SKIP will be nullified only after hlbsp
 	#ifdef HLCSG_HLBSP_SOLIDHINT
 				&& strncasecmp (texname, "SOLIDHINT", 9)
 	#endif
@@ -988,7 +988,7 @@ static void CSGBrush(int brushnum)
 					)
 				{
 					const char *texname = GetTextureByNumber_CSG (f->texinfo);
-					if (f->texinfo == -1 || !strncasecmp (texname, "SKIP", 4) || !strncasecmp (texname, "HINT", 4)
+					if (f->texinfo == -1 || !strncasecmp (texname, BRUSHKEY_SKIP, sizeof(BRUSHKEY_SKIP) - 1) || !strncasecmp (texname, BRUSHKEY_HINT, sizeof(BRUSHKEY_HINT) - 1)
 	#ifdef HLCSG_HLBSP_SOLIDHINT
 						|| !strncasecmp (texname, "SOLIDHINT", 9)
 	#endif
@@ -1323,7 +1323,7 @@ void     ReuseModel ()
 		}
 		if (j == g_numentities)
 		{
-			if (!strcasecmp (name, "null"))
+			if (!strcasecmp (name, SPECIALTEX_NULL))
 			{
 				SetKeyValue (&g_entities[i], "model", "");
 				continue;
@@ -1423,7 +1423,7 @@ static void SetLightStyles( void )
 		if( *ValueForKey( e, "zhlt_usestyle" ))
 		{
 			t = ValueForKey( e, "zhlt_usestyle" );
-			if( !strcasecmp( t, "null" ))
+			if( !strcasecmp( t, SPECIALTEX_NULL ))
 			{
 				t = "";
 			}
@@ -1595,7 +1595,7 @@ void WriteBSP(const char* const name)
         side_t*         side = &g_brushsides[g_numbrushsides];
 
         *side = g_brushsides[b->firstside + i];
-        safe_strncpy(side->td.name, "CLIP", sizeof(side->td.name));
+        safe_strncpy(side->td.name, BRUSHKEY_CLIP, sizeof(side->td.name));
 
         for (j = 0; j < NUM_HULLS; j++)
         {

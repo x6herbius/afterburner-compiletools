@@ -528,9 +528,9 @@ lumpinfo_t*     FindTexture(const lumpinfo_t* const source)
     if (!found)
     {
         Warning("::FindTexture() texture %s not found!", source->name);
-        if (!strcmp(source->name, "NULL")
+        if (!strcmp(source->name, BRUSHKEY_NULL)
 #ifdef HLCSG_PASSBULLETSBRUSH
-			|| !strcmp (source->name, "SKIP")
+			|| !strcmp (source->name, BRUSHKEY_SKIP)
 #endif
 			)
         {
@@ -887,7 +887,7 @@ void            WriteMiptex()
 				safe_strncat (szTmpWad, ";", MAX_VAL);
 			}
 		}
-		
+
 	#ifdef HLCSG_CHART_FIX
 		Log("\n");
 		if (*szTmpWad)
@@ -1054,7 +1054,7 @@ int             TexinfoForBrushTexture(const plane_t* const plane, brush_texture
     int             i, j, k;
 
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
-	if (!strncasecmp(bt->name, "NULL", 4))
+	if (!strncasecmp(bt->name, BRUSHKEY_NULL, sizeof(BRUSHKEY_NULL) - 1))
 	{
 		return -1;
 	}
@@ -1062,10 +1062,10 @@ int             TexinfoForBrushTexture(const plane_t* const plane, brush_texture
     memset(&tx, 0, sizeof(tx));
 #ifndef HLCSG_CUSTOMHULL
 #ifdef HLCSG_PRECISIONCLIP
-	if(!strncmp(bt->name,"BEVEL",5))
+	if(!strncmp(bt->name,BRUSHKEY_BEVEL,sizeof(BRUSHKEY_BEVEL) - 1))
 	{
 		tx.flags |= TEX_BEVEL;
-		safe_strncpy(bt->name,"NULL",5);
+		safe_strncpy(bt->name,BRUSHKEY_NULL,sizeof(BRUSHKEY_NULL));
 	}
 #endif
 #endif
@@ -1088,28 +1088,28 @@ int             TexinfoForBrushTexture(const plane_t* const plane, brush_texture
     tx.miptex = texmap64_store(strdup(bt->name));
 #endif
 
-#ifdef ZHLT_PARANOIA_BSP   
+#ifdef ZHLT_PARANOIA_BSP
     tx.faceinfo = bt->faceinfo;
 #endif
 
     // set the special flag
     if (bt->name[0] == '*'
-        || !strncasecmp(bt->name, "sky", 3)
+        || !strncasecmp(bt->name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1)
 
 // =====================================================================================
 //Cpt_Andrew - Env_Sky Check
 // =====================================================================================
-        || !strncasecmp(bt->name, "env_sky", 5)
+        || !strncasecmp(bt->name, SPECIALTEX_ENV_SKY, sizeof(SPECIALTEX_ENV_SKY) - 1)
 // =====================================================================================
 
 #ifndef HLCSG_CUSTOMHULL
-        || !strncasecmp(bt->name, "clip", 4)
+        || !strncasecmp(bt->name, SPECIALTEX_CLIP, sizeof(SPECIALTEX_CLIP) - 1)
 #endif
-        || !strncasecmp(bt->name, "origin", 6)
+        || !strncasecmp(bt->name, SPECIALTEX_ORIGIN, sizeof(SPECIALTEX_ORIGIN) - 1)
 #ifdef ZHLT_NULLTEX // AJM
-        || !strncasecmp(bt->name, "null", 4)
+        || !strncasecmp(bt->name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1)
 #endif
-        || !strncasecmp(bt->name, "aaatrigger", 10)
+        || !strncasecmp(bt->name, SPECIALTEX_AAATRIGGER, sizeof(SPECIALTEX_AAATRIGGER) - 1)
        )
     {
 		// actually only 'sky' and 'aaatrigger' needs this. --vluzacn

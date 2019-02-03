@@ -557,7 +557,7 @@ void ExpandBrushWithHullBrush (const brush_t *brush, const brushhull_t *hull0, c
 	axialbevel = (bool *)malloc (hb->numfaces * sizeof (bool));
 	memset (axialbevel, 0, hb->numfaces * sizeof (bool));
 	warned = false;
-	
+
 	// check for collisions of face-vertex type. face-edge type is also permitted. face-face type is excluded.
 	for (f = hull0->faces; f; f = f->next)
 	{
@@ -598,7 +598,7 @@ void ExpandBrushWithHullBrush (const brush_t *brush, const brushhull_t *hull0, c
 			}
 			continue; // the same plane will be added in the last stage
 		}
-		
+
 		// find the impact point
 		vec3_t bestvertex;
 		vec_t bestdist;
@@ -1509,7 +1509,7 @@ bool            MakeBrushPlanes(brush_t* b)
         planenum = PlaneFromPoints(s->planepts[0], s->planepts[1], s->planepts[2]);
         if (planenum == -1)
         {
-            Fatal(assume_PLANE_WITH_NO_NORMAL, "Entity %i, Brush %i, Side %i: plane with no normal", 
+            Fatal(assume_PLANE_WITH_NO_NORMAL, "Entity %i, Brush %i, Side %i: plane with no normal",
 #ifdef HLCSG_COUNT_NEW
 				b->originalentitynum, b->originalbrushnum
 #else
@@ -1562,30 +1562,30 @@ bool            MakeBrushPlanes(brush_t* b)
 static contents_t TextureContents(const char* const name)
 {
 #ifdef HLCSG_CUSTOMCONTENT
-	if (!strncasecmp(name, "contentsolid", 12))
+	if (!strncasecmp(name, SPECIALTEX_CUSTOMCONTENT_SOLID, sizeof(SPECIALTEX_CUSTOMCONTENT_SOLID) - 1))
 		return CONTENTS_SOLID;
-	if (!strncasecmp(name, "contentwater", 12))
+	if (!strncasecmp(name, SPECIALTEX_CUSTOMCONTENT_WATER, sizeof(SPECIALTEX_CUSTOMCONTENT_WATER) - 1))
 		return CONTENTS_WATER;
-	if (!strncasecmp(name, "contentempty", 12))
+	if (!strncasecmp(name, SPECIALTEX_CUSTOMCONTENT_EMPTY, sizeof(SPECIALTEX_CUSTOMCONTENT_EMPTY) - 1))
 		return CONTENTS_TOEMPTY;
-	if (!strncasecmp(name, "contentsky", 10))
+	if (!strncasecmp(name, SPECIALTEX_CUSTOMCONTENT_SKY, sizeof(SPECIALTEX_CUSTOMCONTENT_SKY) - 1))
 		return CONTENTS_SKY;
 #endif
-    if (!strncasecmp(name, "sky", 3))
+    if (!strncasecmp(name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1))
         return CONTENTS_SKY;
 
 // =====================================================================================
 //Cpt_Andrew - Env_Sky Check
 // =====================================================================================
 #ifdef HLCSG_TextureContents_FIX
-    if (!strncasecmp(name, "env_sky", 7))
+    if (!strncasecmp(name, SPECIALTEX_ENV_SKY, sizeof(SPECIALTEX_ENV_SKY) - 1))
 #else
-    if (!strncasecmp(name, "env_sky", 3))
+    if (!strncasecmp(name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1))
 #endif
         return CONTENTS_SKY;
 // =====================================================================================
 #ifdef ZHLT_TRANSLUCENT_WORLD_WATER
-    if (!strncasecmp(name, "water", 5))
+    if (!strncasecmp(name, SPECIALTEX_WATER, sizeof(SPECIALTEX_WATER) - 1))
         return CONTENTS_WATER;
 #endif
     if (!strncasecmp(name + 1, "!lava", 5))
@@ -1618,7 +1618,7 @@ static contents_t TextureContents(const char* const name)
         return CONTENTS_WATER; //default for liquids
 	}
 
-    if (!strncasecmp(name, "origin", 6))
+    if (!strncasecmp(name, SPECIALTEX_ORIGIN, sizeof(SPECIALTEX_ORIGIN) - 1))
         return CONTENTS_ORIGIN;
 #ifdef HLCSG_HLBSP_CUSTOMBOUNDINGBOX
 	if (!strncasecmp(name, "boundingbox", 11))
@@ -1626,7 +1626,7 @@ static contents_t TextureContents(const char* const name)
 #endif
 
 #ifndef HLCSG_CUSTOMHULL
-    if (!strncasecmp(name, "clip", 4))
+    if (!strncasecmp(name, SPECIALTEX_CLIP, sizeof(SPECIALTEX_CLIP) - 1))
         return CONTENTS_CLIP;
 #endif
 
@@ -1637,14 +1637,14 @@ static contents_t TextureContents(const char* const name)
 #ifdef HLCSG_NOSPLITBYHINT
 	if (!strncasecmp(name, "splitface", 9))
 		return CONTENTS_HINT;
-	if (!strncasecmp(name, "hint", 4))
+	if (!strncasecmp(name, SPECIALTEX_HINT, sizeof(SPECIALTEX_HINT) - 1))
 		return CONTENTS_TOEMPTY;
-	if (!strncasecmp(name, "skip", 4))
+	if (!strncasecmp(name, SPECIALTEX_SKIP, sizeof(SPECIALTEX_SKIP) - 1))
 		return CONTENTS_TOEMPTY;
 #else
-    if (!strncasecmp(name, "hint", 4))
+    if (!strncasecmp(name, SPECIALTEX_HINT, sizeof(SPECIALTEX_HINT) - 1 ))
         return CONTENTS_HINT;
-    if (!strncasecmp(name, "skip", 4))
+    if (!strncasecmp(name, SPECIALTEX_SKIP, sizeof(SPECIALTEX_SKIP) - 1))
         return CONTENTS_HINT;
 #endif
 
@@ -1655,10 +1655,10 @@ static contents_t TextureContents(const char* const name)
         return CONTENTS_TRANSLUCENT;
 
 #ifdef ZHLT_NULLTEX // AJM:
-	if (!strncasecmp(name, "null", 4))
+	if (!strncasecmp(name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1))
         return CONTENTS_NULL;
 #ifdef HLCSG_PRECISIONCLIP // KGP
-	if(!strncasecmp(name,"bevel",5))
+	if(!strncasecmp(name,SPECIALTEX_BEVEL,sizeof(SPECIALTEX_BEVEL) - 1))
 		return CONTENTS_NULL;
 #endif //precisionclip
 #endif //nulltex
@@ -1678,22 +1678,22 @@ const char*     ContentsToString(const contents_t type)
     case CONTENTS_SOLID:
         return "SOLID";
     case CONTENTS_WATER:
-        return "WATER";
+        return BRUSHKEY_WATER;
     case CONTENTS_SLIME:
         return "SLIME";
     case CONTENTS_LAVA:
         return "LAVA";
     case CONTENTS_SKY:
-        return "SKY";
+        return BRUSHKEY_SKY;
     case CONTENTS_ORIGIN:
-        return "ORIGIN";
+        return BRUSHKEY_ORIGIN;
 #ifdef HLCSG_HLBSP_CUSTOMBOUNDINGBOX
 	case CONTENTS_BOUNDINGBOX:
 		return "BOUNDINGBOX";
 #endif
 #ifndef HLCSG_CUSTOMHULL
     case CONTENTS_CLIP:
-        return "CLIP";
+        return BRUSHKEY_CLIP;
 #endif
     case CONTENTS_CURRENT_0:
         return "CURRENT_0";
@@ -1710,11 +1710,11 @@ const char*     ContentsToString(const contents_t type)
     case CONTENTS_TRANSLUCENT:
         return "TRANSLUCENT";
     case CONTENTS_HINT:
-        return "HINT";
+        return BRUSHKEY_HINT;
 
 #ifdef ZHLT_NULLTEX // AJM
     case CONTENTS_NULL:
-        return "NULL";
+        return BRUSHKEY_NULL;
 #endif
 
 #ifdef HLCSG_EMPTYBRUSH
@@ -1765,7 +1765,7 @@ contents_t      CheckBrushContents(const brush_t* const b)
 #ifdef HLCSG_CUSTOMCONTENT
 	// Difference between SKIP, ContentEmpty:
 	// SKIP doesn't split space in bsp process, ContentEmpty splits space normally.
-	if (!(strncasecmp (s->td.name, "content", 7) && strncasecmp (s->td.name, "skip", 4)))
+	if (!(strncasecmp (s->td.name, SPECIALTEX_CUSTOMCONTENT_PREFIX, sizeof(SPECIALTEX_CUSTOMCONTENT_PREFIX) - 1) && strncasecmp (s->td.name, SPECIALTEX_SKIP, sizeof(SPECIALTEX_SKIP) - 1)))
 		assigned = true;
 #endif
     s++;
@@ -1775,7 +1775,7 @@ contents_t      CheckBrushContents(const brush_t* const b)
 #ifdef HLCSG_CUSTOMCONTENT
 		if (assigned)
 			continue;
-		if (!(strncasecmp (s->td.name, "content", 7) && strncasecmp (s->td.name, "skip", 4)))
+		if (!(strncasecmp (s->td.name, SPECIALTEX_CUSTOMCONTENT_PREFIX, sizeof(SPECIALTEX_CUSTOMCONTENT_PREFIX) - 1) && strncasecmp (s->td.name, SPECIALTEX_SKIP, sizeof(SPECIALTEX_SKIP) - 1)))
 		{
 			best_i = i;
 			best_contents = contents_consider;
@@ -1805,8 +1805,8 @@ contents_t      CheckBrushContents(const brush_t* const b)
         contents_t contents2 = TextureContents(s->td.name);
 #ifdef HLCSG_CUSTOMCONTENT
 		if (assigned
-			&& strncasecmp (s->td.name, "content", 7)
-			&& strncasecmp (s->td.name, "skip", 4)
+			&& strncasecmp (s->td.name, SPECIALTEX_CUSTOMCONTENT_PREFIX, sizeof(SPECIALTEX_CUSTOMCONTENT_PREFIX) - 1)
+			&& strncasecmp (s->td.name, SPECIALTEX_SKIP, sizeof(SPECIALTEX_SKIP) - 1)
 			&& contents2 != CONTENTS_ORIGIN
 			&& contents2 != CONTENTS_HINT
 #ifdef HLCSG_HLBSP_CUSTOMBOUNDINGBOX
@@ -1831,14 +1831,14 @@ contents_t      CheckBrushContents(const brush_t* const b)
         {
             Fatal(assume_MIXED_FACE_CONTENTS, "Entity %i, Brush %i: mixed face contents\n    Texture %s and %s",
 #ifdef HLCSG_COUNT_NEW
-				b->originalentitynum, b->originalbrushnum, 
+				b->originalentitynum, b->originalbrushnum,
 #else
-				b->entitynum, b->brushnum, 
+				b->entitynum, b->brushnum,
 #endif
 #ifdef HLCSG_CheckBrushContents_FIX
                 g_brushsides[b->firstside + best_i].td.name,
 #else
-                g_brushsides[b->firstside].td.name, 
+                g_brushsides[b->firstside].td.name,
 #endif
 				s->td.name);
         }
@@ -1860,11 +1860,11 @@ contents_t      CheckBrushContents(const brush_t* const b)
 #endif
 			)
         {
-            Fatal(assume_BRUSH_NOT_ALLOWED_IN_WORLD, "Entity %i, Brush %i: %s brushes not allowed in world\n(did you forget to tie this origin brush to a rotating entity?)", 
+            Fatal(assume_BRUSH_NOT_ALLOWED_IN_WORLD, "Entity %i, Brush %i: %s brushes not allowed in world\n(did you forget to tie this origin brush to a rotating entity?)",
 #ifdef HLCSG_COUNT_NEW
-				b->originalentitynum, b->originalbrushnum, 
+				b->originalentitynum, b->originalbrushnum,
 #else
-				b->entitynum, b->brushnum, 
+				b->entitynum, b->brushnum,
 #endif
 				ContentsToString(contents));
         }
@@ -1899,11 +1899,11 @@ contents_t      CheckBrushContents(const brush_t* const b)
             break;
 #endif
         default:
-            Fatal(assume_BRUSH_NOT_ALLOWED_IN_ENTITY, "Entity %i, Brush %i: %s brushes not allowed in entity", 
+            Fatal(assume_BRUSH_NOT_ALLOWED_IN_ENTITY, "Entity %i, Brush %i: %s brushes not allowed in entity",
 #ifdef HLCSG_COUNT_NEW
-				b->originalentitynum, b->originalbrushnum, 
+				b->originalentitynum, b->originalbrushnum,
 #else
-				b->entitynum, b->brushnum, 
+				b->entitynum, b->brushnum,
 #endif
 				ContentsToString(contents));
             break;
