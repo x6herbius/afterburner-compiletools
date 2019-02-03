@@ -1539,7 +1539,7 @@ int ParseImplicitTexinfoFromTexture( int miptex )
 	}
 
 	mt = (miptex_t *)&g_dtexdata[offset];
-	safe_strncpy (name, mt->name, 16);
+	safe_strncpy(name, mt->name, MAX_TEXTURE_NAME_LENGTH);
 
 	if (!(strlen (name) >= 6 && !strncasecmp (&name[1], "_rad", 4) && '0' <= name[5] && name[5] <= '9'))
 	{
@@ -2301,14 +2301,11 @@ void CDECL dtexdata_free( void )
 //      Touchy function, can fail with a page fault if all the data isnt kosher
 //      (i.e. map was compiled with missing textures)
 // =====================================================================================
-#ifdef HLCSG_HLBSP_VOIDTEXINFO
-static char emptystring[1] = {'\0'};
-#endif
-char*           GetTextureByNumber(int texturenumber)
+const char* GetTextureByNumber(int texturenumber)
 {
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
 	if (texturenumber == -1)
-		return emptystring;
+		return "";
 #endif
     texinfo_t*      info;
     miptex_t*       miptex;

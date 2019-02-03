@@ -231,8 +231,7 @@ void DefaultTexture (radtexture_t *tex, const char *name)
 	int i;
 	tex->width = 16;
 	tex->height = 16;
-	strcpy (tex->name, name);
-	tex->name[16 - 1] = '\0';
+	safe_strncpy(tex->name, name, sizeof(tex->name));
 	tex->canvas = (byte *)malloc (tex->width * tex->height);
 	hlassume (tex->canvas != NULL, assume_NoMemory);
 	for (i = 0; i < 256; i++)
@@ -252,8 +251,7 @@ void LoadTexture (radtexture_t *tex, const miptex_t *mt, int size)
 	const byte *data = (const byte *)mt;
 	tex->width = header->width;
 	tex->height = header->height;
-	strcpy (tex->name, header->name);
-	tex->name[16 - 1] = '\0';
+	safe_strncpy(tex->name, header->name, sizeof(tex->name));
 	if (tex->width <= 0 || tex->height <= 0 ||
 		tex->width % (2 * 1 << (MIPLEVELS - 1)) != 0 || tex->height % (2 * (1 << (MIPLEVELS - 1))) != 0)
 	{
@@ -270,7 +268,7 @@ void LoadTexture (radtexture_t *tex, const miptex_t *mt, int size)
 	}
 	if (size < (int)sizeof (miptex_t) + mipsize + 2 + 256 * 3)
 	{
-		Error ("Texture '%s': no enough data.", tex->name);
+		Error ("Texture '%s': not enough data.", tex->name);
 	}
 	if (*(unsigned short *)&data[sizeof (miptex_t) + mipsize] != 256)
 	{
@@ -298,13 +296,12 @@ void LoadTextureFromWad (radtexture_t *tex, const miptex_t *header)
 {
 	tex->width = header->width;
 	tex->height = header->height;
-	strcpy (tex->name, header->name);
-	tex->name[16 - 1] = '\0';
+	safe_strncpy(tex->name, header->name, sizeof(tex->name));
 	wadfile_t *wad;
 	for (wad = g_wadfiles; wad; wad = wad->next)
 	{
 		lumpinfo_t temp, *found;
-		strcpy (temp.name, tex->name);
+		safe_strncpy(temp.name, tex->name, sizeof(temp.name));
 		found = (lumpinfo_t *)bsearch (&temp, wad->lumpinfos, wad->numlumps, sizeof (lumpinfo_t), lump_sorter_by_name);
 		if (found)
 		{
@@ -1448,20 +1445,26 @@ void EmbedLightmapInTextures ()
 
 		if (texname[0] == '{')
 		{
-			strcpy (miptex->name, "{_rad");
+			safe_strncpy(miptex->name, "{_rad", sizeof(miptex->name));
 		}
 		/*else if (texname[0] == '!')
 		{
-			strcpy (miptex->name, "!_rad");
+			safe_strncpy(miptex->name, "!_rad", sizeof(miptex->name));
 		}*/
 		else
 		{
-			strcpy (miptex->name, "__rad");
+			safe_strncpy(miptex->name, "__rad", sizeof(miptex->name));
 		}
 		if (originaltexinfonum < 0 || originaltexinfonum > 99999)
 		{
 			Error ("EmbedLightmapInTextures: internal error: texinfo out of range");
 		}
+
+		if ( sizeof(miptex->name) < 16 )
+		{
+			Error("EmbedLightmapInTextures: internal error: texture name buffer size is too small");
+		}
+
 		miptex->name[5] = '0' + (originaltexinfonum / 10000) % 10; // store the original texinfo
 		miptex->name[6] = '0' + (originaltexinfonum / 1000) % 10;
 		miptex->name[7] = '0' + (originaltexinfonum / 100) % 10;

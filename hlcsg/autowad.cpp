@@ -41,7 +41,7 @@ void        autowad_PushName(const char* const texname)
         // first texture, make an entry
         tex = (autowad_texname_t*)malloc(sizeof(autowad_texname_t));
         tex->next = NULL;
-        strcpy_s(tex->name, texname);
+        safe_strncpy(tex->name, texname, sizeof(tex->name));
 
         g_autowad_texname = tex;
         g_numUsedTextures++;
@@ -51,7 +51,7 @@ void        autowad_PushName(const char* const texname)
 #endif
         return;
     }
-    
+
     // otherwise, see if texname isnt already in the list
     for (tex = g_autowad_texname; ;tex = tex->next)
     {
@@ -67,7 +67,7 @@ void        autowad_PushName(const char* const texname)
     autowad_texname_t*  last;
     last = tex;
     tex = (autowad_texname_t*)malloc(sizeof(autowad_texname_t));
-    strcpy_s(tex->name, texname);
+    safe_strncpy(tex->name, texname, sizeof(tex->name));
     tex->next = NULL;
     last->next = tex;
 
@@ -94,7 +94,7 @@ void        autowad_PurgeName(const char* const texname)
         if (!strcmp(current->name, texname))
         {
             if (!prev)      // start of the list
-            {   
+            {
                 g_autowad_texname = current->next;
             }
             else            // middle of list
@@ -120,7 +120,7 @@ void        autowad_PurgeName(const char* const texname)
 
 // =====================================================================================
 //  autowad_PopName
-//      removes a name from the autowad list, puts it in memory and retuns pointer (which 
+//      removes a name from the autowad list, puts it in memory and retuns pointer (which
 //      shoudl be destructed by the calling function later)
 // =====================================================================================
 char*      autowad_PopName()
@@ -161,7 +161,7 @@ bool        autowad_IsUsedTexture(const char* const texname)
     autowad_texname_t*  current;
 
     if (!g_autowad_texname)
-        return false;  
+        return false;
 
     for (current = g_autowad_texname; ; current = current->next)
     {
@@ -291,14 +291,14 @@ void        autowad_UpdateUsedWads()
             char            szSubdir[_MAX_PATH];
 
             ExtractFile(pszWadFile, szFile);
-        
+
             ExtractFilePath(pszWadFile, szTmp);
             ExtractFile(szTmp, szSubdir);
 
             // szSubdir will have a trailing separator
             safe_snprintf(szTmp, _MAX_PATH, "%s" SYSTEM_SLASH_STR "%s%s", pszWadroot, szSubdir, szFile);
             texfile = fopen(szTmp, "rb");
-        
+
             #ifdef SYSTEM_POSIX
             if (!texfile)
             {
@@ -397,7 +397,7 @@ void        autowad_UpdateUsedWads()
             SafeRead(texfile, &thislump[nTexLumps], (sizeof(lumpinfo_t) - sizeof(int)) );  // iTexFile is NOT read from file
 
             CleanupName(thislump[nTexLumps].name, thislump[nTexLumps].name);
-        
+
             if (autowad_IsUsedTexture(thislump[nTexLumps].name))
             {
                 currentwad->usedbymap = true;
