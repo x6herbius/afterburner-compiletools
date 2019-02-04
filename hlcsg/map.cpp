@@ -459,7 +459,7 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 			b->noclip = true;
 		}
 
-		if( !strncasecmp( g_token, "BEVELBRUSH", 10 ))
+		if( !strncasecmp( g_token, BRUSHKEY_BEVELBRUSH, sizeof(BRUSHKEY_BEVELBRUSH) - 1 ))
 		{
 			strcpy( g_token, BRUSHKEY_NULL );
 			b->bevel = true;
@@ -477,17 +477,18 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 
 			b->cliphull |= (1 << NUM_HULLS); // arbitrary nonexistent hull
 
-			if( !strncasecmp( g_token, "CLIPHULL", 8 ) && ( h = g_token[8] - '0', 0 < h && h < NUM_HULLS ))
+			if( !strncasecmp( g_token, BRUSHKEY_PREFIX_CLIPHULL, sizeof(BRUSHKEY_PREFIX_CLIPHULL) - 1 ) &&
+							  ( h = g_token[sizeof(BRUSHKEY_PREFIX_CLIPHULL) - 1] - '0', 0 < h && h < NUM_HULLS ))
 			{
 				b->cliphull |= (1 << h); // hull h
 			}
 
-			if( !strncasecmp( g_token, "CLIPBEVEL", 9 ))
+			if( !strncasecmp( g_token, BRUSHKEY_CLIPBEVEL, sizeof(BRUSHKEY_CLIPBEVEL) - 1 ))
 			{
 				side->bevel = true;
 			}
 
-			if( !strncasecmp( g_token, "CLIPBEVELBRUSH", 14 ))
+			if( !strncasecmp( g_token, BRUSHKEY_CLIPBEVELBRUSH, sizeof(BRUSHKEY_CLIPBEVELBRUSH) - 1 ))
 			{
 				b->bevel = true;
 			}
@@ -662,10 +663,10 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 			&& strncasecmp( side->td.name,BRUSHKEY_HINT, sizeof(BRUSHKEY_HINT) - 1 ) && strncasecmp( side->td.name, BRUSHKEY_SKIP, sizeof(BRUSHKEY_SKIP) - 1 )
 #endif
 #ifdef HLCSG_HLBSP_SOLIDHINT
-			&& strncasecmp( side->td.name, "SOLIDHINT", 9 )
+			&& strncasecmp( side->td.name, BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1 )
 #endif
 #ifdef HLCSG_NOSPLITBYHINT
-			&& strncasecmp( side->td.name, "SPLITFACE", 9 )
+			&& strncasecmp( side->td.name, BRUSHKEY_SPLITFACE, sizeof(BRUSHKEY_SPLITFACE) - 1 )
 #endif
 #ifdef HLCSG_HLBSP_CUSTOMBOUNDINGBOX
 			&& strncasecmp( side->td.name, "BOUNDINGBOX", 11 )
@@ -684,7 +685,7 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 	{
 		// change to SKIP now that we have set brush content.
 		side = &g_brushsides[b->firstside + j];
-		if( !strncasecmp( side->td.name, "SPLITFACE", 9 ))
+		if( !strncasecmp( side->td.name, BRUSHKEY_SPLITFACE, sizeof(BRUSHKEY_SPLITFACE) - 1 ))
 		{
 			strcpy( side->td.name, BRUSHKEY_SKIP );
 		}

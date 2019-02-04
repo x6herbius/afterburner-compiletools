@@ -1003,7 +1003,7 @@ bool            CheckFaceForSkip(const face_t* const f)
 bool CheckFaceForDiscardable (const face_t *f)
 {
 	const char *name = GetTextureByNumber (f->texturenum);
-	if (!strncasecmp (name, "SOLIDHINT", 9))
+	if (!strncasecmp (name, BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1))
 		return true;
 	return false;
 }

@@ -550,7 +550,7 @@ static void     SaveOutside(const brush_t* const b, const int hull, bface_t* out
 		{
 			if (strncasecmp (texname, BRUSHKEY_SKIP, sizeof(BRUSHKEY_SKIP) - 1) && strncasecmp (texname, BRUSHKEY_HINT, sizeof(BRUSHKEY_HINT) - 1)
 	#ifdef HLCSG_HLBSP_SOLIDHINT
-				&& strncasecmp (texname, "SOLIDHINT", 9)
+				&& strncasecmp (texname, BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1)
 	#endif
 				)
 				// SKIP and HINT are special textures for hlbsp
@@ -559,7 +559,7 @@ static void     SaveOutside(const brush_t* const b, const int hull, bface_t* out
 			}
 		}
 	#ifdef HLCSG_HLBSP_SOLIDHINT
-		if (!strncasecmp (texname, "SOLIDHINT", 9))
+		if (!strncasecmp (texname, BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1))
 		{
 			if (frontcontents != backcontents)
 			{
@@ -621,7 +621,7 @@ static void     SaveOutside(const brush_t* const b, const int hull, bface_t* out
 				&& !(tex->flags & TEX_SPECIAL) // sky
 				&& strncasecmp (texname, BRUSHKEY_SKIP, sizeof(BRUSHKEY_SKIP) - 1) && strncasecmp (texname, BRUSHKEY_HINT, sizeof(BRUSHKEY_HINT) - 1) // HINT and SKIP will be nullified only after hlbsp
 	#ifdef HLCSG_HLBSP_SOLIDHINT
-				&& strncasecmp (texname, "SOLIDHINT", 9)
+				&& strncasecmp (texname, BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1)
 	#endif
 				)
 			{
@@ -990,7 +990,7 @@ static void CSGBrush(int brushnum)
 					const char *texname = GetTextureByNumber_CSG (f->texinfo);
 					if (f->texinfo == -1 || !strncasecmp (texname, BRUSHKEY_SKIP, sizeof(BRUSHKEY_SKIP) - 1) || !strncasecmp (texname, BRUSHKEY_HINT, sizeof(BRUSHKEY_HINT) - 1)
 	#ifdef HLCSG_HLBSP_SOLIDHINT
-						|| !strncasecmp (texname, "SOLIDHINT", 9)
+						|| !strncasecmp (texname, BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1)
 	#endif
 						)
 					{
@@ -1175,7 +1175,7 @@ static void CSGBrush(int brushnum)
 							f->backcontents = b2->contents;
 						if (f->contents == CONTENTS_SOLID && f->backcontents == CONTENTS_SOLID
 #ifdef HLCSG_HLBSP_SOLIDHINT
-							&& strncasecmp (GetTextureByNumber_CSG (f->texinfo), "SOLIDHINT", 9)
+							&& strncasecmp (GetTextureByNumber_CSG (f->texinfo), BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1)
 #endif
 							)
 						{
@@ -1191,7 +1191,7 @@ static void CSGBrush(int brushnum)
 #endif
                     if (b1->contents > b2->contents
 #ifdef HLCSG_HLBSP_SOLIDHINT
-						|| b1->contents == b2->contents && !strncasecmp (GetTextureByNumber_CSG (f->texinfo), "SOLIDHINT", 9)
+						|| b1->contents == b2->contents && !strncasecmp (GetTextureByNumber_CSG (f->texinfo), BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1)
 #endif
 						)
                     {                                      // inside a water brush
