@@ -696,6 +696,9 @@ typedef struct
 #ifdef HLRAD_REFLECTIVITY
 	vec3_t reflectivity;
 #endif
+#ifdef ZHLT_AFTERBURNER
+	bool ignorePalette;
+#endif
 } radtexture_t;
 extern int g_numtextures;
 extern radtexture_t *g_textures;

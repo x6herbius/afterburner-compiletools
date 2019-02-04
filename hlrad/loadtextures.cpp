@@ -54,6 +54,65 @@ typedef struct wadfile_s
 wadfile_t *g_wadfiles = NULL;
 bool g_wadfiles_opened;
 
+#ifdef HLRAD_TEXTURE
+typedef byte rgbpixel_t[3];
+
+static inline void Texture_GetPaletteColour(const radtexture_t* const texture, const unsigned char paletteIndex, rgbpixel_t outColour)
+{
+	static const rgbpixel_t DEFAULT_COLOUR = { 0, 0, 0 };
+
+	if ( !outColour )
+	{
+		return;
+	}
+
+	if ( !texture || texture->ignorePalette )
+	{
+		VectorCopy(DEFAULT_COLOUR, outColour);
+		return;
+	}
+
+	VectorCopy(texture->palette[paletteIndex], outColour);
+}
+
+static inline void Texture_GetPaletteTransparentColour(const radtexture_t* const texture, rgbpixel_t outColour)
+{
+	Texture_GetPaletteColour(texture, 255, outColour);
+}
+
+static inline void Texture_GetCanvasColourBySequentialIndex(const radtexture_t* const texture, const unsigned int index, rgbpixel_t outColour)
+{
+	if ( !texture || index >= texture->width * texture->height )
+	{
+		// Will return default colour.
+		Texture_GetPaletteColour(0, 0, outColour);
+		return;
+	}
+
+	if ( texture->ignorePalette )
+	{
+		Warning("TODO: Implement non-palette RAD textures!");
+		Texture_GetPaletteColour(0, 0, outColour);
+		return;
+	}
+
+	Texture_GetPaletteColour(texture, texture->canvas[index], outColour);
+}
+
+static inline void Texture_GetCanvasColour(const radtexture_t* const texture, const unsigned int x, const unsigned int y, rgbpixel_t outColour)
+{
+	if ( !texture )
+	{
+		// Will return default colour.
+		Texture_GetPaletteColour(0, 0, outColour);
+		return;
+	}
+
+	// This call validates the inputs anyway.
+	Texture_GetCanvasColourBySequentialIndex(texture, (y * texture->width) + x, outColour);
+}
+#endif
+
 static int CDECL lump_sorter_by_name (const void *lump1, const void *lump2)
 {
 	lumpinfo_t *plump1 = (lumpinfo_t *)lump1;
@@ -231,6 +290,7 @@ void DefaultTexture (radtexture_t *tex, const char *name)
 	int i;
 	tex->width = 16;
 	tex->height = 16;
+	tex->ignorePalette = false;
 	safe_strncpy(tex->name, name, sizeof(tex->name));
 	tex->canvas = (byte *)malloc (tex->width * tex->height);
 	hlassume (tex->canvas != NULL, assume_NoMemory);
@@ -394,7 +454,9 @@ void LoadTextures ()
 				}
 				else
 				{
-					VectorScale (tex->palette[tex->canvas[j]], 1.0/255.0, reflectivity);
+					rgbpixel_t colour;
+					Texture_GetCanvasColourBySequentialIndex(tex, j, colour);
+					VectorScale (colour, 1.0/255.0, reflectivity);
 					for (int k = 0; k < 3; k++)
 					{
 						reflectivity[k] = pow (reflectivity[k], g_texreflectgamma);
@@ -1176,7 +1238,7 @@ void EmbedLightmapInTextures ()
 				double src_s, src_t;
 				int src_is, src_it;
 				byte src_index;
-				byte src_color[3];
+				rgbpixel_t src_color;
 				double dest_s, dest_t;
 				int dest_is, dest_it;
 				float (*dest)[5];
@@ -1213,7 +1275,7 @@ void EmbedLightmapInTextures ()
 				src_is = qmax (0, qmin (src_is, tex->width - 1));
 				src_it = qmax (0, qmin (src_it, tex->height - 1));
 				src_index = tex->canvas[src_it * tex->width + src_is];
-				VectorCopy (tex->palette[src_index], src_color);
+				Texture_GetPaletteColour(tex, src_index, src_color);
 
 				// get light from the center of the destination pixel
 				light_s = (s_vec + resolution * (dest_is + 0.5 - dest_s)) / texture_step - texmins[0];
@@ -1325,7 +1387,7 @@ void EmbedLightmapInTextures ()
 			{
 				paletteoffset = 0;
 				palettemaxcolors = 255;
-				VectorCopy (tex->palette[255], palette[255]); // the transparency color
+				Texture_GetPaletteTransparentColour(tex, palette[255]); // the transparency color
 			}
 			/*else if (texname[0] == '!')
 			{

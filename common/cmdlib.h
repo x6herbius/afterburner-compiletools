@@ -86,7 +86,7 @@
 #define ZHLT_XASH // build the compiler for Xash engine //--vluzacn
 	#ifdef ZHLT_XASH
 #define ZHLT_XASH2 // build the compiler for Xash engine with change in bsp format //--vluzacn
-#define ZHLT_AFTERBURNER
+#define ZHLT_AFTERBURNER // Holy #define hell, Batman! For the record, the only reason I'm not rewriting these tools in C++ is that it'd take forever.
 	#endif
 #define ZHLT_WRITE_MODEL_ORIGIN // g-cont. store into dmodel_t their real origins
 #define ZHLT_CALC_AMBIENT_SOUNDS // g-cont. calc auto-ambient sounds like Quake1
@@ -612,6 +612,13 @@
 #if defined (ZHLT_XASH) || defined (ZHLT_XASH2)
 #if !defined (ZHLT_TEXLIGHT) || !defined (HLRAD_LERP_VL) || !defined (HLRAD_AUTOCORING) || !defined (HLRAD_MULTISKYLIGHT) || !defined (HLRAD_FinalLightFace_VL) || !defined (HLRAD_AVOIDNORMALFLIP)
 #error "ZHLT_XASH has not been implemented for current configuration"
+#endif
+#endif
+
+#ifdef ZHLT_AFTERBURNER
+// These are all the options that Afterburner support depends on.
+#if !defined(HLRAD_TEXTURE)
+#error "Missing required features to support Afterburner BSPs."
 #endif
 #endif
 //=====================================================================
