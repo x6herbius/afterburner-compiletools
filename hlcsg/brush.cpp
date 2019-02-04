@@ -1585,19 +1585,19 @@ static contents_t TextureContents(const char* const name)
         return CONTENTS_SKY;
 // =====================================================================================
 #ifdef ZHLT_TRANSLUCENT_WORLD_WATER
-    if (!strncasecmp(name, SPECIALTEX_WATER, sizeof(SPECIALTEX_WATER) - 1))
+    if (!strncasecmp(name, SPECIALTEX_LIQUID_WATER, sizeof(SPECIALTEX_LIQUID_WATER) - 1))
         return CONTENTS_WATER;
 #endif
-    if (!strncasecmp(name + 1, "!lava", 5))
+    if (!strncasecmp(name + 1, SPECIALTEX_LIQUID_LAVA, sizeof(SPECIALTEX_LIQUID_LAVA) - 1))
         return CONTENTS_LAVA;
 
-    if (!strncasecmp(name + 1, "!slime", 6))
+    if (!strncasecmp(name + 1, SPECIALTEX_LIQUID_SLIME, sizeof(SPECIALTEX_LIQUID_SLIME) - 1))
         return CONTENTS_SLIME;
 #ifdef HLCSG_TextureContents_FIX
-    if (!strncasecmp(name, "!lava", 5))
+    if (!strncasecmp(name, SPECIALTEX_LIQUID_LAVA, sizeof(SPECIALTEX_LIQUID_LAVA) - 1))
         return CONTENTS_LAVA;
 
-    if (!strncasecmp(name, "!slime", 6))
+    if (!strncasecmp(name, SPECIALTEX_LIQUID_SLIME, sizeof(SPECIALTEX_LIQUID_SLIME) - 1))
         return CONTENTS_SLIME;
 #endif
 
