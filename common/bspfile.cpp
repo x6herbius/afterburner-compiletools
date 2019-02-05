@@ -7,6 +7,7 @@
 #include "bspfile.h"
 #include "scriplib.h"
 #include "blockmem.h"
+#include "bsptextures.h"
 
 //=============================================================================
 
@@ -1290,17 +1291,15 @@ int CountBlocks ()
 bool NoWadTextures ()
 {
 	// copied from loadtextures.cpp
-	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
-	for (int i = 0; i < numtextures; i++)
+	const unsigned int numtextures = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
+	for (unsigned int i = 0; i < numtextures; i++)
 	{
-		int offset = ((dmiptexlump_t *)g_dtexdata)->dataofs[i];
-		int size = g_texdatasize - offset;
-		if (offset < 0 || size < (int)sizeof (miptex_t))
+		miptex_t *mt = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, i);
+		if ( !mt )
 		{
-			// missing textures have ofs -1
 			continue;
 		}
-		miptex_t *mt = (miptex_t *)&g_dtexdata[offset];
+
 		if (!mt->offsets[0])
 		{
 			return false;
@@ -1521,26 +1520,15 @@ void PrintBSPFileSizes( void )
 int ParseImplicitTexinfoFromTexture( int miptex )
 {
 	int texinfo;
-	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
-	int offset;
-	int size;
-	miptex_t *mt;
 	char name[MAX_TEXTURE_NAME_LENGTH];
 
-	if (miptex < 0 || miptex >= numtextures)
+	miptex_t* const mt = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, miptex);
+	if ( !mt )
 	{
 		Warning ("ParseImplicitTexinfoFromTexture: internal error: invalid texture number %d.", miptex);
 		return -1;
 	}
-	offset = ((dmiptexlump_t *)g_dtexdata)->dataofs[miptex];
-	size = g_texdatasize - offset;
-	if (offset < 0 || g_dtexdata + offset < (byte *)&((dmiptexlump_t *)g_dtexdata)->dataofs[numtextures] ||
-		size < (int)sizeof (miptex_t))
-	{
-		return -1;
-	}
 
-	mt = (miptex_t *)&g_dtexdata[offset];
 	safe_strncpy(name, mt->name, MAX_TEXTURE_NAME_LENGTH);
 
 	if (!(strlen (name) >= 6 && !strncasecmp (&name[1], "_rad", 4) && '0' <= name[5] && name[5] <= '9'))
@@ -2309,15 +2297,9 @@ const char* GetTextureByNumber(int texturenumber)
 	if (texturenumber == -1)
 		return "";
 #endif
-    texinfo_t*      info;
-    miptex_t*       miptex;
-    int             ofs;
-
-    info = &g_texinfo[texturenumber];
-    ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
-    miptex = (miptex_t*)(&g_dtexdata[ofs]);
-
-    return miptex->name;
+    texinfo_t* info = &g_texinfo[texturenumber];
+	miptex_t* miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, info->miptex);
+	return miptex ? miptex->name : NULL;
 }
 
 // =====================================================================================

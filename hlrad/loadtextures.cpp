@@ -89,12 +89,14 @@ static inline void Texture_GetCanvasColourBySequentialIndex(const radtexture_t* 
 		return;
 	}
 
+#ifdef ZHLT_AFTERBURNER
 	if ( texture->ignorePalette )
 	{
 		Warning("TODO: Implement non-palette RAD textures!");
 		Texture_GetPaletteColour(0, 0, outColour);
 		return;
 	}
+#endif
 
 	Texture_GetPaletteColour(texture, texture->canvas[index], outColour);
 }

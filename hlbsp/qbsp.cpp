@@ -885,13 +885,13 @@ bool            CheckFaceForNull(const face_t* const f)
 			return true;
 		return false;
 #else
-        texinfo_t*      info;
-        miptex_t*       miptex;
-        int             ofs;
+        texinfo_t* info = &g_texinfo[f->texturenum];
+        miptex_t* miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, info->miptex);
 
-        info = &g_texinfo[f->texturenum];
-        ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
-        miptex = (miptex_t*)(&g_dtexdata[ofs]);
+        if ( !miptex )
+        {
+            return false;
+        }
 
         if (!strcasecmp(miptex->name, SPECIALTEX_NULL))
             return true;
@@ -920,13 +920,13 @@ bool            CheckFaceForEnv_Sky(const face_t* const f)
 		return true;
 	return false;
 #else
-        texinfo_t*      info;
-        miptex_t*       miptex;
-        int             ofs;
+        texinfo_t* info = &g_texinfo[f->texturenum];
+        miptex_t* miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, info->miptex);
 
-        info = &g_texinfo[f->texturenum];
-        ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
-        miptex = (miptex_t*)(&g_dtexdata[ofs]);
+        if ( !miptex )
+        {
+            return false;
+        }
 
         if (!strcasecmp(miptex->name, SPECIALTEX_ENV_SKY))
             return true;
@@ -949,13 +949,13 @@ bool            CheckFaceForHint(const face_t* const f)
 		return true;
 	return false;
 #else
-    texinfo_t*      info;
-    miptex_t*       miptex;
-    int             ofs;
+    texinfo_t* info = &g_texinfo[f->texturenum];
+    miptex_t* miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, info->miptex);
 
-    info = &g_texinfo[f->texturenum];
-    ofs = ((dmiptexlump_t *)g_dtexdata)->dataofs[info->miptex];
-    miptex = (miptex_t *)(&g_dtexdata[ofs]);
+    if ( !miptex )
+    {
+        return false;
+    }
 
     if (!strcasecmp(miptex->name, SPECIALTEX_HINT))
     {
@@ -980,13 +980,13 @@ bool            CheckFaceForSkip(const face_t* const f)
 		return true;
 	return false;
 #else
-    texinfo_t*      info;
-    miptex_t*       miptex;
-    int             ofs;
+    texinfo_t* info = &g_texinfo[f->texturenum];
+    miptex_t* miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, info->miptex);
 
-    info = &g_texinfo[f->texturenum];
-    ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
-    miptex = (miptex_t*)(&g_dtexdata[ofs]);
+    if ( !miptex )
+    {
+        return false;
+    }
 
     if (!strcasecmp(miptex->name, SPECIALTEX_SKIP))
     {
