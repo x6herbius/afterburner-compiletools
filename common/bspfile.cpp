@@ -645,7 +645,7 @@ void LoadBSPImage( dheader_t* const header )
 	g_nummarksurfaces = CopyLump( LUMP_MARKSURFACES, g_dmarksurfaces, sizeof( g_dmarksurfaces[0] ), header );
 	g_numsurfedges = CopyLump( LUMP_SURFEDGES, g_dsurfedges, sizeof( g_dsurfedges[0] ), header );
 	g_numedges = CopyLump( LUMP_EDGES, g_dedges, sizeof( dedge_t ), header );
-	g_texdatasize = CopyLump( LUMP_TEXTURES, g_dtexdata, 1, header );
+	BSPTextures_SetLumpData(g_dtexdata, g_texdatasize, LUMP_TEXTURES, header);
 	g_visdatasize = CopyLump( LUMP_VISIBILITY, g_dvisdata, 1, header );
 	g_lightdatasize = CopyLump( LUMP_LIGHTING, g_dlightdata, 1, header );
 	g_entdatasize = CopyLump( LUMP_ENTITIES, g_dentdata, 1, header );
@@ -1674,7 +1674,7 @@ void DeleteEmbeddedLightmaps( void )
 			int datasize = (g_dtexdata + texdata->dataofs[numremaining]) - dataaddr;
 			byte *newdataaddr = (byte *)&texdata->dataofs[numremaining];
 			memmove (newdataaddr, dataaddr, datasize);
-			g_texdatasize = (newdataaddr + datasize) - g_dtexdata;
+			BSPTextures_SetLumpSizeViaPointerComparison(g_dtexdata, g_texdatasize, newdataaddr + datasize);
 			texdata->nummiptex = numremaining;
 			for (i = 0; i < numremaining; i++)
 			{

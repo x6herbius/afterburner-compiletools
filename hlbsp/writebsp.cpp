@@ -11,6 +11,7 @@
 //  FinishBSPFile
 
 #include <map>
+#include "bsptextures.h"
 
 typedef std::map< int, int > PlaneMap;
 static PlaneMap gPlaneMap;
@@ -973,7 +974,7 @@ void            FinishBSPFile()
 			memcpy (&l->dataofs[Num], newdata, newdatasize);
 			Log ("Reduced %d texdatas to %d (%d bytes to %d)\n", g_nummiptex, Num, g_texdatasize, Size);
 			g_nummiptex = Num;
-			g_texdatasize = Size;
+			BSPTextures_SetLumpSize(g_dtexdata, g_texdatasize, Size);
 			skipReduceTexdata:;
 			free (lumpsizes);
 			free (newdata);

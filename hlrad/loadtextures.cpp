@@ -1,4 +1,5 @@
 #include "qrad.h"
+#include "bsptextures.h"
 #ifdef HLRAD_TEXTURE
 
 #ifdef WORDS_BIGENDIAN
@@ -968,7 +969,7 @@ void NewTextures_Write ()
 	byte *newdataaddr = (byte *)&texdata->dataofs[texdata->nummiptex + g_newtextures_num];
 	hlassume (g_texdatasize + (newdataaddr - dataaddr) <= g_max_map_miptex, assume_MAX_MAP_MIPTEX);
 	memmove (newdataaddr, dataaddr, datasize);
-	g_texdatasize += newdataaddr - dataaddr;
+	BSPTextures_IncrementLumpSize(g_dtexdata, g_texdatasize, newdataaddr - dataaddr);
 	for (i = 0; i < texdata->nummiptex; i++)
 	{
 		if (texdata->dataofs[i] < 0) // bad texture
@@ -984,7 +985,7 @@ void NewTextures_Write ()
 		hlassume (g_texdatasize + g_newtextures_size[i] <= g_max_map_miptex, assume_MAX_MAP_MIPTEX);
 		memcpy (g_dtexdata + g_texdatasize, g_newtextures_data[i], g_newtextures_size[i]);
 		texdata->dataofs[texdata->nummiptex + i] = g_texdatasize;
-		g_texdatasize += g_newtextures_size[i];
+		BSPTextures_IncrementLumpSize(g_dtexdata, g_texdatasize, g_newtextures_size[i]);
 	}
 	texdata->nummiptex += g_newtextures_num;
 

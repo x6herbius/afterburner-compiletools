@@ -1,4 +1,5 @@
 #include "csg.h"
+#include "bsptextures.h"
 
 #define MAXWADNAME 16
 #define MAX_TEXFILES 128
@@ -813,7 +814,7 @@ void            WriteMiptex()
     dmiptexlump_t*  l;
     double          start, end;
 
-    g_texdatasize = 0;
+    BSPTextures_SetLumpSize(g_dtexdata, g_texdatasize, 0);
 
     start = I_FloatTime();
     {
@@ -1017,7 +1018,7 @@ void            WriteMiptex()
             }
             data += len;
         }
-        g_texdatasize = data - g_dtexdata;
+        BSPTextures_SetLumpSizeViaPointerComparison(g_dtexdata, g_texdatasize, data);
 #ifdef ZHLT_NOWADDIR
 		writewad_header.infotableofs = ftell (writewad_file);
 		SafeWrite (writewad_file, writewad_lumpinfos, writewad_header.numlumps * sizeof (dlumpinfo_t));

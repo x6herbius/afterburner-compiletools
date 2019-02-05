@@ -1,11 +1,13 @@
 #include "bsptextures.h"
+#include "messages.h"
+#include "log.h"
 
-unsigned int BSPTextures_TextureCount(byte* const texData, const int size)
+unsigned int BSPTextures_TextureCount(const byte* const texData, const int size)
 {
-	return (texData && size > 0) ? ((dmiptexlump_t *)texData)->nummiptex : 0;
+	return (texData && size > 0) ? ((const dmiptexlump_t *)texData)->nummiptex : 0;
 }
 
-int BSPTextures_GetTextureOffset(byte* const texData, const int size, const unsigned int index)
+int BSPTextures_GetTextureOffset(const byte* const texData, const int size, const unsigned int index)
 {
 	const unsigned int count = BSPTextures_TextureCount(texData, size);
 
@@ -14,7 +16,7 @@ int BSPTextures_GetTextureOffset(byte* const texData, const int size, const unsi
 		return -1;
 	}
 
-	dmiptexlump_t* const header = (dmiptexlump_t*)texData;
+	const dmiptexlump_t* const header = (const dmiptexlump_t*)texData;
 	return header->dataofs[index];
 }
 
@@ -39,4 +41,54 @@ miptex_t* BSPTextures_GetTexture(byte* const texData, const int size, const unsi
 	}
 
 	return (miptex_t*)(texData[offset]);
+}
+
+void BSPTextures_SetLumpSize(const byte* const texData, int& size, const int newSize)
+{
+	size = newSize;
+}
+
+void BSPTextures_IncrementLumpSize(const byte* const texData, int& size, int increment)
+{
+	size += increment;
+}
+
+void BSPTextures_SetLumpSizeViaPointerComparison(const byte* const texData, int& size, const byte* const offsetPointer)
+{
+	if ( !texData || offsetPointer < texData )
+	{
+		BSPTextures_SetLumpSize(texData, size, 0);
+		return;
+	}
+
+	BSPTextures_SetLumpSize(texData, size, offsetPointer - texData);
+}
+
+void BSPTextures_SetLumpData(byte* const texData, int& size, const int lumpId, const dheader_t* const header)
+{
+	if ( !texData )
+	{
+		return;
+	}
+
+	if ( !header )
+	{
+		BSPTextures_SetLumpSize(texData, size, 0);
+		return;
+	}
+
+	const int length = header->lumps[lumpId].filelen;
+	const int offset = header->lumps[lumpId].fileofs;
+
+	if( length < 1 )
+	{
+		BSPTextures_SetLumpSize(texData, size, 0);
+		return;
+	}
+
+	// special handling for tex and lightdata to keep things from exploding - KGP
+	hlassume( g_max_map_miptex > length, assume_MAX_MAP_MIPTEX );
+
+	memcpy(texData, (const byte*)header + offset, length);
+	BSPTextures_SetLumpSize(texData, size, length);
 }
