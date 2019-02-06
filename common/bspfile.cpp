@@ -414,26 +414,7 @@ static void SwapBSPFile( const bool todisk )
 	//
 	// miptex
 	//
-	if( g_texdatasize )
-	{
-		mtl = (dmiptexlump_t*)g_dtexdata;
-
-		if( todisk )
-		{
-			c = mtl->nummiptex;
-		}
-		else
-		{
-			c = LittleLong( mtl->nummiptex );
-		}
-
-		mtl->nummiptex = LittleLong( mtl->nummiptex );
-
-		for( i = 0; i < c; i++ )
-		{
-			mtl->dataofs[i] = LittleLong( mtl->dataofs[i] );
-		}
-	}
+	BSPTextures_ByteSwapAll(g_dtexdata, g_texdatasize, !todisk);
 
 	//
 	// marksurfaces
@@ -548,9 +529,7 @@ static int CopyLump( int lump, void *dest, int size, const dheader_t *header )
 	}
 
 	// special handling for tex and lightdata to keep things from exploding - KGP
-	if( lump == LUMP_TEXTURES && dest == (void*)g_dtexdata )
-		hlassume( g_max_map_miptex > length, assume_MAX_MAP_MIPTEX );
-	else if( lump == LUMP_LIGHTING && dest == (void*)g_dlightdata )
+	if( lump == LUMP_LIGHTING && dest == (void*)g_dlightdata )
 		hlassume( g_max_map_lightdata > length, assume_MAX_MAP_LIGHTING );
 
 	memcpy( dest, (byte *)header + ofs, length );
@@ -813,6 +792,9 @@ void WriteBSPFile( const char* const filename )
 	AddLump( LUMP_LIGHTING,     g_dlightdata,    g_lightdatasize,                        header, bspfile );
 	AddLump( LUMP_VISIBILITY,   g_dvisdata,      g_visdatasize,                          header, bspfile );
 	AddLump( LUMP_ENTITIES,     g_dentdata,      g_entdatasize,                          header, bspfile );
+
+	// At the moment this is OK, since g_dtexdata is flat and contiguous.
+	// It may need to change in the future.
 	AddLump( LUMP_TEXTURES,     g_dtexdata,      g_texdatasize,                          header, bspfile );
 
 #ifdef ZHLT_PARANOIA_BSP
@@ -1409,7 +1391,7 @@ static int GlobUsage( const char *szItem, const int itemstorage, const int maxst
 // =====================================================================================
 void PrintBSPFileSizes( void )
 {
-	int	numtextures = g_texdatasize ? ((dmiptexlump_t *)g_dtexdata)->nummiptex : 0;
+	int numtextures = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
 	int	totalmemory = 0;
 #ifdef ZHLT_CHART_AllocBlock
 	int	numallocblocks = CountBlocks();
@@ -1577,7 +1559,7 @@ void DeleteEmbeddedLightmaps( void )
 	int countremovedtexinfos = 0;
 	int countremovedtextures = 0;
 	int i;
-	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
+	int numtextures = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
 
 	// Step 1: parse the original texinfo index stored in each "?_rad*" texture
 	//         and restore the texinfo for the faces that have had their lightmap embedded
@@ -1669,23 +1651,7 @@ void DeleteEmbeddedLightmaps( void )
 
 		if (numremaining < numtextures)
 		{
-			dmiptexlump_t *texdata = (dmiptexlump_t *)g_dtexdata;
-			byte *dataaddr = (byte *)&texdata->dataofs[texdata->nummiptex];
-			int datasize = (g_dtexdata + texdata->dataofs[numremaining]) - dataaddr;
-			byte *newdataaddr = (byte *)&texdata->dataofs[numremaining];
-			memmove (newdataaddr, dataaddr, datasize);
-			BSPTextures_SetLumpSizeViaPointerComparison(g_dtexdata, g_texdatasize, newdataaddr + datasize);
-			texdata->nummiptex = numremaining;
-			for (i = 0; i < numremaining; i++)
-			{
-				if (texdata->dataofs[i] < 0) // bad texture
-				{
-					continue;
-				}
-				texdata->dataofs[i] += newdataaddr - dataaddr;
-			}
-
-			numtextures = texdata->nummiptex;
+			BSPTextures_Reduce(g_dtexdata, g_texdatasize, numremaining);
 		}
 	}
 
@@ -2268,8 +2234,8 @@ entity_t *FindTargetEntity(const char* const target)
 
 void dtexdata_init( void )
 {
-	g_dtexdata = (byte *)AllocBlock( g_max_map_miptex );
-	hlassume( g_dtexdata != NULL, assume_NoMemory );
+	BSPTextures_Init(g_dtexdata, g_texdatasize, g_max_map_miptex);
+
 	g_dlightdata = (byte *)AllocBlock( g_max_map_lightdata );
 	hlassume( g_dlightdata != NULL, assume_NoMemory );
 	g_ddeluxdata = (byte *)AllocBlock( g_max_map_lightdata );
@@ -2278,8 +2244,8 @@ void dtexdata_init( void )
 
 void CDECL dtexdata_free( void )
 {
-	FreeBlock( g_dtexdata );
-	g_dtexdata = NULL;
+	BSPTextures_Free(g_dtexdata, g_texdatasize);
+
 	FreeBlock( g_dlightdata );
 	g_dlightdata = NULL;
 	FreeBlock( g_ddeluxdata );
