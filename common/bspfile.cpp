@@ -1651,7 +1651,7 @@ void DeleteEmbeddedLightmaps( void )
 
 		if (numremaining < numtextures)
 		{
-			BSPTextures_Reduce(g_dtexdata, g_texdatasize, numremaining);
+			BSPTextures_Trim(g_dtexdata, g_texdatasize, numremaining);
 		}
 	}
 

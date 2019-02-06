@@ -24,6 +24,8 @@ void BSPTextures_ByteSwapAll(byte* const texData, const int size, bool miptexCou
 
 // If newSize >= size, nothing happens.
 // The texture currently existing at newCount must also have a valid offset.
-void BSPTextures_Reduce(byte* const texData, int& size, const unsigned int newCount);
+void BSPTextures_Trim(byte* const texData, int& size, const unsigned int newCount);
+
+void BSPTextures_Reduce(byte* const texData, int& size, texinfo_t* const texInfo, const unsigned int texInfoCount);
 
 #endif // BSPTEXTURES_H
