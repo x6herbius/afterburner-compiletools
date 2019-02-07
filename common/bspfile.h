@@ -1,6 +1,7 @@
 #ifndef BSPFILE_H__
 #define BSPFILE_H__
 #include "cmdlib.h" //--vluzacn
+#include "mathlib.h"
 
 #if _MSC_VER >= 1000
 #pragma once
