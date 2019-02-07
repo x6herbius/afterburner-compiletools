@@ -66,7 +66,7 @@ miptex_t* BSPTextures_GetTexture(byte* const texData, const int size, const unsi
 		return NULL;
 	}
 
-	return (miptex_t*)(texData[offset]);
+	return (miptex_t*)(&texData[offset]);
 }
 
 byte* BSPTextures_RawDataBase(byte* const texData, const int size)
