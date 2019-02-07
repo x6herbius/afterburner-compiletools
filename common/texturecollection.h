@@ -7,17 +7,17 @@
 
 /*
 	Miptex structure, as far as I have been able to deduce:
-	- Name: MAX_TEXTURE_NAME_LENGTH bytes
-	- Width: unsigned int
-	- Height: unsigned int
-	- Mipmap offsets: 4 * unsigned int (offsets are from beginning of miptex)
+	- Name: MAX_TEXTURE_NAME_LENGTH chars
+	- Width: uint32
+	- Height: uint32
+	- Mipmap offsets: 4 * int32 (offsets are from beginning of miptex, or -1)
 	- Mipmap 0: width * height bytes
 	- Mipmap 1: (width / 2) * (height / 2) bytes
 	- Mipmap 2: (width / 4) * (height / 4) bytes
 	- Mipmap 3: (width / 8) * (height / 8) bytes
-	- Palette size: short
+	- Palette size: uint16
 	- Palette data: size * 3 bytes (ie. size * RGB pixels)
-	- Unknown: short, zero. Terminator? Padding?
+	- Unknown: uint16, zero. Terminator? Padding?
 */
 class MiptexWrapper
 {
