@@ -96,6 +96,32 @@ void BSPTextures_IncrementLumpSize(const byte* const texData, int& size, int inc
 	size += increment;
 }
 
+void BSPTextures_SetTextureDataOffset(byte* const texData, const int size, const unsigned int index, const int offset)
+{
+	if ( !texData || size < 1 )
+	{
+		return;
+	}
+
+	const int count = BSPTextures_TextureCount(texData, size);
+	if ( index >= count )
+	{
+		return;
+	}
+
+	((dmiptexlump_t*)texData)->dataofs[index] = offset;
+}
+
+void BSPTextures_SetTextureCount(byte* const texData, const int size, const int count)
+{
+	if ( !texData || size < 1 || count < 0 )
+	{
+		return;
+	}
+
+	((dmiptexlump_t*)texData)->nummiptex = count;
+}
+
 void BSPTextures_SetLumpSizeViaPointerComparison(const byte* const texData, int& size, const byte* const offsetPointer)
 {
 	if ( !texData || offsetPointer < texData )

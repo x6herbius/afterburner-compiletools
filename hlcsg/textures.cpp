@@ -811,7 +811,6 @@ void            WriteMiptex()
 {
     int             len, texsize, totaltexsize = 0;
     byte*           data;
-    dmiptexlump_t*  l;
     double          start, end;
 
     BSPTextures_SetLumpSize(g_dtexdata, g_texdatasize, 0);
@@ -940,13 +939,14 @@ void            WriteMiptex()
         int             i;
 
         // Now setup to get the miptex data (or just the headers if using -wadtextures) from the wadfile
-        l = (dmiptexlump_t*)g_dtexdata;
-        data = (byte*) & l->dataofs[nummiptex];
-        l->nummiptex = nummiptex;
+        BSPTextures_SetTextureCount(g_dtexdata, g_texdatasize, nummiptex);
+        data = BSPTextures_RawDataBase(g_dtexdata, g_texdatasize);
+
 #ifdef ZHLT_NOWADDIR
 		char writewad_name[_MAX_PATH];
 		FILE *writewad_file;
 		int writewad_maxlumpinfos;
+
 		typedef struct
 		{
 			int             filepos;
@@ -957,24 +957,33 @@ void            WriteMiptex()
 			char            pad1, pad2;
 			char            name[MAXWADNAME];
 		} dlumpinfo_t;
+
 		dlumpinfo_t *writewad_lumpinfos;
 		wadinfo_t writewad_header;
+
 		safe_snprintf (writewad_name, _MAX_PATH, "%s.wa_", g_Mapname);
+
 		writewad_file = SafeOpenWrite (writewad_name);
 		writewad_maxlumpinfos = nummiptex;
+
 		writewad_lumpinfos = (dlumpinfo_t *)malloc (writewad_maxlumpinfos * sizeof (dlumpinfo_t));
 		hlassume (writewad_lumpinfos != NULL, assume_NoMemory);
+
 		writewad_header.identification[0] = 'W';
 		writewad_header.identification[1] = 'A';
 		writewad_header.identification[2] = 'D';
 		writewad_header.identification[3] = '3';
 		writewad_header.numlumps = 0;
+
 		if (fseek (writewad_file, sizeof (wadinfo_t), SEEK_SET))
+        {
 			Error ("File write failure");
+        }
 #endif
         for (i = 0; i < nummiptex; i++)
         {
-            l->dataofs[i] = data - (byte*) l;
+            BSPTextures_SetTextureDataOffset(g_dtexdata, g_texdatasize, i, data - (byte*)g_dtexdata);
+
 #ifdef ZHLT_NOWADDIR
 			byte *writewad_data;
 			int writewad_datasize;
@@ -983,9 +992,11 @@ void            WriteMiptex()
 							, &g_dtexdata[g_max_map_miptex] - data
 #endif
 							, writewad_data, writewad_datasize);
+
 			if (writewad_data)
 			{
 				dlumpinfo_t *writewad_lumpinfo = &writewad_lumpinfos[writewad_header.numlumps];
+
 				writewad_lumpinfo->filepos = ftell (writewad_file);
 				writewad_lumpinfo->disksize = writewad_datasize;
 				writewad_lumpinfo->size = miptex[i].size;
@@ -993,8 +1004,10 @@ void            WriteMiptex()
 				writewad_lumpinfo->compression = miptex[i].compression;
 				writewad_lumpinfo->pad1 = miptex[i].pad1;
 				writewad_lumpinfo->pad2 = miptex[i].pad2;
+
 				memcpy (writewad_lumpinfo->name, miptex[i].name, MAXWADNAME);
 				writewad_header.numlumps++;
+
 				SafeWrite (writewad_file, writewad_data, writewad_datasize);
 				free (writewad_data);
 			}
@@ -1008,7 +1021,7 @@ void            WriteMiptex()
 
             if (!len)
             {
-                l->dataofs[i] = -1;                        // didn't find the texture
+                BSPTextures_SetTextureDataOffset(g_dtexdata, g_texdatasize, i, -1);
             }
             else
             {
@@ -1016,22 +1029,34 @@ void            WriteMiptex()
 
                 hlassume(totaltexsize < g_max_map_miptex, assume_MAX_MAP_MIPTEX);
             }
+
             data += len;
         }
+
         BSPTextures_SetLumpSizeViaPointerComparison(g_dtexdata, g_texdatasize, data);
+
 #ifdef ZHLT_NOWADDIR
 		writewad_header.infotableofs = ftell (writewad_file);
 		SafeWrite (writewad_file, writewad_lumpinfos, writewad_header.numlumps * sizeof (dlumpinfo_t));
+
 		if (fseek (writewad_file, 0, SEEK_SET))
+        {
 			Error ("File write failure");
+        }
+
 		SafeWrite (writewad_file, &writewad_header, sizeof (wadinfo_t));
+
 		if (fclose (writewad_file))
+        {
 			Error ("File write failure");
+        }
 #endif
     }
     end = I_FloatTime();
+
     Log("Texture usage is at %1.2f mb (of %1.2f mb MAX)\n", (float)totaltexsize / (1024 * 1024),
         (float)g_max_map_miptex / (1024 * 1024));
+
     Verbose("LoadLump() elapsed time = %ldms\n", (long)(end - start));
 }
 

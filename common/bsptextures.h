@@ -16,6 +16,8 @@ byte* BSPTextures_RawDataBase(byte* const texData, const int size);
 void BSPTextures_SetLumpSize(const byte* const texData, int& size, const int newSize);
 void BSPTextures_SetLumpSizeViaPointerComparison(const byte* const texData, int& size, const byte* const offsetPointer);
 void BSPTextures_IncrementLumpSize(const byte* const texData, int& size, int increment);
+void BSPTextures_SetTextureDataOffset(byte* const texData, const int size, const unsigned int index, const int offset);
+void BSPTextures_SetTextureCount(byte* const texData, const int size, const int count);
 
 // Also sets size.
 void BSPTextures_SetLumpData(byte* const texData, int& size, const int lumpId, const dheader_t* const header);

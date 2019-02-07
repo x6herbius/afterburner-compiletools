@@ -1,5 +1,6 @@
 #include "vis.h"
 #include "stringlib.h"
+#include "bsptextures.h"
 
 /*
 
@@ -87,24 +88,28 @@ void CalcAmbientSounds( void )
 			{
 				surf = &g_dfaces[g_dmarksurfaces[hit->firstmarksurface + k]];
 				info = &g_texinfo[surf->texinfo];
-				ofs = ((dmiptexlump_t *)g_dtexdata)->dataofs[info->miptex];
-				miptex = (miptex_t *)(&g_dtexdata[ofs]);
+				miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, info->miptex);
+
+				if ( !miptex )
+				{
+					continue;
+				}
 
 				if( !Q_strnicmp( miptex->name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1 ))
 				{
 					ambient_type = AMBIENT_SKY;
 				}
-				else if( miptex->name[0] == '!' )
+				else if( Q_strnicmp(miptex->name, SPECIALTEX_LIQUID_PREFIX, sizeof(SPECIALTEX_LIQUID_PREFIX) - 1) == 0 )
 				{
-					if( !Q_strnicmp( miptex->name, "!water", 6 ))
+					if( !Q_strnicmp( miptex->name, SPECIALTEX_LIQUID_WATER, sizeof(SPECIALTEX_LIQUID_WATER) - 1 ))
 					{
 						ambient_type = AMBIENT_WATER;
 					}
-					else if( !Q_strnicmp( miptex->name, "!slime", 6 ))
+					else if( !Q_strnicmp( miptex->name, SPECIALTEX_LIQUID_SLIME, sizeof(SPECIALTEX_LIQUID_SLIME) - 1 ))
 					{
 						ambient_type = AMBIENT_SLIME;
 					}
-					else if( !Q_strnicmp(miptex->name, "!lava", 6 ))
+					else if( !Q_strnicmp(miptex->name, SPECIALTEX_LIQUID_LAVA, sizeof(SPECIALTEX_LIQUID_LAVA) - 1 ))
 					{
 						ambient_type = AMBIENT_LAVA;
 					}
