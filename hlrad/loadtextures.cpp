@@ -411,15 +411,26 @@ void LoadTextures ()
 	{
 		Log ("Load Textures:\n");
 	}
-	g_numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
-	g_textures = (radtexture_t *)malloc (g_numtextures * sizeof (radtexture_t));
-	hlassume (g_textures != NULL, assume_NoMemory);
+
+	g_numtextures = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
+
+	if ( g_numtextures > 0 )
+	{
+		g_textures = (radtexture_t *)malloc(g_numtextures * sizeof(radtexture_t));
+		hlassume (g_textures != NULL, assume_NoMemory);
+	}
+	else
+	{
+		g_textures = NULL;
+	}
+
 	int i;
 	for (i = 0; i < g_numtextures; i++)
 	{
-		int offset = ((dmiptexlump_t *)g_dtexdata)->dataofs[i];
+		int offset = BSPTextures_GetTextureOffset(g_dtexdata, g_texdatasize, i);
 		int size = g_texdatasize - offset;
 		radtexture_t *tex = &g_textures[i];
+
 		if (g_notextures)
 		{
 			DefaultTexture (tex, "DEFAULT");
@@ -431,7 +442,7 @@ void LoadTextures ()
 		}
 		else
 		{
-			miptex_t *mt = (miptex_t *)&g_dtexdata[offset];
+			miptex_t *mt = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, i);
 			if (mt->offsets[0])
 			{
 				Developer (DEVELOPER_LEVEL_MESSAGE, "Texture '%s': found in '%s'.\n", mt->name, g_source);
@@ -937,8 +948,7 @@ static int g_newtextures_size[RADTEXTURES_MAX];
 
 int NewTextures_GetCurrentMiptexIndex ()
 {
-	dmiptexlump_t *texdata = (dmiptexlump_t *)g_dtexdata;
-	return texdata->nummiptex + g_newtextures_num;
+	return BSPTextures_TextureCount(g_dtexdata, g_texdatasize) + g_newtextures_num;
 }
 
 void NewTextures_PushTexture (int size, void *data)
@@ -962,37 +972,47 @@ void NewTextures_Write ()
 	}
 
 	int i;
-	dmiptexlump_t *texdata = (dmiptexlump_t *)g_dtexdata;
-
-	byte *dataaddr = (byte *)&texdata->dataofs[texdata->nummiptex];
+	byte *dataaddr = BSPTextures_RawDataBase(g_dtexdata, g_texdatasize);
 	int datasize = (g_dtexdata + g_texdatasize) - dataaddr;
-	byte *newdataaddr = (byte *)&texdata->dataofs[texdata->nummiptex + g_newtextures_num];
+
+	byte *newdataaddr = dataaddr + (g_newtextures_num * sizeof(int));
 	hlassume (g_texdatasize + (newdataaddr - dataaddr) <= g_max_map_miptex, assume_MAX_MAP_MIPTEX);
+
 	memmove (newdataaddr, dataaddr, datasize);
 	BSPTextures_IncrementLumpSize(g_dtexdata, g_texdatasize, newdataaddr - dataaddr);
-	for (i = 0; i < texdata->nummiptex; i++)
+
+	int textureCount = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
+	int offsetDiff = newdataaddr - dataaddr;
+
+	for (i = 0; i < textureCount; i++)
 	{
-		if (texdata->dataofs[i] < 0) // bad texture
+		int offset = BSPTextures_GetTextureOffset(g_dtexdata, g_texdatasize, i);
+
+		if (offset < 0) // bad texture
 		{
 			continue;
 		}
-		texdata->dataofs[i] += newdataaddr - dataaddr;
+
+		BSPTextures_SetTextureDataOffset(g_dtexdata, g_texdatasize, i, offset + offsetDiff);
 	}
 
-	hlassume (texdata->nummiptex + g_newtextures_num < MAX_MAP_TEXTURES, assume_MAX_MAP_TEXTURES);
+	hlassume (textureCount + g_newtextures_num < MAX_MAP_TEXTURES, assume_MAX_MAP_TEXTURES);
+
 	for (i = 0; i < g_newtextures_num; i++)
 	{
 		hlassume (g_texdatasize + g_newtextures_size[i] <= g_max_map_miptex, assume_MAX_MAP_MIPTEX);
 		memcpy (g_dtexdata + g_texdatasize, g_newtextures_data[i], g_newtextures_size[i]);
-		texdata->dataofs[texdata->nummiptex + i] = g_texdatasize;
 		BSPTextures_IncrementLumpSize(g_dtexdata, g_texdatasize, g_newtextures_size[i]);
+		BSPTextures_SetTextureDataOffset(g_dtexdata, g_texdatasize, textureCount + i, g_texdatasize);
 	}
-	texdata->nummiptex += g_newtextures_num;
+
+	BSPTextures_SetTextureCount(g_dtexdata, g_texdatasize, textureCount + g_newtextures_num);
 
 	for (i = 0; i < g_newtextures_num; i++)
 	{
-		free (g_newtextures_data[i]);
+		free(g_newtextures_data[i]);
 	}
+
 	g_newtextures_num = 0;
 }
 
@@ -1053,24 +1073,12 @@ static void GetLight (dface_t *face, const int texsize[2], double x, double y, v
 
 static bool GetValidTextureName (int miptex, char* name, unsigned int length)
 {
-	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
-	int offset;
-	int size;
-	miptex_t *mt;
-
-	if (miptex < 0 || miptex >= numtextures)
-	{
-		return false;
-	}
-	offset = ((dmiptexlump_t *)g_dtexdata)->dataofs[miptex];
-	size = g_texdatasize - offset;
-	if (offset < 0 || g_dtexdata + offset < (byte *)&((dmiptexlump_t *)g_dtexdata)->dataofs[numtextures] ||
-		size < (int)sizeof (miptex_t))
+	miptex_t* mt = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, miptex);
+	if ( !mt )
 	{
 		return false;
 	}
 
-	mt = (miptex_t *)&g_dtexdata[offset];
 	safe_strncpy (name, mt->name, length);
 
 	if (strcmp (name, mt->name))
