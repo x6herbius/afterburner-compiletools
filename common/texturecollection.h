@@ -4,6 +4,7 @@
 #include "bspfile.h"
 #include <vector>
 #include <memory>
+#include "blockallocator.h"
 
 /*
 	Miptex structure, as far as I have been able to deduce:
@@ -58,6 +59,15 @@ public:
 	// Returns an index into the colour palette for the specified pixel, or -1 on error.
 	int32_t paletteIndexAt(uint32_t x, uint32_t y, uint32_t mipLevel) const;
 
+	// Length of data is areaForMipLevel(level) bytes.
+	// Data is stored in row-major order ((y * width) + x).
+	uint8_t* rawMipmapData(uint32_t level);
+	const uint8_t* rawMipmapData(uint32_t level) const;
+
+	// Length of data is PALETTE_SIZE * sizeof(rgbpixel_t) bytes.
+	rgbpixel_t* rawPaletteData();
+	const rgbpixel_t* rawPaletteData() const;
+
 	// Returns a pointer to the RGB triple for the palette index, or NULL on error.
 	const rgbpixel_t* paletteColour(uint8_t paletteIndex) const;
 
@@ -77,15 +87,20 @@ public:
 	// The dimensions of the mipmaps will be initialised appropriately.
 	void setBlank();
 
+	// Assumes that the miptex pointer contains enough data given its dimensions.
+	bool setFromMiptex(const miptex_t* miptex);
+
 	static uint32_t dimensionForMipLevel(uint32_t dim, uint32_t level);
 	static uint32_t areaForMipLevel(uint32_t width, uint32_t height, uint32_t level);
 
 private:
+	typedef std::vector<byte, BlockAllocator<byte> > ByteArray;
+
 	char m_Name[MAX_TEXTURE_NAME_LENGTH];
 	uint32_t m_Width;
 	uint32_t m_Height;
-	std::vector<byte> m_Mipmaps[MIPLEVELS];
-	std::vector<byte> m_Palette;
+	ByteArray m_Mipmaps[MIPLEVELS];
+	ByteArray m_Palette;
 };
 
 class TextureCollection

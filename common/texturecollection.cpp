@@ -1,4 +1,5 @@
 #include "texturecollection.h"
+#include "hlassert.h"
 
 const uint32_t MiptexWrapper::PALETTE_SIZE = 256;
 
@@ -153,7 +154,7 @@ int32_t MiptexWrapper::paletteIndexAt(uint32_t x, uint32_t y, uint32_t mipLevel)
 		return -1;
 	}
 
-	const std::vector<byte>& mipmap = m_Mipmaps[mipLevel];
+	const ByteArray& mipmap = m_Mipmaps[mipLevel];
 	return static_cast<int32_t>(mipmap[(y * m_Width) + x]);
 }
 
@@ -176,6 +177,117 @@ const MiptexWrapper::rgbpixel_t* MiptexWrapper::colourAt(uint32_t x, uint32_t y,
 	}
 
 	return paletteColour(paletteIndex);
+}
+
+uint8_t* MiptexWrapper::rawMipmapData(uint32_t level)
+{
+	if ( level >= MIPLEVELS || !hasMipmap(level) )
+	{
+		return NULL;
+	}
+
+	return m_Mipmaps[level].data();
+}
+
+const uint8_t* MiptexWrapper::rawMipmapData(uint32_t level) const
+{
+	if ( level >= MIPLEVELS || !hasMipmap(level) )
+	{
+		return NULL;
+	}
+
+	return m_Mipmaps[level].data();
+}
+
+MiptexWrapper::rgbpixel_t* MiptexWrapper::rawPaletteData()
+{
+	if ( !hasPalette() )
+	{
+		return NULL;
+	}
+
+	return reinterpret_cast<rgbpixel_t*>(m_Palette.data());
+}
+
+const MiptexWrapper::rgbpixel_t* MiptexWrapper::rawPaletteData() const
+{
+	if ( !hasPalette() )
+	{
+		return NULL;
+	}
+
+	return reinterpret_cast<const rgbpixel_t*>(m_Palette.data());
+}
+
+bool MiptexWrapper::setFromMiptex(const miptex_t* miptex)
+{
+	if ( !miptex )
+	{
+		return false;
+	}
+
+	invalidate();
+
+	safe_strncpy(m_Name, miptex->name, sizeof(m_Name));
+
+	if ( !setDimensions(miptex->width, miptex->height) )
+	{
+		invalidate();
+		return false;
+	}
+
+	const byte* mipmapAddresses[MIPLEVELS];
+	memset(mipmapAddresses, 0, MIPLEVELS * sizeof(byte*));
+	size_t totalMipDataSize = 0;
+
+	for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )
+	{
+		if ( miptex->offsets[mipLevel] < 0 )
+		{
+			continue;
+		}
+
+		mipmapAddresses[mipLevel] = reinterpret_cast<const byte*>(miptex) + miptex->offsets[mipLevel];
+		totalMipDataSize += areaForMipLevel(mipLevel);
+	}
+
+	const byte* paletteBase = NULL;
+	uint16_t paletteSize = 0;
+
+	// If there is at least some mipmap data, we need a valid palette.
+	if ( totalMipDataSize > 0 )
+	{
+		paletteBase = reinterpret_cast<const byte*>(miptex) + sizeof(*miptex) + totalMipDataSize;
+		paletteSize = *reinterpret_cast<const uint16_t*>(paletteBase);
+
+		if ( paletteSize != PALETTE_SIZE)
+		{
+			invalidate();
+			return false;
+		}
+	}
+
+	// Copy in the mipmap data.
+	for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )
+	{
+		if ( !mipmapAddresses[mipLevel] )
+		{
+			continue;
+		}
+
+		initialiseMipmap(mipLevel);
+		memcpy(rawMipmapData(mipLevel), mipmapAddresses[mipLevel], m_Mipmaps[mipLevel].size());
+	}
+
+	if ( paletteSize > 0 )
+	{
+		// Copy in the palette data.
+		const byte* paletteData = paletteBase + sizeof(uint16_t);
+		initialisePalette();
+		memcpy(rawPaletteData(), paletteData, m_Palette.size());
+	}
+
+	return true;
 }
 
 uint32_t MiptexWrapper::widthForMipLevel(uint32_t level) const
