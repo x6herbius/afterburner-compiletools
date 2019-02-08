@@ -689,7 +689,7 @@ typedef struct
 #ifdef HLRAD_TEXTURE
 typedef struct
 {
-	char name[MAX_TEXTURE_NAME_LENGTH]; // not always same with the name in texdata
+	char name[MIPTEX_NAME_LENGTH]; // not always same with the name in texdata
 	int width, height;
 	byte *canvas; //[height][width]
 	byte palette[256][3];

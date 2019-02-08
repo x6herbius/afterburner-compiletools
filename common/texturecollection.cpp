@@ -110,6 +110,19 @@ void MiptexWrapper::initialisePalette()
 	m_Palette.resize(PALETTE_SIZE * sizeof(rgbpixel_t), 0);
 }
 
+bool MiptexWrapper::hasAnyMipmap() const
+{
+	for ( uint32_t level = 0; level < MIPLEVELS; ++level )
+	{
+		if ( hasMipmap(level) )
+		{
+			return true;
+		}
+	}
+
+	return false;
+}
+
 bool MiptexWrapper::hasMipmap(uint32_t level) const
 {
 	return level < MIPLEVELS && !m_Mipmaps[level].empty();
@@ -288,6 +301,69 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex)
 	}
 
 	return true;
+}
+
+bool MiptexWrapper::exportToMiptex(miptex_t* miptex) const
+{
+	if ( !canExport() )
+	{
+		return false;
+	}
+
+	safe_strncpy(miptex->name, m_Name, sizeof(miptex->name));
+	miptex->width = m_Width;
+	miptex->height = m_Height;
+
+	byte* const mipDataBase = reinterpret_cast<byte*>(miptex) + sizeof(*miptex);
+	int mipDataWritten = 0;
+
+	for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )
+	{
+		if ( m_Mipmaps[mipLevel].empty() )
+		{
+			miptex->offsets[mipLevel] = -1;
+			continue;
+		}
+
+		miptex->offsets[mipLevel] = sizeof(*miptex) + mipDataWritten;
+		memcpy(mipDataBase + mipDataWritten, rawMipmapData(mipLevel), m_Mipmaps[mipLevel].size());
+
+		mipDataWritten += m_Mipmaps[mipLevel].size();
+	}
+
+	byte* const paletteBase = mipDataBase + mipDataWritten;
+	uint16_t* const paletteSize = reinterpret_cast<uint16_t*>(paletteBase);
+	byte* const paletteData = paletteBase + sizeof(uint16_t);
+
+	*paletteSize = m_Palette.size() / sizeof(rgbpixel_t);
+	memcpy(paletteData, rawPaletteData(), m_Palette.size());
+
+	// Terminator
+	*reinterpret_cast<uint16_t*>(paletteData + m_Palette.size()) = 0;
+}
+
+bool MiptexWrapper::canExport() const
+{
+	return isValid() && hasAnyMipmap() && hasPalette();
+}
+
+size_t MiptexWrapper::exportDataSize() const
+{
+	if ( !canExport() )
+	{
+		return 0;
+	}
+
+	size_t size = sizeof(miptex_t);
+
+	for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )
+	{
+		size += m_Mipmaps[mipLevel].size();
+	}
+
+	size += sizeof(uint16_t);	// Palette size
+	size += m_Palette.size();
+	size += sizeof(uint16_t);	// Null terminator
 }
 
 uint32_t MiptexWrapper::widthForMipLevel(uint32_t level) const

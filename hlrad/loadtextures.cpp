@@ -1137,7 +1137,7 @@ void EmbedLightmapInTextures ()
 		entity_t *ent = g_face_entity[i];
 		int originaltexinfonum = f->texinfo;
 		texinfo_t *originaltexinfo = &g_texinfo[originaltexinfonum];
-		char texname[MAX_TEXTURE_NAME_LENGTH];
+		char texname[MIPTEX_NAME_LENGTH];
 		if (!GetValidTextureName (originaltexinfo->miptex, texname, sizeof(texname)))
 		{
 			continue;

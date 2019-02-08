@@ -8,7 +8,7 @@
 
 /*
 	Miptex structure, as far as I have been able to deduce:
-	- Name: MAX_TEXTURE_NAME_LENGTH chars
+	- Name: MIPTEX_NAME_LENGTH chars
 	- Width: uint32
 	- Height: uint32
 	- Mipmap offsets: 4 * int32 (offsets are from beginning of miptex, or -1)
@@ -49,6 +49,7 @@ public:
 	bool hasPalette() const;
 	void initialisePalette();
 
+	bool hasAnyMipmap() const;
 	bool hasMipmap(uint32_t level) const;
 	void initialiseMipmap(int32_t level = -1);	// -1 will init all.
 
@@ -89,6 +90,11 @@ public:
 
 	// Assumes that the miptex pointer contains enough data given its dimensions.
 	bool setFromMiptex(const miptex_t* miptex);
+
+	// Assumes that the miptex pointer points to exportDataSize() bytes of data.
+	bool exportToMiptex(miptex_t* miptex) const;
+	size_t exportDataSize() const;
+	bool canExport() const;
 
 	static uint32_t dimensionForMipLevel(uint32_t dim, uint32_t level);
 	static uint32_t areaForMipLevel(uint32_t width, uint32_t height, uint32_t level);

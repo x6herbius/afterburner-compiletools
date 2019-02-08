@@ -288,9 +288,10 @@ typedef struct
 } dmiptexlump_t;
 
 #define MIPLEVELS   4
+#define MIPTEX_NAME_LENGTH 16
 typedef struct miptex_s
 {
-	char		name[MAX_TEXTURE_NAME_LENGTH];
+	char		name[MIPTEX_NAME_LENGTH];
 	unsigned		width, height;
 	unsigned		offsets[MIPLEVELS];	// four mip maps stored
 } miptex_t;

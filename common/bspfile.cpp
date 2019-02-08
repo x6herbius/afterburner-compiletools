@@ -1502,7 +1502,7 @@ void PrintBSPFileSizes( void )
 int ParseImplicitTexinfoFromTexture( int miptex )
 {
 	int texinfo;
-	char name[MAX_TEXTURE_NAME_LENGTH];
+	char name[MIPTEX_NAME_LENGTH];
 
 	miptex_t* const mt = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, miptex);
 	if ( !mt )
@@ -1511,7 +1511,7 @@ int ParseImplicitTexinfoFromTexture( int miptex )
 		return -1;
 	}
 
-	safe_strncpy(name, mt->name, MAX_TEXTURE_NAME_LENGTH);
+	safe_strncpy(name, mt->name, MIPTEX_NAME_LENGTH);
 
 	if (!(strlen (name) >= 6 && !strncasecmp (&name[1], "_rad", 4) && '0' <= name[5] && name[5] <= '9'))
 	{
