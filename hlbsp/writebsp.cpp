@@ -11,7 +11,6 @@
 //  FinishBSPFile
 
 #include <map>
-#include "bsptextures.h"
 
 typedef std::map< int, int > PlaneMap;
 static PlaneMap gPlaneMap;
@@ -811,11 +810,6 @@ void            BeginBSPFile()
     g_dleafs[0].contents = CONTENTS_SOLID;
 }
 
-static void ReduceTextures()
-{
-	BSPTextures_Reduce(g_dtexdata, g_texdatasize, g_texinfo, g_numtexinfo);
-}
-
 // =====================================================================================
 //  FinishBSPFile
 // =====================================================================================
@@ -862,7 +856,131 @@ void            FinishBSPFile()
 			}
 			g_numtexinfo = g_nummappedtexinfo;
 		}
-		ReduceTextures();
+		{
+			// ABTEXTURES: Filter textures
+			dmiptexlump_t *l = (dmiptexlump_t *)g_dtexdata;
+			int &g_nummiptex = l->nummiptex;
+			bool *Used = (bool *)calloc (g_nummiptex, sizeof(bool));
+			int Num = 0, Size = 0;
+			int *Map = (int *)malloc (g_nummiptex * sizeof(int));
+			int i;
+			hlassume (Used != NULL && Map != NULL, assume_NoMemory);
+			int *lumpsizes = (int *)malloc (g_nummiptex * sizeof (int));
+			const int newdatasizemax = g_texdatasize - ((byte *)&l->dataofs[g_nummiptex] - (byte *)l);
+			byte *newdata = (byte *)malloc (newdatasizemax);
+			int newdatasize = 0;
+			hlassume (lumpsizes != NULL && newdata != NULL, assume_NoMemory);
+			int total = 0;
+			for (i = 0; i < g_nummiptex; i++)
+			{
+				if (l->dataofs[i] == -1)
+				{
+					lumpsizes[i] = -1;
+					continue;
+				}
+				lumpsizes[i] = g_texdatasize - l->dataofs[i];
+				for (int j = 0; j < g_nummiptex; j++)
+				{
+					int lumpsize = l->dataofs[j] - l->dataofs[i];
+					if (l->dataofs[j] == -1 || lumpsize < 0 || lumpsize == 0 && j <= i)
+						continue;
+					if (lumpsize < lumpsizes[i])
+						lumpsizes[i] = lumpsize;
+				}
+				total += lumpsizes[i];
+			}
+			if (total != newdatasizemax)
+			{
+				Warning ("Bad texdata structure.\n");
+				goto skipReduceTexdata;
+			}
+			for (i = 0; i < g_numtexinfo; i++)
+			{
+				texinfo_t *t = &g_texinfo[i];
+				if (t->miptex < 0 || t->miptex >= g_nummiptex)
+				{
+					Warning ("Bad miptex number %d.\n", t->miptex);
+					goto skipReduceTexdata;
+				}
+				Used[t->miptex] = true;
+			}
+			for (i = 0; i < g_nummiptex; i++)
+			{
+				const int MAXWADNAME = 16;
+				char name[MAXWADNAME];
+				int j, k;
+				if (l->dataofs[i] < 0)
+					continue;
+				if (Used[i] == true)
+				{
+					miptex_t *m = (miptex_t *)((byte *)l + l->dataofs[i]);
+					if (m->name[0] != '+' && m->name[0] != '-')
+						continue;
+					safe_strncpy (name, m->name, MAXWADNAME);
+					if (name[1] == '\0')
+						continue;
+					for (j = 0; j < 20; j++)
+					{
+						if (j < 10)
+							name[1] = '0' + j;
+						else
+							name[1] = 'A' + j - 10;
+						for (k = 0; k < g_nummiptex; k++)
+						{
+							if (l->dataofs[k] < 0)
+								continue;
+							miptex_t *m2 = (miptex_t *)((byte *)l + l->dataofs[k]);
+							if (!strcasecmp (name, m2->name))
+								Used[k] = true;
+						}
+					}
+				}
+			}
+			for (i = 0; i < g_nummiptex; i++)
+			{
+				if (Used[i])
+				{
+					Map[i] = Num;
+					Num++;
+				}
+				else
+				{
+					Map[i] = -1;
+				}
+			}
+			for (i = 0; i < g_numtexinfo; i++)
+			{
+				texinfo_t *t = &g_texinfo[i];
+				t->miptex = Map[t->miptex];
+			}
+			Size += (byte *)&l->dataofs[Num] - (byte *)l;
+			for (i = 0; i < g_nummiptex; i++)
+			{
+				if (Used[i])
+				{
+					if (lumpsizes[i] == -1)
+					{
+						l->dataofs[Map[i]] = -1;
+					}
+					else
+					{
+						memcpy ((byte *)newdata + newdatasize, (byte *)l + l->dataofs[i], lumpsizes[i]);
+						l->dataofs[Map[i]] = Size;
+						newdatasize += lumpsizes[i];
+						Size += lumpsizes[i];
+					}
+				}
+			}
+			memcpy (&l->dataofs[Num], newdata, newdatasize);
+			Log ("Reduced %d texdatas to %d (%d bytes to %d)\n", g_nummiptex, Num, g_texdatasize, Size);
+			g_nummiptex = Num;
+			g_texdatasize = Size;
+			skipReduceTexdata:;
+			free (lumpsizes);
+			free (newdata);
+			free (Used);
+			free (Map);
+		}
 #endif
 		Log ("Reduced %d planes to %d\n", g_numplanes, gNumMappedPlanes);
 		for(int counter = 0; counter < gNumMappedPlanes; counter++)

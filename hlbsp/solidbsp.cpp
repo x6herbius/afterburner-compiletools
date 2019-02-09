@@ -1634,6 +1634,7 @@ static void FreeLeafBrushes (node_t *leaf)
 #ifdef HLBSP_WARNMIXEDCONTENTS
 const char*     ContentsToString(int contents)
 {
+	// TODO: CONSTANTS FOR THESE
     switch (contents)
     {
     case CONTENTS_EMPTY:

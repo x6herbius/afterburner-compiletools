@@ -1603,6 +1603,7 @@ static contents_t TextureContents(const char* const name)
 
     if (name[0] == '!') //optimized -- don't check for current unless it's liquid (KGP)
 	{
+		// TODO: CONSTANTS FOR THESE
 		if (!strncasecmp(name, "!cur_90", 7))
 			return CONTENTS_CURRENT_90;
 		if (!strncasecmp(name, "!cur_0", 6))

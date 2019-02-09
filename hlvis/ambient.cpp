@@ -1,6 +1,5 @@
 #include "vis.h"
 #include "stringlib.h"
-#include "bsptextures.h"
 
 /*
 
@@ -88,12 +87,9 @@ void CalcAmbientSounds( void )
 			{
 				surf = &g_dfaces[g_dmarksurfaces[hit->firstmarksurface + k]];
 				info = &g_texinfo[surf->texinfo];
-				miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, info->miptex);
-
-				if ( !miptex )
-				{
-					continue;
-				}
+				// ABTEXTURES: Get texture by index
+				ofs = ((dmiptexlump_t *)g_dtexdata)->dataofs[info->miptex];
+				miptex = (miptex_t *)(&g_dtexdata[ofs]);
 
 				if( !Q_strnicmp( miptex->name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1 ))
 				{

@@ -17,7 +17,6 @@
 #include <string>
 
 #include "qrad.h"
-#include "bsptextures.h"
 
 
 /*
@@ -694,15 +693,18 @@ static void     BaseLightForFace(const dface_t* const f, vec3_t light)
 		return;
 	}
 #endif
+	// ABTEXTURES: Get texture by index
+    texinfo_t*      tx;
+    miptex_t*       mt;
+    int             ofs;
+
     //
     // check for light emited by texture
     //
-    texinfo_t* tx = &g_texinfo[f->texinfo];
-	miptex_t* mt = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, tx->miptex);
-	if ( !mt )
-	{
-		return;
-	}
+    tx = &g_texinfo[f->texinfo];
+
+    ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[tx->miptex];
+    mt = (miptex_t*)((byte*) g_dtexdata + ofs);
 
     LightForTexture(mt->name, light);
 }
@@ -1402,7 +1404,8 @@ void ReadCustomChopValue()
 	entity_t *mapent;
 	epair_t *ep;
 
-	num = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
+	// ABTEXTURES: Get total texture count
+	num = ((dmiptexlump_t *)g_dtexdata)->nummiptex;
 	chopscales = (vec_t *)malloc (num * sizeof(vec_t));
 	for (i = 0; i < num; i++)
 	{
@@ -1416,13 +1419,8 @@ void ReadCustomChopValue()
 		Developer (DEVELOPER_LEVEL_MESSAGE, "info_chopscale entity detected.\n");
 		for (i = 0; i < num; i++)
 		{
-			miptex_t* miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, i);
-			if ( !miptex )
-			{
-				continue;
-			}
-
-			const char *texname = miptex->name;
+			// ABTEXTURES: Get texture by index
+			const char *texname = ((miptex_t*)(g_dtexdata+((dmiptexlump_t*)g_dtexdata)->dataofs[i]))->name;
 			for (ep = mapent->epairs; ep; ep = ep->next)
 			{
 				if (strcasecmp (ep->key, texname))
@@ -1451,7 +1449,8 @@ void ReadCustomSmoothValue()
 	entity_t *mapent;
 	epair_t *ep;
 
-	num = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
+	// ABTEXTURES: Get total texture count
+	num = ((dmiptexlump_t *)g_dtexdata)->nummiptex;
 	g_smoothvalues = (vec_t *)malloc (num * sizeof(vec_t));
 	for (i = 0; i < num; i++)
 	{
@@ -1465,13 +1464,8 @@ void ReadCustomSmoothValue()
 		Developer (DEVELOPER_LEVEL_MESSAGE, "info_smoothvalue entity detected.\n");
 		for (i = 0; i < num; i++)
 		{
-			miptex_t* miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, i);
-			if ( !miptex )
-			{
-				continue;
-			}
-
-			const char *texname = miptex->name;
+			// ABTEXTURES: Get texture by index
+			const char *texname = ((miptex_t*)(g_dtexdata+((dmiptexlump_t*)g_dtexdata)->dataofs[i]))->name;
 			for (ep = mapent->epairs; ep; ep = ep->next)
 			{
 				if (strcasecmp (ep->key, texname))
@@ -1493,7 +1487,8 @@ void ReadTranslucentTextures()
 	entity_t *mapent;
 	epair_t *ep;
 
-	num = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
+	// ABTEXTURES: Get total texture count
+	num = ((dmiptexlump_t *)g_dtexdata)->nummiptex;
 	g_translucenttextures = (vec3_t *)malloc (num * sizeof(vec3_t));
 	for (i = 0; i < num; i++)
 	{
@@ -1507,13 +1502,8 @@ void ReadTranslucentTextures()
 		Developer (DEVELOPER_LEVEL_MESSAGE, "info_translucent entity detected.\n");
 		for (i = 0; i < num; i++)
 		{
-			miptex_t* miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, i);
-			if ( !miptex )
-			{
-				continue;
-			}
-
-			const char *texname = miptex->name;
+			// ABTEXTURES: Get texture by index
+			const char *texname = ((miptex_t*)(g_dtexdata+((dmiptexlump_t*)g_dtexdata)->dataofs[i]))->name;
 			for (ep = mapent->epairs; ep; ep = ep->next)
 			{
 				if (strcasecmp (ep->key, texname))
@@ -1562,7 +1552,8 @@ void ReadLightingCone ()
 	entity_t *mapent;
 	epair_t *ep;
 
-	num = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
+	// ABTEXTURES: Get total texture count
+	num = ((dmiptexlump_t *)g_dtexdata)->nummiptex;
 	g_lightingconeinfo = (vec3_t *)malloc (num * sizeof(vec3_t));
 	for (i = 0; i < num; i++)
 	{
@@ -1577,13 +1568,8 @@ void ReadLightingCone ()
 		Developer (DEVELOPER_LEVEL_MESSAGE, "info_angularfade entity detected.\n");
 		for (i = 0; i < num; i++)
 		{
-			miptex_t* miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, i);
-			if ( !miptex )
-			{
-				continue;
-			}
-
-			const char *texname = miptex->name;
+			// ABTEXTURES: Get texture by index
+			const char *texname = ((miptex_t*)(g_dtexdata+((dmiptexlump_t*)g_dtexdata)->dataofs[i]))->name;
 			for (ep = mapent->epairs; ep; ep = ep->next)
 			{
 				if (strcasecmp (ep->key, texname))

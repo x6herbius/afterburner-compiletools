@@ -7,7 +7,6 @@
 #include "bspfile.h"
 #include "scriplib.h"
 #include "blockmem.h"
-#include "bsptextures.h"
 
 //=============================================================================
 
@@ -414,7 +413,27 @@ static void SwapBSPFile( const bool todisk )
 	//
 	// miptex
 	//
-	BSPTextures_ByteSwapAll(g_dtexdata, g_texdatasize, !todisk);
+	// ABTEXTURES: Swap bytes
+	if( g_texdatasize )
+	{
+		mtl = (dmiptexlump_t*)g_dtexdata;
+
+		if( todisk )
+		{
+			c = mtl->nummiptex;
+		}
+		else
+		{
+			c = LittleLong( mtl->nummiptex );
+		}
+
+		mtl->nummiptex = LittleLong( mtl->nummiptex );
+
+		for( i = 0; i < c; i++ )
+		{
+			mtl->dataofs[i] = LittleLong( mtl->dataofs[i] );
+		}
+	}
 
 	//
 	// marksurfaces
@@ -528,8 +547,11 @@ static int CopyLump( int lump, void *dest, int size, const dheader_t *header )
 		Error( "LoadBSPFile: odd lump size" );
 	}
 
+	// ABTEXTURES: Check textures within limit
 	// special handling for tex and lightdata to keep things from exploding - KGP
-	if( lump == LUMP_LIGHTING && dest == (void*)g_dlightdata )
+	if( lump == LUMP_TEXTURES && dest == (void*)g_dtexdata )
+		hlassume( g_max_map_miptex > length, assume_MAX_MAP_MIPTEX );
+	else if( lump == LUMP_LIGHTING && dest == (void*)g_dlightdata )
 		hlassume( g_max_map_lightdata > length, assume_MAX_MAP_LIGHTING );
 
 	memcpy( dest, (byte *)header + ofs, length );
@@ -624,7 +646,8 @@ void LoadBSPImage( dheader_t* const header )
 	g_nummarksurfaces = CopyLump( LUMP_MARKSURFACES, g_dmarksurfaces, sizeof( g_dmarksurfaces[0] ), header );
 	g_numsurfedges = CopyLump( LUMP_SURFEDGES, g_dsurfedges, sizeof( g_dsurfedges[0] ), header );
 	g_numedges = CopyLump( LUMP_EDGES, g_dedges, sizeof( dedge_t ), header );
-	BSPTextures_SetLumpData(g_dtexdata, g_texdatasize, LUMP_TEXTURES, header);
+	// ABTEXTURES: Import from lump data
+	g_texdatasize = CopyLump( LUMP_TEXTURES, g_dtexdata, 1, header );
 	g_visdatasize = CopyLump( LUMP_VISIBILITY, g_dvisdata, 1, header );
 	g_lightdatasize = CopyLump( LUMP_LIGHTING, g_dlightdata, 1, header );
 	g_entdatasize = CopyLump( LUMP_ENTITIES, g_dentdata, 1, header );
@@ -1272,16 +1295,19 @@ int CountBlocks ()
 #ifdef ZHLT_CHART_WADFILES
 bool NoWadTextures ()
 {
+	// ABTEXTURES: Check all for valid mipmap offsets
 	// copied from loadtextures.cpp
-	const unsigned int numtextures = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
-	for (unsigned int i = 0; i < numtextures; i++)
+	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
+	for (int i = 0; i < numtextures; i++)
 	{
-		miptex_t *mt = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, i);
-		if ( !mt )
+		int offset = ((dmiptexlump_t *)g_dtexdata)->dataofs[i];
+		int size = g_texdatasize - offset;
+		if (offset < 0 || size < (int)sizeof (miptex_t))
 		{
+			// missing textures have ofs -1
 			continue;
 		}
-
+		miptex_t *mt = (miptex_t *)&g_dtexdata[offset];
 		if (!mt->offsets[0])
 		{
 			return false;
@@ -1391,7 +1417,8 @@ static int GlobUsage( const char *szItem, const int itemstorage, const int maxst
 // =====================================================================================
 void PrintBSPFileSizes( void )
 {
-	int numtextures = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
+	// ABTEXTURES: Total texture count
+	int	numtextures = g_texdatasize ? ((dmiptexlump_t *)g_dtexdata)->nummiptex : 0;
 	int	totalmemory = 0;
 #ifdef ZHLT_CHART_AllocBlock
 	int	numallocblocks = CountBlocks();
@@ -1502,16 +1529,29 @@ void PrintBSPFileSizes( void )
 int ParseImplicitTexinfoFromTexture( int miptex )
 {
 	int texinfo;
-	char name[MIPTEX_NAME_LENGTH];
+	// ABTEXTURES: Total texture count
+	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
+	int offset;
+	int size;
+	miptex_t *mt;
+	char name[16];
 
-	miptex_t* const mt = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, miptex);
-	if ( !mt )
+	if (miptex < 0 || miptex >= numtextures)
 	{
 		Warning ("ParseImplicitTexinfoFromTexture: internal error: invalid texture number %d.", miptex);
 		return -1;
 	}
+	// ABTEXTURES: Get texture by index
+	offset = ((dmiptexlump_t *)g_dtexdata)->dataofs[miptex];
+	size = g_texdatasize - offset;
+	if (offset < 0 || g_dtexdata + offset < (byte *)&((dmiptexlump_t *)g_dtexdata)->dataofs[numtextures] ||
+		size < (int)sizeof (miptex_t))
+	{
+		return -1;
+	}
 
-	safe_strncpy(name, mt->name, MIPTEX_NAME_LENGTH);
+	mt = (miptex_t *)&g_dtexdata[offset];
+	safe_strncpy (name, mt->name, 16);
 
 	if (!(strlen (name) >= 6 && !strncasecmp (&name[1], "_rad", 4) && '0' <= name[5] && name[5] <= '9'))
 	{
@@ -1559,7 +1599,8 @@ void DeleteEmbeddedLightmaps( void )
 	int countremovedtexinfos = 0;
 	int countremovedtextures = 0;
 	int i;
-	int numtextures = BSPTextures_TextureCount(g_dtexdata, g_texdatasize);
+	// ABTEXTURES: Total texture count
+	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
 
 	// Step 1: parse the original texinfo index stored in each "?_rad*" texture
 	//         and restore the texinfo for the faces that have had their lightmap embedded
@@ -1651,7 +1692,24 @@ void DeleteEmbeddedLightmaps( void )
 
 		if (numremaining < numtextures)
 		{
-			BSPTextures_Trim(g_dtexdata, g_texdatasize, numremaining);
+			// ABTEXTURES: Filter textures
+			dmiptexlump_t *texdata = (dmiptexlump_t *)g_dtexdata;
+			byte *dataaddr = (byte *)&texdata->dataofs[texdata->nummiptex];
+			int datasize = (g_dtexdata + texdata->dataofs[numremaining]) - dataaddr;
+			byte *newdataaddr = (byte *)&texdata->dataofs[numremaining];
+			memmove (newdataaddr, dataaddr, datasize);
+			g_texdatasize = (newdataaddr + datasize) - g_dtexdata;
+			texdata->nummiptex = numremaining;
+			for (i = 0; i < numremaining; i++)
+			{
+				if (texdata->dataofs[i] < 0) // bad texture
+				{
+					continue;
+				}
+				texdata->dataofs[i] += newdataaddr - dataaddr;
+			}
+
+			numtextures = texdata->nummiptex;
 		}
 	}
 
@@ -2234,8 +2292,9 @@ entity_t *FindTargetEntity(const char* const target)
 
 void dtexdata_init( void )
 {
-	BSPTextures_Init(g_dtexdata, g_texdatasize, g_max_map_miptex);
-
+	// ABTEXTURES: Init
+	g_dtexdata = (byte *)AllocBlock( g_max_map_miptex );
+	hlassume( g_dtexdata != NULL, assume_NoMemory );
 	g_dlightdata = (byte *)AllocBlock( g_max_map_lightdata );
 	hlassume( g_dlightdata != NULL, assume_NoMemory );
 	g_ddeluxdata = (byte *)AllocBlock( g_max_map_lightdata );
@@ -2244,8 +2303,9 @@ void dtexdata_init( void )
 
 void CDECL dtexdata_free( void )
 {
-	BSPTextures_Free(g_dtexdata, g_texdatasize);
-
+	// ABTEXTURES: Destroy
+	FreeBlock( g_dtexdata );
+	g_dtexdata = NULL;
 	FreeBlock( g_dlightdata );
 	g_dlightdata = NULL;
 	FreeBlock( g_ddeluxdata );
@@ -2263,9 +2323,16 @@ const char* GetTextureByNumber(int texturenumber)
 	if (texturenumber == -1)
 		return "";
 #endif
-    texinfo_t* info = &g_texinfo[texturenumber];
-	miptex_t* miptex = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, info->miptex);
-	return miptex ? miptex->name : NULL;
+	// ABTEXTURES: Get texture by index
+    texinfo_t*      info;
+    miptex_t*       miptex;
+    int             ofs;
+
+    info = &g_texinfo[texturenumber];
+    ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
+    miptex = (miptex_t*)(&g_dtexdata[ofs]);
+
+    return miptex->name;
 }
 
 // =====================================================================================

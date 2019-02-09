@@ -1,5 +1,4 @@
 #include "csg.h"
-#include "bsptextures.h"
 
 #define MAXWADNAME 16
 #define MAX_TEXFILES 128
@@ -811,9 +810,12 @@ void            WriteMiptex()
 {
     int             len, texsize, totaltexsize = 0;
     byte*           data;
+    dmiptexlump_t*  l;
     double          start, end;
 
-    BSPTextures_SetLumpSize(g_dtexdata, g_texdatasize, 0);
+    // ABTEXTURES: Load textures from files
+    // This is gonna take a bit of investigating and refactoring.
+    g_texdatasize = 0;
 
     start = I_FloatTime();
     {
@@ -939,8 +941,9 @@ void            WriteMiptex()
         int             i;
 
         // Now setup to get the miptex data (or just the headers if using -wadtextures) from the wadfile
-        BSPTextures_SetTextureCount(g_dtexdata, g_texdatasize, nummiptex);
-        data = BSPTextures_RawDataBase(g_dtexdata, g_texdatasize);
+        l = (dmiptexlump_t*)g_dtexdata;
+        data = (byte*) & l->dataofs[nummiptex];
+        l->nummiptex = nummiptex;
 
 #ifdef ZHLT_NOWADDIR
 		char writewad_name[_MAX_PATH];
@@ -982,7 +985,7 @@ void            WriteMiptex()
 #endif
         for (i = 0; i < nummiptex; i++)
         {
-            BSPTextures_SetTextureDataOffset(g_dtexdata, g_texdatasize, i, data - (byte*)g_dtexdata);
+            l->dataofs[i] = data - (byte*) l;
 
 #ifdef ZHLT_NOWADDIR
 			byte *writewad_data;
@@ -1021,7 +1024,7 @@ void            WriteMiptex()
 
             if (!len)
             {
-                BSPTextures_SetTextureDataOffset(g_dtexdata, g_texdatasize, i, -1);
+                l->dataofs[i] = -1;                        // didn't find the texture
             }
             else
             {
@@ -1033,20 +1036,20 @@ void            WriteMiptex()
             data += len;
         }
 
-        BSPTextures_SetLumpSizeViaPointerComparison(g_dtexdata, g_texdatasize, data);
+        g_texdatasize = data - g_dtexdata;
 
 #ifdef ZHLT_NOWADDIR
 		writewad_header.infotableofs = ftell (writewad_file);
 		SafeWrite (writewad_file, writewad_lumpinfos, writewad_header.numlumps * sizeof (dlumpinfo_t));
 
-		if (fseek (writewad_file, 0, SEEK_SET))
+        if (fseek (writewad_file, 0, SEEK_SET))
         {
 			Error ("File write failure");
         }
 
 		SafeWrite (writewad_file, &writewad_header, sizeof (wadinfo_t));
 
-		if (fclose (writewad_file))
+        if (fclose (writewad_file))
         {
 			Error ("File write failure");
         }

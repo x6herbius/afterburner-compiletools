@@ -1,5 +1,4 @@
 #include "qrad.h"
-#include "bsptextures.h"
 
 edgeshare_t     g_edgeshare[MAX_MAP_EDGES];
 vec3_t          g_face_centroids[MAX_MAP_FACES]; // BUG: should this be [MAX_MAP_FACES]?
@@ -727,8 +726,18 @@ static facesampleinfo_t facesampleinfo[MAX_MAP_FACES];
 // =====================================================================================
 static const char* TextureNameFromFace(const dface_t* const f)
 {
-	texinfo_t* tx = &g_texinfo[f->texinfo];
-	miptex_t* mt = BSPTextures_GetTexture(g_dtexdata, g_texdatasize, tx->miptex);
+	// ABTEXTURES: Get texture by index
+    texinfo_t*      tx;
+    miptex_t*       mt;
+    int             ofs;
+
+    //
+    // check for light emited by texture
+    //
+    tx = &g_texinfo[f->texinfo];
+
+    ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[tx->miptex];
+    mt = (miptex_t*)((byte*) g_dtexdata + ofs);
 
 	return mt->name;
 }
