@@ -62,6 +62,11 @@ PLATFORM_CONFIG = \
 			"-mavx",
 			"-floop-interchange",
 			"-mfpmath=sse -g"
+		],
+
+		"CXXFLAGS":
+		[
+			"-std=c++11"
 		]
 	},
 
@@ -110,6 +115,11 @@ PLATFORM_CONFIG = \
 			"-mavx",
 			"-floop-interchange",
 			"-mfpmath=sse -g"
+		],
+
+		"CXXFLAGS":
+		[
+			"-std=c++11"
 		]
 	}
 }
@@ -143,6 +153,7 @@ def __setPlatformConfig(ctx):
 		__platformConfigAppendUnique(ctx, "DEFINES")
 		__platformConfigAppendUnique(ctx, "LINKFLAGS")
 		__platformConfigAppendUnique(ctx, "CFLAGS")
+		__platformConfigAppendUnique(ctx, "CXXFLAGS")
 
 		if not ctx.env.IS_32BIT:
 			__platformConfigAppendUnique(ctx, "DEFINES", configKey="DEFINES_64")
