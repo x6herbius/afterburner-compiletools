@@ -4,7 +4,6 @@
 #include <vector>
 #include <memory>
 #include "cppmemory.h"
-#include "hlassert.h"
 
 // Need functionality for:
 // - Exporting lump data, with optional byte swapping
@@ -21,12 +20,20 @@
 class TextureCollection
 {
 public:
+	class Entry;
+	enum class EntryType
+	{
+		Undefined = -1,
+		Miptex = 0,
+		PngOnDisk
+	};
+
 	TextureCollection();
 	~TextureCollection();
 
 private:
-	struct Entry;
-	typedef Mem::vector<std::unique_ptr<Entry>> EntryList;
+	typedef std::unique_ptr<Entry> EntryPtr;
+	typedef Mem::vector<EntryPtr> EntryList;
 
 	EntryList m_Items;
 };
