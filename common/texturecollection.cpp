@@ -25,7 +25,7 @@ private:
 class MiptexEntry : public TextureCollection::Entry
 {
 public:
-	MiptexEntry() : TextureCollection::Entry(TextureCollection::Entry::EntryType::Miptex)
+	MiptexEntry() : TextureCollection::Entry(TextureCollection::EntryType::Miptex)
 	{
 	}
 

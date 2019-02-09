@@ -25,7 +25,7 @@ void* operator new(size_t size)
 	return mem;
 }
 
-void operator delete(void* ptr)
+void operator delete(void* ptr) noexcept
 {
 	if ( ptr )
 	{
