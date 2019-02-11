@@ -1634,37 +1634,36 @@ static void FreeLeafBrushes (node_t *leaf)
 #ifdef HLBSP_WARNMIXEDCONTENTS
 const char*     ContentsToString(int contents)
 {
-	// TODO: CONSTANTS FOR THESE
     switch (contents)
     {
     case CONTENTS_EMPTY:
-        return "EMPTY";
+        return BRUSHKEY_EMPTY;
     case CONTENTS_SOLID:
-        return "SOLID";
+        return BRUSHKEY_SOLID;
     case CONTENTS_WATER:
         return BRUSHKEY_WATER;
     case CONTENTS_SLIME:
-        return "SLIME";
+        return BRUSHKEY_SLIME;
     case CONTENTS_LAVA:
-        return "LAVA";
+        return BRUSHKEY_LAVA;
     case CONTENTS_SKY:
         return BRUSHKEY_SKY;
     case CONTENTS_CURRENT_0:
-        return "CURRENT_0";
+        return BRUSHKEY_CURRENT_0;
     case CONTENTS_CURRENT_90:
-        return "CURRENT_90";
+        return BRUSHKEY_CURRENT_90;
     case CONTENTS_CURRENT_180:
-        return "CURRENT_180";
+        return BRUSHKEY_CURRENT_180;
     case CONTENTS_CURRENT_270:
-        return "CURRENT_270";
+        return BRUSHKEY_CURRENT_270;
     case CONTENTS_CURRENT_UP:
-        return "CURRENT_UP";
+        return BRUSHKEY_CURRENT_UP;
     case CONTENTS_CURRENT_DOWN:
-        return "CURRENT_DOWN";
+        return BRUSHKEY_CURRENT_DOWN;
     case CONTENTS_TRANSLUCENT:
-        return "TRANSLUCENT";
+        return BRUSHKEY_TRANSLUCENT;
     default:
-        return "UNKNOWN";
+        return BRUSHKEY_UNKNOWN;
     }
 }
 #endif

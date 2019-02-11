@@ -568,7 +568,7 @@ static void     SaveOutside(const brush_t* const b, const int hull, bface_t* out
 		}
 	#endif
 	#ifdef HLCSG_WATERBACKFACE_FIX
-		if (b->entitynum != 0 && !strncasecmp (texname, "!", 1))
+		if (b->entitynum != 0 && !strncasecmp (texname, SPECIALTEX_LIQUID_PREFIX, sizeof(SPECIALTEX_LIQUID_PREFIX) - 1))
 		{
 			backnull = true; // strip water face on one side
 		}

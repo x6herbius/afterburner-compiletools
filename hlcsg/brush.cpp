@@ -1601,20 +1601,19 @@ static contents_t TextureContents(const char* const name)
         return CONTENTS_SLIME;
 #endif
 
-    if (name[0] == '!') //optimized -- don't check for current unless it's liquid (KGP)
+    if (!strncmp(name, SPECIALTEX_LIQUID_PREFIX, sizeof(SPECIALTEX_LIQUID_PREFIX) - 1)) //optimized -- don't check for current unless it's liquid (KGP)
 	{
-		// TODO: CONSTANTS FOR THESE
-		if (!strncasecmp(name, "!cur_90", 7))
+		if (!strncasecmp(name, SPECIALTEX_LIQUID_CURRENT_90, sizeof(SPECIALTEX_LIQUID_CURRENT_90) - 1))
 			return CONTENTS_CURRENT_90;
-		if (!strncasecmp(name, "!cur_0", 6))
+		if (!strncasecmp(name, SPECIALTEX_LIQUID_CURRENT_0, sizeof(SPECIALTEX_LIQUID_CURRENT_0) - 1))
 			return CONTENTS_CURRENT_0;
-		if (!strncasecmp(name, "!cur_270", 8))
+		if (!strncasecmp(name, SPECIALTEX_LIQUID_CURRENT_270, sizeof(SPECIALTEX_LIQUID_CURRENT_270) - 1))
 			return CONTENTS_CURRENT_270;
-		if (!strncasecmp(name, "!cur_180", 8))
+		if (!strncasecmp(name, SPECIALTEX_LIQUID_CURRENT_180, sizeof(SPECIALTEX_LIQUID_CURRENT_180) - 1))
 			return CONTENTS_CURRENT_180;
-		if (!strncasecmp(name, "!cur_up", 7))
+		if (!strncasecmp(name, SPECIALTEX_LIQUID_CURRENT_UP, sizeof(SPECIALTEX_LIQUID_CURRENT_UP) - 1))
 			return CONTENTS_CURRENT_UP;
-		if (!strncasecmp(name, "!cur_dwn", 8))
+		if (!strncasecmp(name, SPECIALTEX_LIQUID_CURRENT_DOWN, sizeof(SPECIALTEX_LIQUID_CURRENT_DOWN) - 1))
 			return CONTENTS_CURRENT_DOWN;
         return CONTENTS_WATER; //default for liquids
 	}
@@ -1622,7 +1621,7 @@ static contents_t TextureContents(const char* const name)
     if (!strncasecmp(name, SPECIALTEX_ORIGIN, sizeof(SPECIALTEX_ORIGIN) - 1))
         return CONTENTS_ORIGIN;
 #ifdef HLCSG_HLBSP_CUSTOMBOUNDINGBOX
-	if (!strncasecmp(name, "boundingbox", 11))
+	if (!strncasecmp(name, SPECIALTEX_BOUNDINGBOX, sizeof(SPECIALTEX_BOUNDINGBOX) - 1))
 		return CONTENTS_BOUNDINGBOX;
 #endif
 
@@ -1632,11 +1631,11 @@ static contents_t TextureContents(const char* const name)
 #endif
 
 #ifdef HLCSG_HLBSP_SOLIDHINT
-	if (!strncasecmp(name, "solidhint", 9))
+	if (!strncasecmp(name, SPECIALTEX_SOLIDHINT, sizeof(SPECIALTEX_SOLIDHINT) - 1))
 		return CONTENTS_NULL;
 #endif
 #ifdef HLCSG_NOSPLITBYHINT
-	if (!strncasecmp(name, "splitface", 9))
+	if (!strncasecmp(name, SPECIALTEX_SPLITFACE, sizeof(SPECIALTEX_SPLITFACE) - 1))
 		return CONTENTS_HINT;
 	if (!strncasecmp(name, SPECIALTEX_HINT, sizeof(SPECIALTEX_HINT) - 1))
 		return CONTENTS_TOEMPTY;
@@ -1649,10 +1648,10 @@ static contents_t TextureContents(const char* const name)
         return CONTENTS_HINT;
 #endif
 
-    if (!strncasecmp(name, "translucent", 11))
+    if (!strncasecmp(name, SPECIALTEX_TRANSLUCENT, sizeof(SPECIALTEX_TRANSLUCENT) - 1))
         return CONTENTS_TRANSLUCENT;
 
-    if (name[0] == '@')
+    if (!strncmp(name, SPECIALTEX_TRANSLUCENT_PREFIX_ONLY, sizeof(SPECIALTEX_TRANSLUCENT_PREFIX_ONLY) - 1))
         return CONTENTS_TRANSLUCENT;
 
 #ifdef ZHLT_NULLTEX // AJM:
@@ -1675,41 +1674,41 @@ const char*     ContentsToString(const contents_t type)
     switch (type)
     {
     case CONTENTS_EMPTY:
-        return "EMPTY";
+        return BRUSHKEY_EMPTY;
     case CONTENTS_SOLID:
-        return "SOLID";
+        return BRUSHKEY_SOLID;
     case CONTENTS_WATER:
         return BRUSHKEY_WATER;
     case CONTENTS_SLIME:
-        return "SLIME";
+        return BRUSHKEY_SLIME;
     case CONTENTS_LAVA:
-        return "LAVA";
+        return BRUSHKEY_LAVA;
     case CONTENTS_SKY:
         return BRUSHKEY_SKY;
     case CONTENTS_ORIGIN:
         return BRUSHKEY_ORIGIN;
 #ifdef HLCSG_HLBSP_CUSTOMBOUNDINGBOX
 	case CONTENTS_BOUNDINGBOX:
-		return "BOUNDINGBOX";
+		return BRUSHKEY_BOUNDINGBOX;
 #endif
 #ifndef HLCSG_CUSTOMHULL
     case CONTENTS_CLIP:
         return BRUSHKEY_CLIP;
 #endif
     case CONTENTS_CURRENT_0:
-        return "CURRENT_0";
+        return BRUSHKEY_CURRENT_0;
     case CONTENTS_CURRENT_90:
-        return "CURRENT_90";
+        return BRUSHKEY_CURRENT_90;
     case CONTENTS_CURRENT_180:
-        return "CURRENT_180";
+        return BRUSHKEY_CURRENT_180;
     case CONTENTS_CURRENT_270:
-        return "CURRENT_270";
+        return BRUSHKEY_CURRENT_270;
     case CONTENTS_CURRENT_UP:
-        return "CURRENT_UP";
+        return BRUSHKEY_CURRENT_UP;
     case CONTENTS_CURRENT_DOWN:
-        return "CURRENT_DOWN";
+        return BRUSHKEY_CURRENT_DOWN;
     case CONTENTS_TRANSLUCENT:
-        return "TRANSLUCENT";
+        return BRUSHKEY_TRANSLUCENT;
     case CONTENTS_HINT:
         return BRUSHKEY_HINT;
 
@@ -1720,11 +1719,11 @@ const char*     ContentsToString(const contents_t type)
 
 #ifdef HLCSG_EMPTYBRUSH
 	case CONTENTS_TOEMPTY:
-		return "EMPTY";
+		return BRUSHKEY_EMPTY;
 #endif
 
     default:
-        return "UNKNOWN";
+        return BRUSHKEY_UNKNOWN;
     }
 }
 

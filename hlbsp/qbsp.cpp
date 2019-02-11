@@ -872,7 +872,7 @@ bool            CheckFaceForNull(const face_t* const f)
 	if (f->contents == CONTENTS_SKY)
     {
 		const char *name = GetTextureByNumber (f->texturenum);
-        if (strncasecmp(name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1)) // for env_rain
+        if (!strncasecmp(name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1)) // for env_rain
 			return true;
     }
 #endif

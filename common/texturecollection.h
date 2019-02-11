@@ -7,8 +7,8 @@
 #include "cppmemory.h"
 
 // Need functionality for:
-// - Exporting lump data, with optional byte swapping
-// - Importing lump data, with optional byte swapping
+// - Exporting lump data
+// - Importing lump data
 // - Getting number of textures in list - done
 // - Getting a texture by index - done
 // - Returning the type of the texture at the given index - done

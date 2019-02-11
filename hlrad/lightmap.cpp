@@ -3013,7 +3013,7 @@ void            CreateDirectLights()
 
 #ifdef HLRAD_WATERBACKFACE_FIX
 			dface_t *f = &g_dfaces[p->faceNumber];
-			if (g_face_entity[p->faceNumber] - g_entities != 0 && !strncasecmp (GetTextureByNumber (f->texinfo), "!", 1))
+			if (g_face_entity[p->faceNumber] - g_entities != 0 && !strncasecmp(GetTextureByNumber (f->texinfo), SPECIALTEX_LIQUID_PREFIX, sizeof(SPECIALTEX_LIQUID_PREFIX) - 1))
 			{
 				directlight_t *dl2;
 				numdlights++;

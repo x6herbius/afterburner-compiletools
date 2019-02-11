@@ -669,7 +669,7 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 			&& strncasecmp( side->td.name, BRUSHKEY_SPLITFACE, sizeof(BRUSHKEY_SPLITFACE) - 1 )
 #endif
 #ifdef HLCSG_HLBSP_CUSTOMBOUNDINGBOX
-			&& strncasecmp( side->td.name, "BOUNDINGBOX", 11 )
+			&& strncasecmp( side->td.name, BRUSHKEY_BOUNDINGBOX, sizeof(BRUSHKEY_BOUNDINGBOX) - 1 )
 #endif
 #ifdef HLCSG_CUSTOMCONTENT
 			&& strncasecmp( side->td.name, BRUSHKEY_CUSTOMCONTENT_PREFIX, sizeof(BRUSHKEY_CUSTOMCONTENT_PREFIX) - 1 ) && strncasecmp( side->td.name, BRUSHKEY_SKY, sizeof(BRUSHKEY_SKY) - 1 )

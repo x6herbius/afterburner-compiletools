@@ -620,7 +620,11 @@
 #if !defined(HLRAD_TEXTURE)
 #error "Missing required features to support Afterburner BSPs."
 #endif
+
+#if defined(WORDS_BIGENDIAN)
+#error "Big-endian mode is not currently supported."
 #endif
+#endif // ZHLT_AFTERBURNER
 //=====================================================================
 
 #if _MSC_VER <1400
