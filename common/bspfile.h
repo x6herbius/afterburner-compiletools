@@ -114,15 +114,14 @@
 #endif
 //=============================================================================
 
-#ifdef ZHLT_XASH2
-#ifdef ZHLT_AFTERBURNER
-#define BSPVERSION		43
-#else
+#if defined(ZHLT_XASH2)
 #define BSPVERSION		31
-#endif	// ZHLT_AFTERBURNER
+#elif defined(ZHLT_AFTERBURNER)
+#define BSPVERSION		43	// Nightfire BSP format was 42
 #else
 #define BSPVERSION		30
 #endif
+
 #define TOOLVERSION		2
 
 #ifdef ZHLT_AFTERBURNER

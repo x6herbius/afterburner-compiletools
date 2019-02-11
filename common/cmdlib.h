@@ -83,11 +83,11 @@
 #define ZHLT_NOWADDIR //--vluzacn
 #define ZHLT_STUDIOSHADOWS // g-cont. cast shadows from studio models
 #define ZHLT_PARANOIA_BSP // write extra lumps
-#define ZHLT_XASH // build the compiler for Xash engine //--vluzacn
+/*#define ZHLT_XASH // build the compiler for Xash engine //--vluzacn
 	#ifdef ZHLT_XASH
 #define ZHLT_XASH2 // build the compiler for Xash engine with change in bsp format //--vluzacn
+	#endif*/
 #define ZHLT_AFTERBURNER // Holy #define hell, Batman! For the record, the only reason I'm not rewriting these tools in C++ is that it'd take forever.
-	#endif
 #define ZHLT_WRITE_MODEL_ORIGIN // g-cont. store into dmodel_t their real origins
 #define ZHLT_CALC_AMBIENT_SOUNDS // g-cont. calc auto-ambient sounds like Quake1
 //#define ZHLT_TRANSLUCENT_WORLD_WATER // g-cont. allow to make world water is translucency (disabled because invoke crash somewhere into TestLine_r)
