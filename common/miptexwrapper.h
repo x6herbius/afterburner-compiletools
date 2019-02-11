@@ -100,7 +100,7 @@ public:
 	static uint32_t areaForMipLevel(uint32_t width, uint32_t height, uint32_t level);
 
 private:
-	typedef Mem::vector<byte> ByteArray;
+	typedef std::vector<byte> ByteArray;
 
 	char m_Name[MAX_TEXTURE_NAME_LENGTH];
 	uint32_t m_Width;
