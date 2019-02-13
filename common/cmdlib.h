@@ -93,7 +93,6 @@
 //#define ZHLT_TRANSLUCENT_WORLD_WATER // g-cont. allow to make world water is translucency (disabled because invoke crash somewhere into TestLine_r)
 #define ZHLT_NEW_FILESYSTEM	// g-cont. allow to search reosources in pak-files
 #define ZHLT_NEW_PACIFIER	// g-cont. new pacifier style like in Source
-#define ZHLT_CHART_WADFILES //--vluzacn
 #define ZHLT_DEFAULTEXTENSION_FIX //--vluzacn
 #define ZHLT_FREETEXTUREAXIS //--vluzacn
 #define ZHLT_WARNWORLDFACES //--vluzacn

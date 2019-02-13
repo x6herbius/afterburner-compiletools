@@ -686,6 +686,7 @@ int             LoadLump(const lumpinfo_t* const source, byte* dest, int* texsiz
             wadinclude = it->second;
         }
 
+        // ABTEXTURES: Load textures from file
         // Should we just load the texture header w/o the palette & bitmap?
         if (g_wadtextures && !wadinclude)
 #endif

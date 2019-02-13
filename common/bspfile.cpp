@@ -7,6 +7,8 @@
 #include "bspfile.h"
 #include "scriplib.h"
 #include "blockmem.h"
+#include "checksum.h"
+#include "texturecollection.h"
 
 //=============================================================================
 
@@ -33,6 +35,9 @@ int		g_ddeluxdata_checksum;
 int		g_texdatasize;
 byte*		g_dtexdata;                                  // (dmiptexlump_t)
 int		g_dtexdata_checksum;
+
+TextureCollection g_TextureCollection;
+int g_TextureCollectionChecksum;
 
 int		g_entdatasize;
 char		g_dentdata[MAX_MAP_ENTSTRING];
@@ -129,25 +134,6 @@ vec3_t g_hull_size[MAX_MAP_HULLS][2] =
 	{-16, -16, -18 },	{ 16, 16, 18 }
 	}
 };
-
-/*
- * ===============
- * FastChecksum
- * ===============
-*/
-static int FastChecksum( const void *const buffer, int bytes )
-{
-	char	*buf = (char *)buffer;
-	int	checksum = 0;
-
-	while( bytes-- )
-	{
-		checksum = rotl( checksum, 4 ) ^ (*buf);
-		buf++;
-	}
-
-	return checksum;
-}
 
 /*
  * ===============
@@ -544,7 +530,7 @@ static int CopyLump( int lump, void *dest, int size, const dheader_t *header )
 
 	if( length % size )
 	{
-		Error( "LoadBSPFile: odd lump size" );
+		Error( "LoadBSPFile: Lump size %d was expected to be multiple of %d", length, size );
 	}
 
 	// ABTEXTURES: Check textures within limit
@@ -704,7 +690,7 @@ void LoadBSPImage( dheader_t* const header )
 	g_dmarksurfaces_checksum = FastChecksum( g_dmarksurfaces, g_nummarksurfaces * sizeof( g_dmarksurfaces[0] ));
 	g_dsurfedges_checksum = FastChecksum( g_dsurfedges, g_numsurfedges * sizeof( g_dsurfedges[0] ));
 	g_dedges_checksum = FastChecksum( g_dedges, g_numedges * sizeof( g_dedges[0] ));
-	g_dtexdata_checksum = FastChecksum( g_dtexdata, g_texdatasize * sizeof( g_dtexdata[0] ));
+	g_TextureCollectionChecksum = g_TextureCollection.calculateChecksum();
 	g_dvisdata_checksum = FastChecksum( g_dvisdata, g_visdatasize * sizeof( g_dvisdata[0] ));
 	g_dlightdata_checksum = FastChecksum( g_dlightdata, g_lightdatasize * sizeof( g_dlightdata[0] ));
 	g_dentdata_checksum = FastChecksum( g_dentdata, g_entdatasize * sizeof( g_dentdata[0] ));
@@ -1292,94 +1278,6 @@ int CountBlocks ()
 	return count;
 }
 #endif
-#ifdef ZHLT_CHART_WADFILES
-bool NoWadTextures ()
-{
-	// ABTEXTURES: Check all for valid mipmap offsets
-	// copied from loadtextures.cpp
-	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
-	for (int i = 0; i < numtextures; i++)
-	{
-		int offset = ((dmiptexlump_t *)g_dtexdata)->dataofs[i];
-		int size = g_texdatasize - offset;
-		if (offset < 0 || size < (int)sizeof (miptex_t))
-		{
-			// missing textures have ofs -1
-			continue;
-		}
-		miptex_t *mt = (miptex_t *)&g_dtexdata[offset];
-		if (!mt->offsets[0])
-		{
-			return false;
-		}
-	}
-	return true;
-}
-char *FindWadValue ()
-	// return NULL for syntax error
-	// this function needs to be as stable as possible because it might be called from ripent
-{
-	int linestart, lineend;
-	bool inentity = false;
-	for (linestart = 0; linestart < g_entdatasize; )
-	{
-		for (lineend = linestart; lineend < g_entdatasize; lineend++)
-			if (g_dentdata[lineend] == '\r' || g_dentdata[lineend] == '\n')
-				break;
-		if (lineend == linestart + 1)
-		{
-			if (g_dentdata[linestart] == '{')
-			{
-				if (inentity)
-					return NULL;
-				inentity = true;
-			}
-			else if (g_dentdata[linestart] == '}')
-			{
-				if (!inentity)
-					return NULL;
-				inentity = false;
-				return _strdup (""); // only parse the first entity
-			}
-			else
-				return NULL;
-		}
-		else
-		{
-			if (!inentity)
-				return NULL;
-			int quotes[4];
-			int i, j;
-			for (i = 0, j = linestart; i < 4; i++, j++)
-			{
-				for (; j < lineend; j++)
-					if (g_dentdata[j] == '\"')
-						break;
-				if (j >= lineend)
-					break;
-				quotes[i] = j;
-			}
-			if (i != 4 || quotes[0] != linestart || quotes[3] != lineend - 1)
-			{
-				return NULL;
-			}
-			if (quotes[1] - (quotes[0] + 1) == (int)strlen ("wad") && !strncmp (&g_dentdata[quotes[0] + 1], "wad", strlen ("wad")))
-			{
-				int len = quotes[3] - (quotes[2] + 1);
-				char *value = (char *)malloc (len + 1);
-				hlassume (value != NULL, assume_NoMemory);
-				memcpy (value, &g_dentdata[quotes[2] + 1], len);
-				value[len] = '\0';
-				return value;
-			}
-		}
-		for (linestart = lineend; linestart < g_entdatasize; linestart++)
-			if (g_dentdata[linestart] != '\r' && g_dentdata[linestart] != '\n')
-				break;
-	}
-	return NULL;
-}
-#endif
 
 #define ENTRIES(a)		(sizeof(a)/sizeof(*(a)))
 #define ENTRYSIZE(a)	(sizeof(*(a)))
@@ -1423,10 +1321,6 @@ void PrintBSPFileSizes( void )
 #ifdef ZHLT_CHART_AllocBlock
 	int	numallocblocks = CountBlocks();
 	int	maxallocblocks = 64;
-#endif
-#ifdef ZHLT_CHART_WADFILES
-	bool	nowadtextures = NoWadTextures(); // We don't have this check at hlcsg, because only legacy compile tools don't empty "wad" value in "-nowadtextures" compiles.
-	char	*wadvalue = FindWadValue();
 #endif
 
 	Log( "\n");
@@ -1499,25 +1393,6 @@ void PrintBSPFileSizes( void )
 	Log( "%i textures referenced\n", numtextures );
 
 	Log( "=== Total BSP file data space used: %d bytes ===\n", totalmemory );
-#ifdef ZHLT_CHART_WADFILES
-	if( nowadtextures )
-	{
-		Log( "Wad files required to run the map: (None)\n" );
-	}
-	else if( wadvalue == NULL )
-	{
-		Log( "Wad files required to run the map: (Couldn't parse wad keyvalue from entity data)\n" );
-	}
-	else
-	{
-		Log( "Wad files required to run the map: \"%s\"\n", wadvalue );
-	}
-
-	if( wadvalue )
-	{
-		free( wadvalue );
-	}
-#endif
 }
 
 
@@ -2292,7 +2167,7 @@ entity_t *FindTargetEntity(const char* const target)
 
 void dtexdata_init( void )
 {
-	// ABTEXTURES: Init
+	g_TextureCollection.clear();
 	g_dtexdata = (byte *)AllocBlock( g_max_map_miptex );
 	hlassume( g_dtexdata != NULL, assume_NoMemory );
 	g_dlightdata = (byte *)AllocBlock( g_max_map_lightdata );
@@ -2303,7 +2178,7 @@ void dtexdata_init( void )
 
 void CDECL dtexdata_free( void )
 {
-	// ABTEXTURES: Destroy
+	g_TextureCollection.clear();
 	FreeBlock( g_dtexdata );
 	g_dtexdata = NULL;
 	FreeBlock( g_dlightdata );

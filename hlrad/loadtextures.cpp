@@ -308,6 +308,7 @@ void DefaultTexture (radtexture_t *tex, const char *name)
 
 void LoadTexture (radtexture_t *tex, const miptex_t *mt, int size)
 {
+	// ABTEXTURES: Populate radtexture from miptex
 	int i, j;
 	const miptex_t *header = mt;
 	const byte *data = (const byte *)mt;
@@ -356,6 +357,7 @@ void LoadTexture (radtexture_t *tex, const miptex_t *mt, int size)
 
 void LoadTextureFromWad (radtexture_t *tex, const miptex_t *header)
 {
+	// ABTEXTURES: Load texture from WAD
 	tex->width = header->width;
 	tex->height = header->height;
 	safe_strncpy(tex->name, header->name, sizeof(tex->name));
@@ -1471,6 +1473,7 @@ void EmbedLightmapInTextures ()
 		}
 		info->miptex = NewTextures_GetCurrentMiptexIndex ();
 
+		// ABTEXTURES: Add a new texture and fill its data
 		// emit a texture
 
 		int miptexsize;

@@ -395,3 +395,17 @@ uint32_t MiptexWrapper::areaForMipLevel(uint32_t width, uint32_t height, uint32_
 {
 	return dimensionForMipLevel(width, level) * dimensionForMipLevel(height, level);
 }
+
+uint32_t MiptexWrapper::totalIdealBytesRequired(uint32_t width, uint32_t height)
+{
+	size_t size = sizeof(miptex_t);
+
+	for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )
+	{
+		size += areaForMipLevel(width, height, mipLevel);
+	}
+
+	size += sizeof(uint16_t);					// Palette size
+	size += PALETTE_SIZE * sizeof(rgbpixel_t);	// Palette data
+	size += sizeof(uint16_t);					// Null terminator
+}

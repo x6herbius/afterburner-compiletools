@@ -9,14 +9,13 @@
 // Need functionality for:
 // - Exporting lump data
 // - Importing lump data
+// - Returning whether a texture at a given index is valid
 // - Getting number of textures in list - done
 // - Getting a texture by index - done
 // - Returning the type of the texture at the given index - done
 // - Creating textures with arbitrary user data
 // - Filtering the list and outputting a map of old -> new
 //   texture indices - done
-
-// Don't bother about checking for offsets into WAD - remove ZHLT_CHART_WADFILES
 
 class MiptexWrapper;
 
@@ -36,6 +35,7 @@ public:
 
 	ItemType itemType(uint32_t index) const;
 	uint32_t count() const;
+	void clear();
 
 	// If index is out of range, or type does not match, returns NULL.
 	MiptexWrapper* miptexAt(uint32_t index);
@@ -46,6 +46,8 @@ public:
 	// Output vector will hold a list of mappings from original index to new index.
 	// A mapping to -1 means that the item has been removed.
 	void filter(const std::function<bool(uint32_t, ItemType)>& callback, std::vector<int32_t>& map);
+
+	int calculateChecksum() const;
 
 private:
 	typedef std::shared_ptr<Item> ItemPtr;

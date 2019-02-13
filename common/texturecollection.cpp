@@ -1,5 +1,6 @@
 #include "texturecollection.h"
 #include "miptexwrapper.h"
+#include "hlassert.h"
 
 class TextureCollection::Item
 {
@@ -140,4 +141,16 @@ void TextureCollection::mapItems(const std::vector<int32_t>& map, uint32_t newCo
 	}
 
 	m_Items = tempItems;
+}
+
+void TextureCollection::clear()
+{
+	m_Items.clear();
+}
+
+int TextureCollection::calculateChecksum() const
+{
+	// TODO
+	hlassert(false);
+	return 0;
 }
