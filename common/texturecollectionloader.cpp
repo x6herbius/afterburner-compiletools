@@ -6,6 +6,7 @@
 #include "bspfile.h"
 #include "log.h"
 #include "miptexwrapper.h"
+#include "hlassert.h"
 
 #define WARNING(...) Warning("TextureCollectionLoader: " __VA_ARGS__)
 
@@ -37,8 +38,24 @@ bool TextureCollectionLoader::load(const void* data, uint32_t length)
 		return false;
 	}
 
-	// TODO
-	return false;
+	m_Collection.allocateAndAppend(m_ReadData.validCount, TextureCollection::ItemType::Miptex);
+
+	const uint32_t* offsets = reinterpret_cast<const uint32_t*>(m_ReadData.data + sizeof(uint32_t));
+	for ( uint32_t origIndex = 0; origIndex < m_TextureIndexReordering.size(); ++origIndex )
+	{
+		const int32_t newIndex = m_TextureIndexReordering[origIndex];
+		if ( newIndex < 0 )
+		{
+			continue;
+		}
+
+		MiptexWrapper* miptexWrapper = m_Collection.miptexAt(newIndex);
+		hlassert(miptexWrapper);
+
+		miptexWrapper->setFromMiptex(reinterpret_cast<const miptex_t*>(m_ReadData.data + offsets[origIndex]));
+	}
+
+	return true;
 }
 
 bool TextureCollectionLoader::populateTextureIndexReorderingMap()
@@ -56,10 +73,12 @@ bool TextureCollectionLoader::populateTextureIndexReorderingMap()
 	const uint32_t* offsets = reinterpret_cast<const uint32_t*>(m_ReadData.data + sizeof(uint32_t));
 	std::vector<IndexOffsetPair> offsetForIndex;
 
-	// 1. Sanity check offsets.
+	// 1. Sanity check offsets. We remove textures with offsets of -1 because they're useless to us -
+	// there's no way to even establish the texture name. Actual mipmap data offsets of -1 within the
+	// texture are fine, but they're handled by the miptex wrapper later.
 	for ( uint32_t index = 0; index < m_ReadData.count; ++index )
 	{
-		// Offset begins at 0 - this is invalid, since the offset should at least be past the header.
+		// Offset value here begins at 0. This is invalid, since the offset should at least be past the header.
 		// If the actual offset it valid, this 0 is replaced with the actual offset.
 		IndexOffsetPair pair(index, 0);
 
@@ -137,7 +156,7 @@ void TextureCollectionLoader::invalidateTexturesWithInsufficientData(std::vector
 		const uint32_t textureIndex = pair.first;
 		const uint32_t textureOffset = pair.second;
 
-		if ( textureOffset == 0 )
+		if ( textureOffset < 1 )
 		{
 			// Skip - already invalidated.
 			continue;

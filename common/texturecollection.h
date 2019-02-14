@@ -47,11 +47,15 @@ public:
 	// A mapping to -1 means that the item has been removed.
 	void filter(const std::function<bool(uint32_t, ItemType)>& callback, std::vector<int32_t>& map);
 
+	bool allocateAndAppend(size_t count, ItemType type);
+
 	int calculateChecksum() const;
 
 private:
 	typedef std::shared_ptr<Item> ItemPtr;
 	typedef std::vector<ItemPtr> ItemList;
+
+	static ItemPtr createItem(ItemType type);
 
 	void mapItems(const std::vector<int32_t>& map, uint32_t newCount);
 

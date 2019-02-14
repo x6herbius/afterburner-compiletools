@@ -143,6 +143,23 @@ void TextureCollection::mapItems(const std::vector<int32_t>& map, uint32_t newCo
 	m_Items = tempItems;
 }
 
+bool TextureCollection::allocateAndAppend(size_t count, ItemType type)
+{
+	if ( count < 1 || type == ItemType::Undefined )
+	{
+		return false;
+	}
+
+	const size_t oldSize = m_Items.size();
+	m_Items.resize(oldSize + count);
+
+	for ( uint32_t index = oldSize; index < m_Items.size(); ++index )
+	{
+		m_Items[index] = createItem(type);
+		hlassert(m_Items[index]);
+	}
+}
+
 void TextureCollection::clear()
 {
 	m_Items.clear();
@@ -153,4 +170,20 @@ int TextureCollection::calculateChecksum() const
 	// TODO
 	hlassert(false);
 	return 0;
+}
+
+TextureCollection::ItemPtr TextureCollection::createItem(ItemType type)
+{
+	switch (type)
+	{
+		case ItemType::Miptex:
+		{
+			return ItemPtr(new MiptexItem());
+		}
+
+		default:
+		{
+			return ItemPtr();
+		}
+	}
 }

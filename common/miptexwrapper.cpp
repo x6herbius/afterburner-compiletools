@@ -1,5 +1,8 @@
 #include "miptexwrapper.h"
 #include "hlassert.h"
+#include "log.h"
+
+#define WARNING(...) Warning("MiptexWrapper: " __VA_ARGS__)
 
 const uint32_t MiptexWrapper::PALETTE_SIZE = 256;
 
@@ -236,6 +239,7 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex)
 {
 	if ( !miptex )
 	{
+		WARNING("Invalid miptex input.");
 		return false;
 	}
 
@@ -245,6 +249,7 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex)
 
 	if ( !setDimensions(miptex->width, miptex->height) )
 	{
+		WARNING("Invalid dimensions %dx%d.", miptex->width, miptex->height);
 		invalidate();
 		return false;
 	}
@@ -275,6 +280,7 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex)
 
 		if ( paletteSize != PALETTE_SIZE)
 		{
+			WARNING("Invalid palette size - expected %u but got %u.", PALETTE_SIZE, paletteSize);
 			invalidate();
 			return false;
 		}
