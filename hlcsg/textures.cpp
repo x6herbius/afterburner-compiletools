@@ -36,8 +36,8 @@ std::deque< std::string > g_WadInclude;
 std::map< int, bool > s_WadIncludeMap;
 #endif
 
-static int      nummiptex = 0;
-static lumpinfo_t miptex[MAX_MAP_TEXTURES];
+static int      numLocalMiptex = 0;
+static lumpinfo_t localMiptex[MAX_MAP_TEXTURES];
 static int      nTexLumps = 0;
 static lumpinfo_t* lumpinfo = NULL;
 static int      nTexFiles = 0;
@@ -206,18 +206,18 @@ static int      FindMiptex(const char* const name)
 #endif
 
     ThreadLock();
-    for (i = 0; i < nummiptex; i++)
+    for (i = 0; i < numLocalMiptex; i++)
     {
-        if (!strcmp(name, miptex[i].name))
+        if (!strcmp(name, localMiptex[i].name))
         {
             ThreadUnlock();
             return i;
         }
     }
 
-    hlassume(nummiptex < MAX_MAP_TEXTURES, assume_MAX_MAP_TEXTURES);
-    safe_strncpy(miptex[i].name, name, MAXWADNAME);
-    nummiptex++;
+    hlassume(numLocalMiptex < MAX_MAP_TEXTURES, assume_MAX_MAP_TEXTURES);
+    safe_strncpy(localMiptex[i].name, name, MAXWADNAME);
+    numLocalMiptex++;
     ThreadUnlock();
     return i;
 }
@@ -741,16 +741,16 @@ void            AddAnimatingTextures()
     int             i, j, k;
     char            name[MAXWADNAME];
 
-    base = nummiptex;
+    base = numLocalMiptex;
 
     for (i = 0; i < base; i++)
     {
-        if ((miptex[i].name[0] != '+') && (miptex[i].name[0] != '-'))
+        if ((localMiptex[i].name[0] != '+') && (localMiptex[i].name[0] != '-'))
         {
             continue;
         }
 
-        safe_strncpy(name, miptex[i].name, MAXWADNAME);
+        safe_strncpy(name, localMiptex[i].name, MAXWADNAME);
 
         for (j = 0; j < 20; j++)
         {
@@ -775,9 +775,9 @@ void            AddAnimatingTextures()
         }
     }
 
-    if (nummiptex - base)
+    if (numLocalMiptex - base)
     {
-        Log("added %i additional animating textures.\n", nummiptex - base);
+        Log("added %i additional animating textures.\n", numLocalMiptex - base);
     }
 }
 
@@ -832,21 +832,21 @@ void            WriteMiptex()
     {
         int             i;
 
-        for (i = 0; i < nummiptex; i++)
+        for (i = 0; i < numLocalMiptex; i++)
         {
             lumpinfo_t*     found;
 
-            found = FindTexture(miptex + i);
+            found = FindTexture(localMiptex + i);
             if (found)
             {
-                miptex[i] = *found;
+                localMiptex[i] = *found;
 #ifdef HLCSG_AUTOWAD_NEW
 				texwadpathes[found->iTexFile]->usedtextures++;
 #endif
             }
             else
             {
-                miptex[i].iTexFile = miptex[i].filepos = miptex[i].disksize = 0;
+                localMiptex[i].iTexFile = localMiptex[i].filepos = localMiptex[i].disksize = 0;
             }
         }
     }
@@ -866,7 +866,7 @@ void            WriteMiptex()
 			if (!currentwad->usedbymap && (currentwad->usedtextures > 0 || !g_bWadAutoDetect))
 			{
 				Log ("Including Wadfile: %s\n", currentwad->path);
-				double percused = (double)currentwad->usedtextures / (double)nummiptex * 100;
+				double percused = (double)currentwad->usedtextures / (double)numLocalMiptex * 100;
 				Log (" - Contains %i used texture%s, %2.2f percent of map (%d textures in wad)\n",
 					 currentwad->usedtextures, currentwad->usedtextures == 1? "": "s", percused, currentwad->totaltextures);
 			}
@@ -877,7 +877,7 @@ void            WriteMiptex()
 			if (currentwad->usedbymap && (currentwad->usedtextures > 0 || !g_bWadAutoDetect))
 			{
 				Log ("Using Wadfile: %s\n", currentwad->path);
-				double percused = (double)currentwad->usedtextures / (double)nummiptex * 100;
+				double percused = (double)currentwad->usedtextures / (double)numLocalMiptex * 100;
 				Log (" - Contains %i used texture%s, %2.2f percent of map (%d textures in wad)\n",
 					 currentwad->usedtextures, currentwad->usedtextures == 1? "": "s", percused, currentwad->totaltextures);
 	#ifdef HLCSG_STRIPWADPATH
@@ -912,7 +912,7 @@ void            WriteMiptex()
         texinfo_t*      tx = g_texinfo;
 
         // Sort them FIRST by wadfile and THEN by name for most efficient loading in the engine.
-        qsort((void*)miptex, (size_t) nummiptex, sizeof(miptex[0]), lump_sorter_by_wad_and_name);
+        qsort((void*)localMiptex, (size_t) numLocalMiptex, sizeof(localMiptex[0]), lump_sorter_by_wad_and_name);
 
         // Sleazy Hack 104 Pt 2 - After sorting the miptex array, reset the texinfos to point to the right miptexs
         for (i = 0; i < g_numtexinfo; i++, tx++)
@@ -935,7 +935,7 @@ void            WriteMiptex()
 #endif
     }
     end = I_FloatTime();
-    Verbose("qsort(miptex) elapsed time = %ldms\n", (long)(end - start));
+    Verbose("qsort(localMiptex) elapsed time = %ldms\n", (long)(end - start));
 
     start = I_FloatTime();
     {
@@ -943,8 +943,8 @@ void            WriteMiptex()
 
         // Now setup to get the miptex data (or just the headers if using -wadtextures) from the wadfile
         l = (dmiptexlump_t*)g_dtexdata;
-        data = (byte*) & l->dataofs[nummiptex]; // Data = pointer to beginning of texture data after header
-        l->nummiptex = nummiptex;               // Set number of textures
+        data = (byte*) & l->dataofs[numLocalMiptex]; // Data = pointer to beginning of texture data after header
+        l->nummiptex = numLocalMiptex;               // Set number of textures
 
 #ifdef ZHLT_NOWADDIR
 		char writewad_name[_MAX_PATH];
@@ -968,7 +968,7 @@ void            WriteMiptex()
 		safe_snprintf (writewad_name, _MAX_PATH, "%s.wa_", g_Mapname);
 
 		writewad_file = SafeOpenWrite (writewad_name);
-		writewad_maxlumpinfos = nummiptex;
+		writewad_maxlumpinfos = numLocalMiptex;
 
 		writewad_lumpinfos = (dlumpinfo_t *)malloc (writewad_maxlumpinfos * sizeof (dlumpinfo_t));
 		hlassume (writewad_lumpinfos != NULL, assume_NoMemory);
@@ -984,7 +984,7 @@ void            WriteMiptex()
 			Error ("File write failure");
         }
 #endif
-        for (i = 0; i < nummiptex; i++)
+        for (i = 0; i < numLocalMiptex; i++)
         {
             l->dataofs[i] = data - (byte*) l;   // Set data offset for this texture.
 
@@ -992,7 +992,7 @@ void            WriteMiptex()
 			byte *writewad_data;
 			int writewad_datasize;
             // Call LoadLump which copies actual miptex data into place in global array.
-			len = LoadLump (miptex + i, data, &texsize
+			len = LoadLump (localMiptex + i, data, &texsize
 #ifdef HLCSG_FILEREADFAILURE_FIX
 							, &g_dtexdata[g_max_map_miptex] - data
 #endif
@@ -1004,13 +1004,13 @@ void            WriteMiptex()
 
 				writewad_lumpinfo->filepos = ftell (writewad_file);
 				writewad_lumpinfo->disksize = writewad_datasize;
-				writewad_lumpinfo->size = miptex[i].size;
-				writewad_lumpinfo->type = miptex[i].type;
-				writewad_lumpinfo->compression = miptex[i].compression;
-				writewad_lumpinfo->pad1 = miptex[i].pad1;
-				writewad_lumpinfo->pad2 = miptex[i].pad2;
+				writewad_lumpinfo->size = localMiptex[i].size;
+				writewad_lumpinfo->type = localMiptex[i].type;
+				writewad_lumpinfo->compression = localMiptex[i].compression;
+				writewad_lumpinfo->pad1 = localMiptex[i].pad1;
+				writewad_lumpinfo->pad2 = localMiptex[i].pad2;
 
-				memcpy (writewad_lumpinfo->name, miptex[i].name, MAXWADNAME);
+				memcpy (writewad_lumpinfo->name, localMiptex[i].name, MAXWADNAME);
 				writewad_header.numlumps++;
 
 				SafeWrite (writewad_file, writewad_data, writewad_datasize);
@@ -1018,7 +1018,7 @@ void            WriteMiptex()
 			}
 #else
             // Call LoadLump which copies actual miptex data into place in global array.
-            len = LoadLump(miptex + i, data, &texsize
+            len = LoadLump(localMiptex + i, data, &texsize
 #ifdef HLCSG_FILEREADFAILURE_FIX
 							, &g_dtexdata[g_max_map_miptex] - data
 #endif

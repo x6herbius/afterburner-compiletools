@@ -2124,9 +2124,11 @@ entity_t *FindTargetEntity(const char* const target)
 
 void dtexdata_init( void )
 {
+	// Remove this once all texture operations have been replaced using the texture collection.
+	// This is here so that the program doesn't attempt to run while the g_dtexdata stuff is
+	// still half-removed.
+	hlassert(false);
 	g_TextureCollection.clear();
-	g_dtexdata = (byte *)AllocBlock( g_max_map_miptex );
-	hlassume( g_dtexdata != NULL, assume_NoMemory );
 	g_dlightdata = (byte *)AllocBlock( g_max_map_lightdata );
 	hlassume( g_dlightdata != NULL, assume_NoMemory );
 	g_ddeluxdata = (byte *)AllocBlock( g_max_map_lightdata );
@@ -2136,8 +2138,6 @@ void dtexdata_init( void )
 void CDECL dtexdata_free( void )
 {
 	g_TextureCollection.clear();
-	FreeBlock( g_dtexdata );
-	g_dtexdata = NULL;
 	FreeBlock( g_dlightdata );
 	g_dlightdata = NULL;
 	FreeBlock( g_ddeluxdata );
@@ -2146,7 +2146,7 @@ void CDECL dtexdata_free( void )
 
 const char* GetTextureByNumber(int texturenumber)
 {
-    const texinfo_t* info = (texnumber >= 0 && texturenumber < g_numtexinfo) ? &g_texinfo[texturenumber] : NULL;
+    const texinfo_t* info = (texturenumber >= 0 && texturenumber < g_numtexinfo) ? &g_texinfo[texturenumber] : NULL;
     const MiptexWrapper* wrapper = info ? g_TextureCollection.miptexAt(info->miptex) : NULL;
 
     return wrapper ? wrapper->name() : "";
