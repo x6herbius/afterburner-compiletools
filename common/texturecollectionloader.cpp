@@ -31,9 +31,13 @@ bool TextureCollectionLoader::load(const void* data, uint32_t length)
 
 	// g_max_map_miptex is the size in bytes.
 	hlassume(m_ReadData.dataLength < g_max_map_miptex, assume_MAX_MAP_MIPTEX);
-	m_ReadData.count = *reinterpret_cast<const uint32_t*>(m_ReadData.data);
 
-	if ( !populateTextureIndexReorderingMap() )
+	// We're loading from disk, so apparently we have to byte-swap.
+	const uint32_t preSwapCount = *reinterpret_cast<const uint32_t*>(m_ReadData.data);
+	m_ReadData.count = LittleLong(preSwapCount);
+
+	m_ReadData.validCount = populateTextureIndexReorderingMap();
+	if ( m_ReadData.validCount < 1 )
 	{
 		return false;
 	}
@@ -52,13 +56,15 @@ bool TextureCollectionLoader::load(const void* data, uint32_t length)
 		MiptexWrapper* miptexWrapper = m_Collection.miptexAt(newIndex);
 		hlassert(miptexWrapper);
 
-		miptexWrapper->setFromMiptex(reinterpret_cast<const miptex_t*>(m_ReadData.data + offsets[origIndex]));
+		const uint32_t offset = LittleLong(offsets[origIndex]);
+		miptexWrapper->setFromMiptex(reinterpret_cast<const miptex_t*>(m_ReadData.data + offset));
 	}
 
 	return true;
 }
 
-bool TextureCollectionLoader::populateTextureIndexReorderingMap()
+// Returns how many textures were valid.
+uint32_t TextureCollectionLoader::populateTextureIndexReorderingMap()
 {
 	m_TextureIndexReordering.clear();
 
@@ -67,7 +73,7 @@ bool TextureCollectionLoader::populateTextureIndexReorderingMap()
 	if ( headerLength > m_ReadData.dataLength )
 	{
 		WARNING("Data was not long enough to contain %u texture offsets.", m_ReadData.count);
-		return false;
+		return 0;
 	}
 
 	const uint32_t* offsets = reinterpret_cast<const uint32_t*>(m_ReadData.data + sizeof(uint32_t));
@@ -78,27 +84,29 @@ bool TextureCollectionLoader::populateTextureIndexReorderingMap()
 	// texture are fine, but they're handled by the miptex wrapper later.
 	for ( uint32_t index = 0; index < m_ReadData.count; ++index )
 	{
+		const uint32_t offset = LittleLong(offsets[index]);
+
 		// Offset value here begins at 0. This is invalid, since the offset should at least be past the header.
 		// If the actual offset it valid, this 0 is replaced with the actual offset.
 		IndexOffsetPair pair(index, 0);
 
-		if ( offsets[index] >= m_ReadData.dataLength )
+		if ( offset >= m_ReadData.dataLength )
 		{
 			WARNING("Offset value of %u for texture index %u exceeds total data size of %u.",
-					offsets[index],
+					offset,
 					index,
 					m_ReadData.dataLength);
 		}
-		else if ( offsets[index] < headerLength )
+		else if ( offset < headerLength )
 		{
 			WARNING("Offset value of %u for texture index %u is invalid (expected at least %u).",
-					offsets[index],
+					offset,
 					index,
 					headerLength);
 		}
 		else
 		{
-			pair.second = offsets[index];
+			pair.second = offset;
 		}
 
 		offsetForIndex.push_back(pair);
@@ -119,7 +127,6 @@ bool TextureCollectionLoader::populateTextureIndexReorderingMap()
 
 	// 5. Create the vector to map original index to new index.
 	m_TextureIndexReordering.resize(m_ReadData.count, -1);
-	m_ReadData.validCount = offsetForIndex.size();
 
 	for ( uint32_t targetIndex = 0; targetIndex < offsetForIndex.size(); ++targetIndex )
 	{
@@ -127,7 +134,7 @@ bool TextureCollectionLoader::populateTextureIndexReorderingMap()
 		m_TextureIndexReordering[pair.first] = targetIndex;
 	}
 
-	return true;
+	return offsetForIndex.size();
 }
 
 void TextureCollectionLoader::removeInvalidTextures(std::vector<IndexOffsetPair>& offsetsForIndex)

@@ -235,6 +235,8 @@ const MiptexWrapper::rgbpixel_t* MiptexWrapper::rawPaletteData() const
 	return reinterpret_cast<const rgbpixel_t*>(m_Palette.data());
 }
 
+// According to the old code in bspfile.cpp, only the dmiptexlump_t data needs to be swapped for endianness.
+// Once the miptex_t is being referenced, it's fine.
 bool MiptexWrapper::setFromMiptex(const miptex_t* miptex)
 {
 	if ( !miptex )
@@ -355,11 +357,11 @@ bool MiptexWrapper::canExport() const
 
 size_t MiptexWrapper::exportDataSize() const
 {
-	if ( !canExport() )
-	{
-		return 0;
-	}
+	return canExport() ? dataSize() : 0;
+}
 
+size_t MiptexWrapper::dataSize() const
+{
 	size_t size = sizeof(miptex_t);
 
 	for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )

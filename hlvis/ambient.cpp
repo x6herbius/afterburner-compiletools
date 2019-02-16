@@ -1,5 +1,6 @@
 #include "vis.h"
 #include "stringlib.h"
+#include "miptexwrapper.h"
 
 /*
 
@@ -58,8 +59,6 @@ void CalcAmbientSounds( void )
 	vec_t	d, maxd;
 	int	ambient_type;
 	texinfo_t	*info;
-	miptex_t	*miptex;
-	int	ofs;
 	vec_t	dists[NUM_AMBIENTS];
 	vec_t	vol;
 
@@ -87,25 +86,25 @@ void CalcAmbientSounds( void )
 			{
 				surf = &g_dfaces[g_dmarksurfaces[hit->firstmarksurface + k]];
 				info = &g_texinfo[surf->texinfo];
-				// ABTEXTURES: Get texture by index
-				ofs = ((dmiptexlump_t *)g_dtexdata)->dataofs[info->miptex];
-				miptex = (miptex_t *)(&g_dtexdata[ofs]);
 
-				if( !Q_strnicmp( miptex->name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1 ))
+				const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(info->miptex);
+				const char* name = wrapper ? wrapper->name() : NULL;
+
+				if( !Q_strnicmp(name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1) )
 				{
 					ambient_type = AMBIENT_SKY;
 				}
-				else if( Q_strnicmp(miptex->name, SPECIALTEX_LIQUID_PREFIX, sizeof(SPECIALTEX_LIQUID_PREFIX) - 1) == 0 )
+				else if( Q_strnicmp(name, SPECIALTEX_LIQUID_PREFIX, sizeof(SPECIALTEX_LIQUID_PREFIX) - 1) == 0 )
 				{
-					if( !Q_strnicmp( miptex->name, SPECIALTEX_LIQUID_WATER, sizeof(SPECIALTEX_LIQUID_WATER) - 1 ))
+					if( !Q_strnicmp(name, SPECIALTEX_LIQUID_WATER, sizeof(SPECIALTEX_LIQUID_WATER) - 1) )
 					{
 						ambient_type = AMBIENT_WATER;
 					}
-					else if( !Q_strnicmp( miptex->name, SPECIALTEX_LIQUID_SLIME, sizeof(SPECIALTEX_LIQUID_SLIME) - 1 ))
+					else if( !Q_strnicmp(name, SPECIALTEX_LIQUID_SLIME, sizeof(SPECIALTEX_LIQUID_SLIME) - 1) )
 					{
 						ambient_type = AMBIENT_SLIME;
 					}
-					else if( !Q_strnicmp(miptex->name, SPECIALTEX_LIQUID_LAVA, sizeof(SPECIALTEX_LIQUID_LAVA) - 1 ))
+					else if( !Q_strnicmp(name, SPECIALTEX_LIQUID_LAVA, sizeof(SPECIALTEX_LIQUID_LAVA) - 1) )
 					{
 						ambient_type = AMBIENT_LAVA;
 					}

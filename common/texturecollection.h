@@ -37,6 +37,12 @@ public:
 	uint32_t count() const;
 	void clear();
 
+	// Regardless of whether textures are in an exportable state.
+	size_t totalBytesInUse() const;
+
+	// Only counts textures that can currently be exported.
+	size_t exportBytesRequired() const;
+
 	// If index is out of range, or type does not match, returns NULL.
 	MiptexWrapper* miptexAt(uint32_t index);
 	const MiptexWrapper* miptexAt(uint32_t index) const;
@@ -48,6 +54,9 @@ public:
 	void filter(const std::function<bool(uint32_t, ItemType)>& callback, std::vector<int32_t>& map);
 
 	bool allocateAndAppend(size_t count, ItemType type);
+
+	// If newCount is >= current count, nothing happens.
+	void truncate(size_t newCount);
 
 	int calculateChecksum() const;
 

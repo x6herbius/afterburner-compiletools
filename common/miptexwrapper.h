@@ -96,6 +96,10 @@ public:
 	size_t exportDataSize() const;
 	bool canExport() const;
 
+	// Numebr of bytes currently being used by the texture, regardless of
+	// whether it is in an exportable state.
+	size_t dataSize() const;
+
 	static uint32_t dimensionForMipLevel(uint32_t dim, uint32_t level);
 	static uint32_t areaForMipLevel(uint32_t width, uint32_t height, uint32_t level);
 	static uint32_t totalIdealBytesRequired(uint32_t width, uint32_t height);

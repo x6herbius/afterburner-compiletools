@@ -17,7 +17,7 @@
 #include <string>
 
 #include "qrad.h"
-
+#include "miptexwrapper.h"
 
 /*
  * NOTES
@@ -693,20 +693,12 @@ static void     BaseLightForFace(const dface_t* const f, vec3_t light)
 		return;
 	}
 #endif
-	// ABTEXTURES: Get texture by index
-    texinfo_t*      tx;
-    miptex_t*       mt;
-    int             ofs;
-
-    //
-    // check for light emited by texture
-    //
-    tx = &g_texinfo[f->texinfo];
-
-    ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[tx->miptex];
-    mt = (miptex_t*)((byte*) g_dtexdata + ofs);
-
-    LightForTexture(mt->name, light);
+	const texinfo_t* texinfo = &g_texinfo[f->texinfo];
+	const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(texinfo->miptex);
+	if ( wrapper )
+	{
+		LightForTexture(wrapper->name(), light);
+	}
 }
 
 // =====================================================================================
@@ -1404,32 +1396,52 @@ void ReadCustomChopValue()
 	entity_t *mapent;
 	epair_t *ep;
 
-	// ABTEXTURES: Get total texture count
-	num = ((dmiptexlump_t *)g_dtexdata)->nummiptex;
+	num = g_TextureCollection.count();
 	chopscales = (vec_t *)malloc (num * sizeof(vec_t));
 	for (i = 0; i < num; i++)
 	{
 		chopscales[i] = 1.0;
 	}
+
 	for (k = 0; k < g_numentities; k++)
 	{
 		mapent = &g_entities[k];
-		if (strcmp(ValueForKey(mapent, "classname"), "info_chopscale"))
+		if (strcmp(ValueForKey(mapent, "classname"), "info_chopscale") != 0)
+		{
 			continue;
+		}
+
 		Developer (DEVELOPER_LEVEL_MESSAGE, "info_chopscale entity detected.\n");
+
 		for (i = 0; i < num; i++)
 		{
-			// ABTEXTURES: Get texture by index
-			const char *texname = ((miptex_t*)(g_dtexdata+((dmiptexlump_t*)g_dtexdata)->dataofs[i]))->name;
+			const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(i);
+			if ( !wrapper )
+			{
+				continue;
+			}
+
+			const char* texname = wrapper->name();
+			if ( strcasecmp(texname, SPECIALTEX_ORIGIN) == 0 )
+			{
+				continue;
+			}
+
 			for (ep = mapent->epairs; ep; ep = ep->next)
 			{
-				if (strcasecmp (ep->key, texname))
+				if (strcasecmp(ep->key, texname) != 0)
+				{
 					continue;
-				if (!strcasecmp (ep->key, SPECIALTEX_ORIGIN))
+				}
+
+				const vec_t scale = atof(ep->value);
+
+				if (scale <= 0)
+				{
 					continue;
-				if (atof (ep->value) <= 0)
-					continue;
-				chopscales[i] = atof (ep->value);
+				}
+
+				chopscales[i] = scale;
 				Developer (DEVELOPER_LEVEL_MESSAGE, "info_chopscale: %s = %f\n", texname, chopscales[i]);
 			}
 		}
@@ -1449,31 +1461,46 @@ void ReadCustomSmoothValue()
 	entity_t *mapent;
 	epair_t *ep;
 
-	// ABTEXTURES: Get total texture count
-	num = ((dmiptexlump_t *)g_dtexdata)->nummiptex;
+	num = g_TextureCollection.count();
 	g_smoothvalues = (vec_t *)malloc (num * sizeof(vec_t));
 	for (i = 0; i < num; i++)
 	{
 		g_smoothvalues[i] = g_smoothing_threshold;
 	}
+
 	for (k = 0; k < g_numentities; k++)
 	{
 		mapent = &g_entities[k];
-		if (strcmp(ValueForKey(mapent, "classname"), "info_smoothvalue"))
+		if (strcmp(ValueForKey(mapent, "classname"), "info_smoothvalue") != 0)
+		{
 			continue;
-		Developer (DEVELOPER_LEVEL_MESSAGE, "info_smoothvalue entity detected.\n");
+		}
+
+		Developer(DEVELOPER_LEVEL_MESSAGE, "info_smoothvalue entity detected.\n");
+
 		for (i = 0; i < num; i++)
 		{
-			// ABTEXTURES: Get texture by index
-			const char *texname = ((miptex_t*)(g_dtexdata+((dmiptexlump_t*)g_dtexdata)->dataofs[i]))->name;
+			const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(i);
+			if ( !wrapper )
+			{
+				continue;
+			}
+
+			const char* texname = wrapper->name();
+			if ( strcasecmp(texname, SPECIALTEX_ORIGIN) == 0 )
+			{
+				continue;
+			}
+
 			for (ep = mapent->epairs; ep; ep = ep->next)
 			{
-				if (strcasecmp (ep->key, texname))
+				if (strcasecmp(ep->key, texname) != 0)
+				{
 					continue;
-				if (!strcasecmp (ep->key, SPECIALTEX_ORIGIN))
-					continue;
-				g_smoothvalues[i] = cos(atof (ep->value) * (Q_PI / 180.0));
-				Developer (DEVELOPER_LEVEL_MESSAGE, "info_smoothvalue: %s = %f\n", texname, atof (ep->value));
+				}
+
+				g_smoothvalues[i] = cos(atof(ep->value) * (Q_PI / 180.0));
+				Developer (DEVELOPER_LEVEL_MESSAGE, "info_smoothvalue: %s = %f\n", texname, atof(ep->value));
 			}
 		}
 	}
@@ -1487,32 +1514,47 @@ void ReadTranslucentTextures()
 	entity_t *mapent;
 	epair_t *ep;
 
-	// ABTEXTURES: Get total texture count
-	num = ((dmiptexlump_t *)g_dtexdata)->nummiptex;
+	num = g_TextureCollection.count();
 	g_translucenttextures = (vec3_t *)malloc (num * sizeof(vec3_t));
 	for (i = 0; i < num; i++)
 	{
 		VectorClear (g_translucenttextures[i]);
 	}
+
 	for (k = 0; k < g_numentities; k++)
 	{
 		mapent = &g_entities[k];
-		if (strcmp(ValueForKey(mapent, "classname"), "info_translucent"))
+		if (strcmp(ValueForKey(mapent, "classname"), "info_translucent") != 0)
+		{
 			continue;
+		}
+
 		Developer (DEVELOPER_LEVEL_MESSAGE, "info_translucent entity detected.\n");
+
 		for (i = 0; i < num; i++)
 		{
-			// ABTEXTURES: Get texture by index
-			const char *texname = ((miptex_t*)(g_dtexdata+((dmiptexlump_t*)g_dtexdata)->dataofs[i]))->name;
+			const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(i);
+			if ( !wrapper )
+			{
+				continue;
+			}
+
+			const char* texname = wrapper->name();
+			if ( strcasecmp(texname, SPECIALTEX_ORIGIN) == 0 )
+			{
+				continue;
+			}
+
 			for (ep = mapent->epairs; ep; ep = ep->next)
 			{
-				if (strcasecmp (ep->key, texname))
+				if (strcasecmp(ep->key, texname) != 0)
+				{
 					continue;
-				if (!strcasecmp (ep->key, SPECIALTEX_ORIGIN))
-					continue;
+				}
+
 				double r, g, b;
-				int count;
-				count = sscanf (ep->value, "%lf %lf %lf", &r, &g, &b);
+				int count = sscanf(ep->value, "%lf %lf %lf", &r, &g, &b);
+
 				if (count == 1)
 				{
 					g = b = r;
@@ -1522,15 +1564,17 @@ void ReadTranslucentTextures()
 					Warning ("ignore bad translucent value '%s'", ep->value);
 					continue;
 				}
+
 				if (r < 0.0 || r > 1.0 || g < 0.0 || g > 1.0 || b < 0.0 || b > 1.0)
 				{
 					Warning ("translucent value should be 0.0-1.0");
 					continue;
 				}
+
 				g_translucenttextures[i][0] = r;
 				g_translucenttextures[i][1] = g;
 				g_translucenttextures[i][2] = b;
-				Developer (DEVELOPER_LEVEL_MESSAGE, "info_translucent: %s = %f %f %f\n", texname, r, g, b);
+				Developer(DEVELOPER_LEVEL_MESSAGE, "info_translucent: %s = %f %f %f\n", texname, r, g, b);
 			}
 		}
 	}
@@ -1552,51 +1596,68 @@ void ReadLightingCone ()
 	entity_t *mapent;
 	epair_t *ep;
 
-	// ABTEXTURES: Get total texture count
-	num = ((dmiptexlump_t *)g_dtexdata)->nummiptex;
+	num = g_TextureCollection.count();
 	g_lightingconeinfo = (vec3_t *)malloc (num * sizeof(vec3_t));
+
 	for (i = 0; i < num; i++)
 	{
 		g_lightingconeinfo[i][0] = 1.0; // default power
 		g_lightingconeinfo[i][1] = 1.0; // default scale
 	}
+
 	for (k = 0; k < g_numentities; k++)
 	{
 		mapent = &g_entities[k];
-		if (strcmp(ValueForKey(mapent, "classname"), "info_angularfade"))
+		if (strcmp(ValueForKey(mapent, "classname"), "info_angularfade") != 0)
+		{
 			continue;
-		Developer (DEVELOPER_LEVEL_MESSAGE, "info_angularfade entity detected.\n");
+		}
+
+		Developer(DEVELOPER_LEVEL_MESSAGE, "info_angularfade entity detected.\n");
 		for (i = 0; i < num; i++)
 		{
-			// ABTEXTURES: Get texture by index
-			const char *texname = ((miptex_t*)(g_dtexdata+((dmiptexlump_t*)g_dtexdata)->dataofs[i]))->name;
+			const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(i);
+			if ( !wrapper )
+			{
+				continue;
+			}
+
+			const char* texname = wrapper->name();
+			if ( strcasecmp(texname, SPECIALTEX_ORIGIN) == 0 )
+			{
+				continue;
+			}
+
 			for (ep = mapent->epairs; ep; ep = ep->next)
 			{
-				if (strcasecmp (ep->key, texname))
+				if (strcasecmp (ep->key, texname) != 0)
+				{
 					continue;
-				if (!strcasecmp (ep->key, SPECIALTEX_ORIGIN))
-					continue;
+				}
+
 				double power, scale;
-				int count;
-				count = sscanf (ep->value, "%lf %lf", &power, &scale);
+				int count = sscanf(ep->value, "%lf %lf", &power, &scale);
+
 				if (count == 1)
 				{
 					scale = 1.0;
 				}
 				else if (count != 2)
 				{
-					Warning ("ignore bad angular fade value '%s'", ep->value);
+					Warning("ignore bad angular fade value '%s'", ep->value);
 					continue;
 				}
+
 				if (power < 0.0 || scale < 0.0)
 				{
-					Warning ("ignore disallowed angular fade value '%s'", ep->value);
+					Warning("ignore disallowed angular fade value '%s'", ep->value);
 					continue;
 				}
+
 				scale *= DefaultScaleForPower (power);
 				g_lightingconeinfo[i][0] = power;
 				g_lightingconeinfo[i][1] = scale;
-				Developer (DEVELOPER_LEVEL_MESSAGE, "info_angularfade: %s = %f %f\n", texname, power, scale);
+				Developer(DEVELOPER_LEVEL_MESSAGE, "info_angularfade: %s = %f %f\n", texname, power, scale);
 			}
 		}
 	}

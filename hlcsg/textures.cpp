@@ -943,8 +943,8 @@ void            WriteMiptex()
 
         // Now setup to get the miptex data (or just the headers if using -wadtextures) from the wadfile
         l = (dmiptexlump_t*)g_dtexdata;
-        data = (byte*) & l->dataofs[nummiptex];
-        l->nummiptex = nummiptex;
+        data = (byte*) & l->dataofs[nummiptex]; // Data = pointer to beginning of texture data after header
+        l->nummiptex = nummiptex;               // Set number of textures
 
 #ifdef ZHLT_NOWADDIR
 		char writewad_name[_MAX_PATH];
@@ -986,11 +986,12 @@ void            WriteMiptex()
 #endif
         for (i = 0; i < nummiptex; i++)
         {
-            l->dataofs[i] = data - (byte*) l;
+            l->dataofs[i] = data - (byte*) l;   // Set data offset for this texture.
 
 #ifdef ZHLT_NOWADDIR
 			byte *writewad_data;
 			int writewad_datasize;
+            // Call LoadLump which copies actual miptex data into place in global array.
 			len = LoadLump (miptex + i, data, &texsize
 #ifdef HLCSG_FILEREADFAILURE_FIX
 							, &g_dtexdata[g_max_map_miptex] - data
@@ -1016,6 +1017,7 @@ void            WriteMiptex()
 				free (writewad_data);
 			}
 #else
+            // Call LoadLump which copies actual miptex data into place in global array.
             len = LoadLump(miptex + i, data, &texsize
 #ifdef HLCSG_FILEREADFAILURE_FIX
 							, &g_dtexdata[g_max_map_miptex] - data
@@ -1037,7 +1039,7 @@ void            WriteMiptex()
             data += len;
         }
 
-        g_texdatasize = data - g_dtexdata;
+        g_texdatasize = data - g_dtexdata;  // Set tht total size of all the texture data
 
 #ifdef ZHLT_NOWADDIR
 		writewad_header.infotableofs = ftell (writewad_file);

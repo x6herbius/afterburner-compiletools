@@ -2,6 +2,7 @@
 #define BSPFILE_H__
 #include "cmdlib.h" //--vluzacn
 #include "mathlib.h"
+#include "texturecollection.h"
 
 #if _MSC_VER >= 1000
 #pragma once
@@ -549,6 +550,9 @@ extern int      g_ddeluxdata_checksum;
 extern int      g_texdatasize;
 extern byte*    g_dtexdata;                                  // (dmiptexlump_t)
 extern int      g_dtexdata_checksum;
+
+extern TextureCollection g_TextureCollection;
+extern int g_TextureCollectionChecksum;
 
 extern int      g_entdatasize;
 extern char     g_dentdata[MAX_MAP_ENTSTRING];

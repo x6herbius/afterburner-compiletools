@@ -9,6 +9,8 @@
 #include "blockmem.h"
 #include "checksum.h"
 #include "texturecollection.h"
+#include "texturecollectionloader.h"
+#include "miptexwrapper.h"
 
 //=============================================================================
 
@@ -396,30 +398,7 @@ static void SwapBSPFile( const bool todisk )
 	}
 #endif
 
-	//
-	// miptex
-	//
-	// ABTEXTURES: Swap bytes
-	if( g_texdatasize )
-	{
-		mtl = (dmiptexlump_t*)g_dtexdata;
-
-		if( todisk )
-		{
-			c = mtl->nummiptex;
-		}
-		else
-		{
-			c = LittleLong( mtl->nummiptex );
-		}
-
-		mtl->nummiptex = LittleLong( mtl->nummiptex );
-
-		for( i = 0; i < c; i++ )
-		{
-			mtl->dataofs[i] = LittleLong( mtl->dataofs[i] );
-		}
-	}
+	// Textures do not need to be byte-swapped, as this is handled automatically on import/export.
 
 	//
 	// marksurfaces
@@ -533,7 +512,6 @@ static int CopyLump( int lump, void *dest, int size, const dheader_t *header )
 		Error( "LoadBSPFile: Lump size %d was expected to be multiple of %d", length, size );
 	}
 
-	// ABTEXTURES: Check textures within limit
 	// special handling for tex and lightdata to keep things from exploding - KGP
 	if( lump == LUMP_TEXTURES && dest == (void*)g_dtexdata )
 		hlassume( g_max_map_miptex > length, assume_MAX_MAP_MIPTEX );
@@ -632,8 +610,9 @@ void LoadBSPImage( dheader_t* const header )
 	g_nummarksurfaces = CopyLump( LUMP_MARKSURFACES, g_dmarksurfaces, sizeof( g_dmarksurfaces[0] ), header );
 	g_numsurfedges = CopyLump( LUMP_SURFEDGES, g_dsurfedges, sizeof( g_dsurfedges[0] ), header );
 	g_numedges = CopyLump( LUMP_EDGES, g_dedges, sizeof( dedge_t ), header );
-	// ABTEXTURES: Import from lump data
-	g_texdatasize = CopyLump( LUMP_TEXTURES, g_dtexdata, 1, header );
+	TextureCollectionLoader(g_TextureCollection)
+		.load(reinterpret_cast<const byte*>(header) + header->lumps[LUMP_TEXTURES].fileofs,
+			  header->lumps[LUMP_TEXTURES].filelen);
 	g_visdatasize = CopyLump( LUMP_VISIBILITY, g_dvisdata, 1, header );
 	g_lightdatasize = CopyLump( LUMP_LIGHTING, g_dlightdata, 1, header );
 	g_entdatasize = CopyLump( LUMP_ENTITIES, g_dentdata, 1, header );
@@ -1315,8 +1294,7 @@ static int GlobUsage( const char *szItem, const int itemstorage, const int maxst
 // =====================================================================================
 void PrintBSPFileSizes( void )
 {
-	// ABTEXTURES: Total texture count
-	int	numtextures = g_texdatasize ? ((dmiptexlump_t *)g_dtexdata)->nummiptex : 0;
+	int	numtextures = g_TextureCollection.count();
 	int	totalmemory = 0;
 #ifdef ZHLT_CHART_AllocBlock
 	int	numallocblocks = CountBlocks();
@@ -1360,7 +1338,7 @@ void PrintBSPFileSizes( void )
 	totalmemory += ArrayUsage( "surfedges", g_numsurfedges, ENTRIES( g_dsurfedges ), ENTRYSIZE( g_dsurfedges ));
 	totalmemory += ArrayUsage( "edges", g_numedges, ENTRIES( g_dedges ), ENTRYSIZE( g_dedges ));
 
-	totalmemory += GlobUsage( "texdata", g_texdatasize, g_max_map_miptex );
+	totalmemory += GlobUsage( "texdata", g_TextureCollection.totalBytesInUse(), g_max_map_miptex );
 	totalmemory += GlobUsage( "lightdata", g_lightdatasize, g_max_map_lightdata );
 	totalmemory += GlobUsage( "visdata", g_visdatasize, sizeof( g_dvisdata ));
 	totalmemory += GlobUsage( "entdata", g_entdatasize, sizeof( g_dentdata ));
@@ -1404,11 +1382,10 @@ void PrintBSPFileSizes( void )
 int ParseImplicitTexinfoFromTexture( int miptex )
 {
 	int texinfo;
-	// ABTEXTURES: Total texture count
-	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
+	int numtextures = g_TextureCollection.count();
 	int offset;
 	int size;
-	miptex_t *mt;
+	const miptex_t *mt;
 	char name[16];
 
 	if (miptex < 0 || miptex >= numtextures)
@@ -1416,18 +1393,14 @@ int ParseImplicitTexinfoFromTexture( int miptex )
 		Warning ("ParseImplicitTexinfoFromTexture: internal error: invalid texture number %d.", miptex);
 		return -1;
 	}
-	// ABTEXTURES: Get texture by index
-	offset = ((dmiptexlump_t *)g_dtexdata)->dataofs[miptex];
-	size = g_texdatasize - offset;
-	if (offset < 0 || g_dtexdata + offset < (byte *)&((dmiptexlump_t *)g_dtexdata)->dataofs[numtextures] ||
-		size < (int)sizeof (miptex_t))
+
+	const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(miptex);
+	if ( !wrapper )
 	{
 		return -1;
 	}
 
-	mt = (miptex_t *)&g_dtexdata[offset];
-	safe_strncpy (name, mt->name, 16);
-
+	safe_strncpy (name, wrapper->name(), sizeof(name));
 	if (!(strlen (name) >= 6 && !strncasecmp (&name[1], "_rad", 4) && '0' <= name[5] && name[5] <= '9'))
 	{
 		return -1;
@@ -1474,8 +1447,7 @@ void DeleteEmbeddedLightmaps( void )
 	int countremovedtexinfos = 0;
 	int countremovedtextures = 0;
 	int i;
-	// ABTEXTURES: Total texture count
-	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
+	int numtextures = g_TextureCollection.count();
 
 	// Step 1: parse the original texinfo index stored in each "?_rad*" texture
 	//         and restore the texinfo for the faces that have had their lightmap embedded
@@ -1567,24 +1539,9 @@ void DeleteEmbeddedLightmaps( void )
 
 		if (numremaining < numtextures)
 		{
-			// ABTEXTURES: Filter textures
-			dmiptexlump_t *texdata = (dmiptexlump_t *)g_dtexdata;
-			byte *dataaddr = (byte *)&texdata->dataofs[texdata->nummiptex];
-			int datasize = (g_dtexdata + texdata->dataofs[numremaining]) - dataaddr;
-			byte *newdataaddr = (byte *)&texdata->dataofs[numremaining];
-			memmove (newdataaddr, dataaddr, datasize);
-			g_texdatasize = (newdataaddr + datasize) - g_dtexdata;
-			texdata->nummiptex = numremaining;
-			for (i = 0; i < numremaining; i++)
-			{
-				if (texdata->dataofs[i] < 0) // bad texture
-				{
-					continue;
-				}
-				texdata->dataofs[i] += newdataaddr - dataaddr;
-			}
-
-			numtextures = texdata->nummiptex;
+			// numremaining was calculated by walking back from the end of the texture list,
+			// so we can just truncate to this new count.
+			g_TextureCollection.truncate(numremaining);
 		}
 	}
 
@@ -2187,27 +2144,12 @@ void CDECL dtexdata_free( void )
 	g_ddeluxdata = NULL;
 }
 
-// =====================================================================================
-//  GetTextureByNumber
-//      Touchy function, can fail with a page fault if all the data isnt kosher
-//      (i.e. map was compiled with missing textures)
-// =====================================================================================
 const char* GetTextureByNumber(int texturenumber)
 {
-#ifdef HLCSG_HLBSP_VOIDTEXINFO
-	if (texturenumber == -1)
-		return "";
-#endif
-	// ABTEXTURES: Get texture by index
-    texinfo_t*      info;
-    miptex_t*       miptex;
-    int             ofs;
+    const texinfo_t* info = (texnumber >= 0 && texturenumber < g_numtexinfo) ? &g_texinfo[texturenumber] : NULL;
+    const MiptexWrapper* wrapper = info ? g_TextureCollection.miptexAt(info->miptex) : NULL;
 
-    info = &g_texinfo[texturenumber];
-    ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
-    miptex = (miptex_t*)(&g_dtexdata[ofs]);
-
-    return miptex->name;
+    return wrapper ? wrapper->name() : "";
 }
 
 // =====================================================================================

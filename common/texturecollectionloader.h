@@ -39,7 +39,7 @@ private:
 	};
 
 	void clearInternalData();
-	bool populateTextureIndexReorderingMap();
+	uint32_t populateTextureIndexReorderingMap();
 	void invalidateTexturesWithInsufficientData(std::vector<IndexOffsetPair>& offsetForIndex);
 	void removeInvalidTextures(std::vector<IndexOffsetPair>& offsetsForIndex);
 

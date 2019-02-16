@@ -885,23 +885,24 @@ bool            CheckFaceForNull(const face_t* const f)
 			return true;
 		return false;
 #else
-        // ABTEXTURES: Get by index
-        texinfo_t*      info;
-        miptex_t*       miptex;
-        int             ofs;
+        const texinfo_t* texinfo = &g_texinfo[f->texturenum];
+        const MiptexWrapper* miptex = g_TextureCollection.miptexAt(texinfo->miptex);
+        const char* miptexName = miptex ? miptex->name() : NULL;
 
-        info = &g_texinfo[f->texturenum];
-        ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
-        miptex = (miptex_t*)(&g_dtexdata[ofs]);
-
-        if (!strcasecmp(miptex->name, SPECIALTEX_NULL))
+        if (!strcasecmp(miptexName, SPECIALTEX_NULL))
+        {
             return true;
+        }
 	#ifdef HLCSG_CUSTOMHULL
-        else if (!strncasecmp(miptex->name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1))
+        else if (!strncasecmp(miptexName, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1))
+        {
             return true;
+        }
 	#else
         else
+        {
             return false;
+        }
 	#endif
 #endif
     }
@@ -910,31 +911,26 @@ bool            CheckFaceForNull(const face_t* const f)
         return false;
     }
 }
+
+static bool CheckFaceTextureForName(const face_t* const face, const char* textureName, size_t maxLength)
+{
+#ifdef HLCSG_HLBSP_VOIDTEXINFO
+	return strncasecmp(GetTextureByNumber(face->texturenum), textureName, maxLength) == 0;
+#else
+        const texinfo_t* texinfo = &g_texinfo[f->texturenum];
+        const MiptexWrapper* miptex = g_TextureCollection.miptexAt(info->miptex);
+        const char* miptexName = miptex ? miptex->name() : NULL;
+
+        return strcasecmp(miptexName, textureName) == 0;
+#endif
+}
+
 // =====================================================================================
 //Cpt_Andrew - UTSky Check
 // =====================================================================================
-bool            CheckFaceForEnv_Sky(const face_t* const f)
+bool CheckFaceForEnv_Sky(const face_t* const f)
 {
-#ifdef HLCSG_HLBSP_VOIDTEXINFO
-	const char *name = GetTextureByNumber (f->texturenum);
-	if (!strncasecmp (name, SPECIALTEX_ENV_SKY, sizeof(SPECIALTEX_ENV_SKY) - 1))
-		return true;
-	return false;
-#else
-        // ABTEXTURES: Get by index
-        texinfo_t*      info;
-        miptex_t*       miptex;
-        int             ofs;
-
-        info = &g_texinfo[f->texturenum];
-        ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
-        miptex = (miptex_t*)(&g_dtexdata[ofs]);
-
-        if (!strcasecmp(miptex->name, SPECIALTEX_ENV_SKY))
-            return true;
-        else
-            return false;
-#endif
+    return CheckFaceTextureForName(f, SPECIALTEX_ENV_SKY, sizeof(SPECIALTEX_ENV_SKY) - 1);
 }
 // =====================================================================================
 #endif
@@ -943,73 +939,24 @@ bool            CheckFaceForEnv_Sky(const face_t* const f)
 //  CheckFaceForHint
 //      Returns true if the passed face is facetype hint
 // =====================================================================================
-bool            CheckFaceForHint(const face_t* const f)
+bool CheckFaceForHint(const face_t* const f)
 {
-#ifdef HLCSG_HLBSP_VOIDTEXINFO
-	const char *name = GetTextureByNumber (f->texturenum);
-	if (!strncasecmp (name, SPECIALTEX_HINT, sizeof(SPECIALTEX_HINT) - 1))
-		return true;
-	return false;
-#else
-    // ABTEXTURES: Get by index
-    texinfo_t*      info;
-    miptex_t*       miptex;
-    int             ofs;
-
-    info = &g_texinfo[f->texturenum];
-    ofs = ((dmiptexlump_t *)g_dtexdata)->dataofs[info->miptex];
-    miptex = (miptex_t *)(&g_dtexdata[ofs]);
-
-    if (!strcasecmp(miptex->name, SPECIALTEX_HINT))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-#endif
+    return CheckFaceTextureForName(f, SPECIALTEX_HINT, sizeof(SPECIALTEX_HINT) - 1);
 }
 
 // =====================================================================================
 //  CheckFaceForSkipt
 //      Returns true if the passed face is facetype skip
 // =====================================================================================
-bool            CheckFaceForSkip(const face_t* const f)
+bool CheckFaceForSkip(const face_t* const f)
 {
-#ifdef HLCSG_HLBSP_VOIDTEXINFO
-	const char *name = GetTextureByNumber (f->texturenum);
-	if (!strncasecmp (name, SPECIALTEX_SKIP, sizeof(SPECIALTEX_SKIP) - 1))
-		return true;
-	return false;
-#else
-    // ABTEXTURES: Get by index
-    texinfo_t*      info;
-    miptex_t*       miptex;
-    int             ofs;
-
-    info = &g_texinfo[f->texturenum];
-    ofs = ((dmiptexlump_t*)g_dtexdata)->dataofs[info->miptex];
-    miptex = (miptex_t*)(&g_dtexdata[ofs]);
-
-    if (!strcasecmp(miptex->name, SPECIALTEX_SKIP))
-    {
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-#endif
+    return CheckFaceTextureForName(f, SPECIALTEX_SKIP, sizeof(SPECIALTEX_SKIP) - 1);
 }
 
 #ifdef HLCSG_HLBSP_SOLIDHINT
 bool CheckFaceForDiscardable (const face_t *f)
 {
-	const char *name = GetTextureByNumber (f->texturenum);
-	if (!strncasecmp (name, BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1))
-		return true;
-	return false;
+	return strncasecmp(GetTextureByNumber(f->texturenum), BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1) == 0;
 }
 
 #endif

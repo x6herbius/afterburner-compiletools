@@ -160,6 +160,16 @@ bool TextureCollection::allocateAndAppend(size_t count, ItemType type)
 	}
 }
 
+void TextureCollection::truncate(size_t newCount)
+{
+	if ( newCount >= m_Items.size() )
+	{
+		return;
+	}
+
+	m_Items.resize(newCount);
+}
+
 void TextureCollection::clear()
 {
 	m_Items.clear();
@@ -170,6 +180,64 @@ int TextureCollection::calculateChecksum() const
 	// TODO
 	hlassert(false);
 	return 0;
+}
+
+size_t TextureCollection::totalBytesInUse() const
+{
+	size_t size = 0;
+
+	for ( const ItemPtr& item : m_Items )
+	{
+		if ( !item.get() )
+		{
+			continue;
+		}
+
+		switch ( item->type() )
+		{
+			case ItemType::Miptex:
+			{
+				const MiptexItem* miptexItem = static_cast<const MiptexItem*>(item.get());
+				const MiptexWrapper* wrapper = miptexItem->miptex();
+				size += wrapper->dataSize();
+				break;
+			}
+
+			default:
+			{
+				break;
+			}
+		}
+	}
+}
+
+size_t TextureCollection::exportBytesRequired() const
+{
+	size_t size = 0;
+
+	for ( const ItemPtr& item : m_Items )
+	{
+		if ( !item.get() )
+		{
+			continue;
+		}
+
+		switch ( item->type() )
+		{
+			case ItemType::Miptex:
+			{
+				const MiptexItem* miptexItem = static_cast<const MiptexItem*>(item.get());
+				const MiptexWrapper* wrapper = miptexItem->miptex();
+				size += wrapper->exportDataSize();
+				break;
+			}
+
+			default:
+			{
+				break;
+			}
+		}
+	}
 }
 
 TextureCollection::ItemPtr TextureCollection::createItem(ItemType type)
