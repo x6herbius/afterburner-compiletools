@@ -80,7 +80,6 @@
 #define ZHLT_ENTITY_LIGHTSURFACE //--vluzacn
 #define ZHLT_CHART_AllocBlock //--vluzacn
 #define ZHLT_TEXNAME_CHARSET //--vluzacn
-#define ZHLT_NOWADDIR //--vluzacn
 #define ZHLT_STUDIOSHADOWS // g-cont. cast shadows from studio models
 #define ZHLT_PARANOIA_BSP // write extra lumps
 /*#define ZHLT_XASH // build the compiler for Xash engine //--vluzacn

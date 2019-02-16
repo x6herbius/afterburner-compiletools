@@ -122,11 +122,7 @@ static int CDECL lump_sorter_by_name (const void *lump1, const void *lump2)
 	return strcasecmp (plump1->name, plump2->name);
 }
 
-void OpenWadFile (const char *name
-#ifdef ZHLT_NOWADDIR
-	, bool fullpath = false
-#endif
-	)
+void OpenWadFile (const char *name)
 {
 	int i;
 	wadfile_t *wad;
@@ -139,19 +135,7 @@ void OpenWadFile (const char *name
 		wad->next = *pos;
 		*pos = wad;
 	}
-#ifdef ZHLT_NOWADDIR
-   if (fullpath)
-   {
-	safe_snprintf (wad->path, _MAX_PATH, "%s", name);
-	wad->file = fopen (wad->path, "rb");
-	if (!wad->file)
-	{
-		Error ("Couldn't open %s", wad->path);
-	}
-   }
-   else
-   {
-#endif
+
 	waddir_t *dir;
 	for (dir = g_waddirs; dir; dir = dir->next)
 	{
@@ -167,9 +151,7 @@ void OpenWadFile (const char *name
 		Fatal (assume_COULD_NOT_LOCATE_WAD, "Could not locate wad file %s", name);
 		return;
 	}
-#ifdef ZHLT_NOWADDIR
-   }
-#endif
+
 	Log ("Using Wadfile: %s\n", wad->path);
 	wad->filesize = q_filelength (wad->file);
 	struct
@@ -216,17 +198,7 @@ void TryOpenWadFiles ()
 	if (!g_wadfiles_opened)
 	{
 		g_wadfiles_opened = true;
-#ifdef ZHLT_NOWADDIR
-		char filename[_MAX_PATH];
-		safe_snprintf(filename, _MAX_PATH, "%s.wa_", g_Mapname);
-	   if (q_exists (filename))
-	   {
-		OpenWadFile (filename, true);
-	   }
-	   else
-	   {
-		Warning ("Couldn't open %s", filename);
-#endif
+
 		Log ("Opening wad files from directories:\n");
 		if (!g_waddirs)
 		{
@@ -263,9 +235,6 @@ void TryOpenWadFiles ()
 				j++;
 			}
 		}
-#ifdef ZHLT_NOWADDIR
-	   }
-#endif
 		CheckFatal ();
 	}
 }

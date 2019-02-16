@@ -131,11 +131,6 @@ void            ResetTmpFiles()
 		safe_snprintf(filename, _MAX_PATH, "%s.b3", g_Mapname);
 		_unlink(filename);
 #endif
-#ifdef ZHLT_NOWADDIR
-
-		safe_snprintf(filename, _MAX_PATH, "%s.wa_", g_Mapname);
-		_unlink(filename);
-#endif
 #ifdef ZHLT_64BIT_FIX
 
 		safe_snprintf(filename, _MAX_PATH, "%s.ext", g_Mapname);

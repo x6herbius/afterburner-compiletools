@@ -781,6 +781,7 @@ void WriteBSPFile( const char* const filename )
 	AddLump( LUMP_VISIBILITY,   g_dvisdata,      g_visdatasize,                          header, bspfile );
 	AddLump( LUMP_ENTITIES,     g_dentdata,      g_entdatasize,                          header, bspfile );
 
+	// ABTEXTURES: Export texture list
 	// At the moment this is OK, since g_dtexdata is flat and contiguous.
 	// It may need to change in the future.
 	AddLump( LUMP_TEXTURES,     g_dtexdata,      g_texdatasize,                          header, bspfile );

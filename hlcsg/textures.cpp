@@ -528,9 +528,9 @@ lumpinfo_t*     FindTexture(const lumpinfo_t* const source)
     if (!found)
     {
         Warning("::FindTexture() texture %s not found!", source->name);
-        if (!strcmp(source->name, BRUSHKEY_NULL)
+        if (strcmp(source->name, BRUSHKEY_NULL) == 0
 #ifdef HLCSG_PASSBULLETSBRUSH
-			|| !strcmp (source->name, BRUSHKEY_SKIP)
+			|| strcmp (source->name, BRUSHKEY_SKIP) == 0
 #endif
 			)
         {
@@ -652,15 +652,8 @@ int             LoadLump(const lumpinfo_t* const source, byte* dest, int* texsiz
 #ifdef HLCSG_FILEREADFAILURE_FIX
 						, int dest_maxsize
 #endif
-#ifdef ZHLT_NOWADDIR
-						, byte *&writewad_data, int &writewad_datasize
-#endif
 						)
 {
-#ifdef ZHLT_NOWADDIR
-	writewad_data = NULL;
-	writewad_datasize = -1;
-#endif
     //Log("** PnFNFUNC: LoadLump\n");
 
     *texsize = 0;
@@ -701,15 +694,10 @@ int             LoadLump(const lumpinfo_t* const source, byte* dest, int* texsiz
             SafeRead(texfiles[source->iTexFile], dest, sizeof(miptex_t));
 
             for (i = 0; i < MIPLEVELS; i++)
+            {
                 miptex->offsets[i] = 0;
-#ifdef ZHLT_NOWADDIR
-			writewad_data = (byte *)malloc (source->disksize);
-			hlassume (writewad_data != NULL, assume_NoMemory);
-			if (fseek (texfiles[source->iTexFile], source->filepos, SEEK_SET))
-				Error ("File read failure");
-			SafeRead (texfiles[source->iTexFile], writewad_data, source->disksize);
-			writewad_datasize = source->disksize;
-#endif
+            }
+
             return sizeof(miptex_t);
         }
         else
@@ -946,84 +934,16 @@ void            WriteMiptex()
         data = (byte*) & l->dataofs[numLocalMiptex]; // Data = pointer to beginning of texture data after header
         l->nummiptex = numLocalMiptex;               // Set number of textures
 
-#ifdef ZHLT_NOWADDIR
-		char writewad_name[_MAX_PATH];
-		FILE *writewad_file;
-		int writewad_maxlumpinfos;
-
-		typedef struct
-		{
-			int             filepos;
-			int             disksize;
-			int             size;
-			char            type;
-			char            compression;
-			char            pad1, pad2;
-			char            name[MAXWADNAME];
-		} dlumpinfo_t;
-
-		dlumpinfo_t *writewad_lumpinfos;
-		wadinfo_t writewad_header;
-
-		safe_snprintf (writewad_name, _MAX_PATH, "%s.wa_", g_Mapname);
-
-		writewad_file = SafeOpenWrite (writewad_name);
-		writewad_maxlumpinfos = numLocalMiptex;
-
-		writewad_lumpinfos = (dlumpinfo_t *)malloc (writewad_maxlumpinfos * sizeof (dlumpinfo_t));
-		hlassume (writewad_lumpinfos != NULL, assume_NoMemory);
-
-		writewad_header.identification[0] = 'W';
-		writewad_header.identification[1] = 'A';
-		writewad_header.identification[2] = 'D';
-		writewad_header.identification[3] = '3';
-		writewad_header.numlumps = 0;
-
-		if (fseek (writewad_file, sizeof (wadinfo_t), SEEK_SET))
-        {
-			Error ("File write failure");
-        }
-#endif
         for (i = 0; i < numLocalMiptex; i++)
         {
             l->dataofs[i] = data - (byte*) l;   // Set data offset for this texture.
 
-#ifdef ZHLT_NOWADDIR
-			byte *writewad_data;
-			int writewad_datasize;
-            // Call LoadLump which copies actual miptex data into place in global array.
-			len = LoadLump (localMiptex + i, data, &texsize
-#ifdef HLCSG_FILEREADFAILURE_FIX
-							, &g_dtexdata[g_max_map_miptex] - data
-#endif
-							, writewad_data, writewad_datasize);
-
-			if (writewad_data)
-			{
-				dlumpinfo_t *writewad_lumpinfo = &writewad_lumpinfos[writewad_header.numlumps];
-
-				writewad_lumpinfo->filepos = ftell (writewad_file);
-				writewad_lumpinfo->disksize = writewad_datasize;
-				writewad_lumpinfo->size = localMiptex[i].size;
-				writewad_lumpinfo->type = localMiptex[i].type;
-				writewad_lumpinfo->compression = localMiptex[i].compression;
-				writewad_lumpinfo->pad1 = localMiptex[i].pad1;
-				writewad_lumpinfo->pad2 = localMiptex[i].pad2;
-
-				memcpy (writewad_lumpinfo->name, localMiptex[i].name, MAXWADNAME);
-				writewad_header.numlumps++;
-
-				SafeWrite (writewad_file, writewad_data, writewad_datasize);
-				free (writewad_data);
-			}
-#else
             // Call LoadLump which copies actual miptex data into place in global array.
             len = LoadLump(localMiptex + i, data, &texsize
 #ifdef HLCSG_FILEREADFAILURE_FIX
 							, &g_dtexdata[g_max_map_miptex] - data
 #endif
 							);
-#endif
 
             if (!len)
             {
@@ -1040,23 +960,6 @@ void            WriteMiptex()
         }
 
         g_texdatasize = data - g_dtexdata;  // Set tht total size of all the texture data
-
-#ifdef ZHLT_NOWADDIR
-		writewad_header.infotableofs = ftell (writewad_file);
-		SafeWrite (writewad_file, writewad_lumpinfos, writewad_header.numlumps * sizeof (dlumpinfo_t));
-
-        if (fseek (writewad_file, 0, SEEK_SET))
-        {
-			Error ("File write failure");
-        }
-
-		SafeWrite (writewad_file, &writewad_header, sizeof (wadinfo_t));
-
-        if (fclose (writewad_file))
-        {
-			Error ("File write failure");
-        }
-#endif
     }
     end = I_FloatTime();
 
