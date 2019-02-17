@@ -403,13 +403,13 @@ void FS_FileBase( const char *in, char *out )
 
 	len = Q_strlen( in );
 	if( !len ) return;
-	
+
 	// scan backward for '.'
 	end = len - 1;
 
 	while( end && in[end] != '.' && in[end] != '/' && in[end] != '\\' )
 		end--;
-	
+
 	if( in[end] != '.' )
 		end = len-1; // no '.', copy to end
 	else end--; // found ',', copy to left of '.'
@@ -546,7 +546,7 @@ static bool FS_AddPak_Fullpath( const char *pakfile, bool *already_loaded, bool 
 	pack_t		*pak = NULL;
 	const char	*ext = FS_FileExtension( pakfile );
 	int		errorcode = PAK_LOAD_COULDNT_OPEN;
-	
+
 	for( search = fs_searchpaths; search; search = search->next )
 	{
 		if( search->pack && !Q_stricmp( search->pack->filename, pakfile ))
@@ -759,7 +759,7 @@ void FS_ClearSearchPath( void )
 
 		if( search->pack )
 		{
-			if( search->pack->files ) 
+			if( search->pack->files )
 				Free( search->pack->files );
 			Free( search->pack );
 		}
@@ -781,7 +781,7 @@ static bool FS_ParseLiblistGam( const char *filename, const char *gamedir )
 
 	afile = (char *)FS_LoadFile( filename, NULL, false );
 	if( !afile ) return false;
-	
+
 	Q_strncpy( fs_basedir, "valve", sizeof( fs_basedir ));
 	FS_FileBase( gamedir, fs_gamedir );
 
@@ -997,7 +997,7 @@ Internal function used to determine filetime
 static long FS_SysFileTime( const char *filename )
 {
 	struct stat buf;
-	
+
 	if( stat( filename, &buf ) == -1 )
 		return -1;
 
@@ -1052,7 +1052,7 @@ static file_t* FS_SysOpen( const char* filepath, const char* mode )
 			opt |= O_BINARY;
 			break;
 		default:
-			Log( "Error: FS_SysOpen: %s: unknown char in mode (%c)\n", filepath, mode, mode[ind] );
+			Log( "Error: FS_SysOpen: %s: unknown char in mode (%c)\n", filepath, mode[ind] );
 			break;
 		}
 	}
@@ -1248,7 +1248,7 @@ file_t *FS_OpenReadFile( const char *filename, const char *mode, bool gamedironl
 
 	// not found?
 	if( search == NULL )
-		return NULL; 
+		return NULL;
 
 	if( search->pack )
 		return FS_OpenPackedFile( search->pack, pack_ind );
@@ -1259,7 +1259,7 @@ file_t *FS_OpenReadFile( const char *filename, const char *mode, bool gamedironl
 		// found in the filesystem?
 		Q_sprintf( path, "%s%s", search->filename, filename );
 		return FS_SysOpen( path, mode );
-	} 
+	}
 	return NULL;
 }
 
@@ -1285,7 +1285,7 @@ file_t *FS_Open( const char *filepath, const char *mode, bool gamedironly )
 
 	if( mode[0] == 'w' || mode[0] == 'a'|| mode[0] == 'e' || Q_strchr( mode, '+' ))
 		Error( "FS_Open: trying to open for a write file\n" );
-	
+
 	// else, we look at the various search paths and open the file in read-only mode
 	return FS_OpenReadFile( filepath, mode, gamedironly );
 }
@@ -1409,10 +1409,10 @@ int FS_Seek( file_t *file, long offset, int whence )
 	case SEEK_END:
 		offset += file->real_length;
 		break;
-	default: 
+	default:
 		return -1;
 	}
-	
+
 	if( offset < 0 || offset > file->real_length )
 		return -1;
 
@@ -1546,7 +1546,7 @@ void FS_DefaultExtension( char *path, const char *extension )
 	while( *src != '/' && src != path )
 	{
 		// it has an extension
-		if( *src == '.' ) return;                 
+		if( *src == '.' ) return;
 		src--;
 	}
 	Q_strcat( path, extension );
@@ -1602,7 +1602,7 @@ long FS_FileSize( const char *filename, bool gamedironly )
 {
 	file_t	*fp;
 	int	length = 0;
-	
+
 	fp = FS_Open( filename, "rb", gamedironly );
 
 	if( fp )
@@ -1639,7 +1639,7 @@ long FS_FileTime( const char *filename, bool gamedironly )
 {
 	searchpath_t	*search;
 	int		pack_ind;
-	
+
 	search = FS_FindFile( filename, &pack_ind, gamedironly );
 	if( !search ) return -1; // doesn't exist
 

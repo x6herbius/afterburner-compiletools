@@ -211,7 +211,7 @@ static void CalcFaceExtents( dface_t *surf, float texturemins[2], float extents[
 		extents[i] = (bmaxs[i] - bmins[i]) * texture_step;
 
 		if( !( tex->flags, TEX_SPECIAL ) && extents[i] > 4096 )
-			Warning( "Bad surface extents %i\n", extents[i] );
+			Warning( "Bad surface extents %f\n", extents[i] );
 	}
 }
 

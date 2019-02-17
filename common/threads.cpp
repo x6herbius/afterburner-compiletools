@@ -124,7 +124,7 @@ int             GetThreadWork()
 #ifdef ZHLT_PROGRESSFILE // AJM
 		if( g_progressfile )
 		{
-            
+
 
 		}
 #endif
@@ -523,7 +523,7 @@ void            ThreadSetPriority(q_threadpriority type)
     g_threadpriority = type;
 
     // Currently in Linux land users are incapable of raising the priority level of their processes
-    // Unless you are root -high is useless . . . 
+    // Unless you are root -high is useless . . .
     switch (g_threadpriority)
     {
     case eThreadPriorityLow:
@@ -652,7 +652,17 @@ void            RunThreadsOn(int workcnt, bool showpacifier, q_threadfunction fu
 
     for (i = 0; i < g_numthreads; i++)
     {
-        if (pthread_create(&work_threads[i], &attrib, ThreadEntryStub, (void*)i) == -1)
+        // This shuts up "Cast to pointer from integer of different size" warning.
+        union IntToVoid
+        {
+            int intVal;
+            void* voidVal;
+        };
+
+        IntToVoid temp;
+        temp.intVal = i;
+
+        if (pthread_create(&work_threads[i], &attrib, ThreadEntryStub, temp.voidVal) == -1)
         {
             Error("pthread_create failed");
         }

@@ -4419,7 +4419,7 @@ static void     Usage()
 // =====================================================================================
 static void     Settings()
 {
-    char*           tmp;
+    const char*           tmp;
     char            buf1[1024];
     char            buf2[1024];
 
@@ -4519,7 +4519,16 @@ static void     Settings()
     Log("smoothing threshold  [ %17s ] [ %17s ]\n", buf1, buf2);
 #ifdef HLRAD_CUSTOMSMOOTH
 	safe_snprintf(buf1, sizeof(buf1), g_smoothing_value_2<0? "no change": "%3.3f", g_smoothing_value_2);
-	safe_snprintf(buf2, sizeof(buf2), DEFAULT_SMOOTHING2_VALUE<0? "no change": "%3.3f", DEFAULT_SMOOTHING2_VALUE);
+
+	if (  DEFAULT_SMOOTHING2_VALUE < 0 )
+	{
+		safe_snprintf(buf2, sizeof(buf2), "no change");
+	}
+	else
+	{
+		safe_snprintf(buf2, sizeof(buf2), "%3.3f", DEFAULT_SMOOTHING2_VALUE);
+	}
+
     Log("smoothing threshold 2[ %17s ] [ %17s ]\n", buf1, buf2);
 #endif
     safe_snprintf(buf1, sizeof(buf1), "%3.3f", g_dlight_threshold);

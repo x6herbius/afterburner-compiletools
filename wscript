@@ -7,6 +7,7 @@ import os
 APPNAME = "afterburner-compiletools"
 
 # We need to support "linux", "win32" and "darwin"
+# TODO: Probably change these to compilers instead of platforms.
 PLATFORM_CONFIG = \
 {
 	"common":
@@ -61,12 +62,14 @@ PLATFORM_CONFIG = \
 			"-msse4",
 			"-mavx",
 			"-floop-interchange",
-			"-mfpmath=sse -g"
+			"-mfpmath=sse -g",
+			"-Werror"
 		],
 
 		"CXXFLAGS":
 		[
-			"-std=c++11"
+			"-std=c++11",
+			"-Werror"
 		]
 	},
 

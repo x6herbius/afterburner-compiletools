@@ -1,6 +1,6 @@
 //=======================================================================
 //			Copyright (C) XashXT Group 2011
-//		         stringlib.cpp - safety string routines 
+//		         stringlib.cpp - safety string routines
 //=======================================================================
 
 #ifdef _WIN32
@@ -203,7 +203,7 @@ int Q_strnicmp( const char *s1, const char *s2, int n )
 		c2 = *s2++;
 
 		if( !n-- ) return 0; // strings are equal until end point
-		
+
 		if( c1 != c2 )
 		{
 			if( c1 >= 'a' && c1 <= 'z' ) c1 -= ('a' - 'A');
@@ -227,7 +227,7 @@ int Q_strncmp( const char *s1, const char *s2, int n )
 	}
 	else if( s2 == NULL )
 		return 1;
-	
+
 	do {
 		c1 = *s1++;
 		c2 = *s2++;
@@ -237,7 +237,7 @@ int Q_strncmp( const char *s1, const char *s2, int n )
 		if( c1 != c2 ) return c1 < c2 ? -1 : 1;
 
 	} while( c1 );
-	
+
 	// strings are equal
 	return 0;
 }
@@ -334,7 +334,7 @@ void Q_getwd( char *out, size_t len )
 	_getcwd( out, len );
 	Q_strncat( out, "\\", len );
 #else
-	getwd( out );
+	getcwd( out, len );
 #endif
 }
 
@@ -439,11 +439,11 @@ void _Q_timestring( int seconds, char *msg, size_t size )
 	int	nMin = seconds / 60;
 	int	nSec = seconds - nMin * 60;
 	int	nHour = nMin / 60;
-	char	*ext[2] = { "", "s" };
+	const char* ext[2] = { "", "s" };
 
 	nMin -= nHour * 60;
-	
-	if( nHour > 0 ) 
+
+	if( nHour > 0 )
 		Q_snprintf( msg, size, "%d hour%s, %d minute%s, %d second%s", nHour, ext[nHour != 1], nMin, ext[nMin != 1], nSec, ext[nSec != 1] );
 	else if ( nMin > 0 )
 		Q_snprintf( msg, size, "%d minute%s, %d second%s", nMin, ext[nMin != 1], nSec, ext[nSec != 1] );
@@ -477,10 +477,10 @@ char *COM_ParseFile( char *data, char *token )
 
 	if( !token )
 		return NULL;
-	
+
 	len = 0;
 	token[0] = 0;
-	
+
 	if( !data )
 		return NULL;
 // skip whitespace
@@ -491,7 +491,7 @@ skipwhite:
 			return NULL;	// end of file;
 		data++;
 	}
-	
+
 	// skip // comments
 	if( c=='/' && data[1] == '/' )
 	{
@@ -537,7 +537,7 @@ skipwhite:
 		if( COM_IsSingleChar( c ))
 			break;
 	} while( c > 32 );
-	
+
 	token[len] = 0;
 
 	return data;

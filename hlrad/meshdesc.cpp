@@ -75,7 +75,7 @@ areanode_t *CMeshDesc :: CreateAreaNode( int depth, const vec3_t mins, const vec
 	anode = &areanodes[numareanodes++];
 
 	ClearLink( &anode->facets );
-	
+
 	if( depth == AREA_DEPTH )
 	{
 		anode->axis = -1;
@@ -83,12 +83,12 @@ areanode_t *CMeshDesc :: CreateAreaNode( int depth, const vec3_t mins, const vec
 		return anode;
 	}
 
-	VectorSubtract( maxs, mins, size );	
+	VectorSubtract( maxs, mins, size );
 
 	if( size[0] > size[1] )
 		anode->axis = 0;
 	else anode->axis = 1;
-	
+
 	anode->dist = 0.5f * ( maxs[anode->axis] + mins[anode->axis] );
 
 	VectorCopy( mins, mins1 );
@@ -364,7 +364,7 @@ void CMeshDesc :: AngleMatrix( const vec3_t angles, const vec3_t origin, const v
 {
 	float sr, sp, sy, cr, cp, cy;
 	float angle;
-	
+
 	angle = angles[1] * (M_PI * 2.0f / 360.0f);
 	sy = sin( angle );
 	cy = cos( angle );
@@ -522,7 +522,7 @@ bool CMeshDesc :: StudioConstructMesh( model_t *pModel )
 	static vec4_t q[MAXSTUDIOBONES];
 	int totalVertSize = 0;
 
-	for( int i = 0; i < phdr->numbones; i++, pbone++, panim++ ) 
+	for( int i = 0; i < phdr->numbones; i++, pbone++, panim++ )
 	{
 		StudioCalcBoneQuaterion( pbone, panim, q[i] );
 		StudioCalcBonePosition( pbone, panim, pos[i] );
@@ -533,12 +533,12 @@ bool CMeshDesc :: StudioConstructMesh( model_t *pModel )
 	AngleMatrix( pModel->angles, pModel->origin, pModel->scale, transform );
 
 	// compute bones for default anim
-	for( i = 0; i < phdr->numbones; i++ ) 
+	for( i = 0; i < phdr->numbones; i++ )
 	{
 		// initialize bonematrix
 		QuaternionMatrix( q[i], pos[i], bonematrix );
 
-		if( pbone[i].parent == -1 ) 
+		if( pbone[i].parent == -1 )
 			ConcatTransforms( transform, bonematrix, bonetransform[i] );
 		else ConcatTransforms( bonetransform[pbone[i].parent], bonematrix, bonetransform[i] );
 	}
@@ -584,7 +584,7 @@ bool CMeshDesc :: StudioConstructMesh( model_t *pModel )
 		if( m_skinnum != 0 && m_skinnum < phdr->numskinfamilies )
 			pskinref += (m_skinnum * phdr->numskinref);
 
-		for( int j = 0; j < psubmodel->nummesh; j++ ) 
+		for( int j = 0; j < psubmodel->nummesh; j++ )
 		{
 			mstudiomesh_t *pmesh = (mstudiomesh_t *)((byte *)phdr + psubmodel->meshindex) + j;
 			short *ptricmds = (short *)((byte *)phdr + pmesh->triindex);
@@ -972,8 +972,8 @@ void CMeshDesc :: RelinkFacet( mfacet_t *facet )
 			node = node->children[1];
 		else break; // crosses the node
 	}
-	
-	// link it in	
+
+	// link it in
 	InsertLinkBefore( &facet->area, &node->facets );
 }
 
@@ -1015,7 +1015,7 @@ bool CMeshDesc :: FinishMeshBuild( void )
 	}
 
 	if( buffer != bufend )
-		Developer( DEVELOPER_LEVEL_ERROR, "FinishMeshBuild: memory representation error! %x != %x\n", buffer, bufend );
+		Developer( DEVELOPER_LEVEL_ERROR, "FinishMeshBuild: memory representation error! %lu != %lu\n", (uint64_t)buffer, (uint64_t)bufend );
 
 	// copy planes into mesh array (probably aligned block)
 	for( i = 0; i < m_mesh.numplanes; i++ )

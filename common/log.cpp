@@ -42,7 +42,7 @@
 
 #include "stringlib.h"
 
-char*           g_Program = "Uninitialized variable ::g_Program";
+const char*           g_Program = "Uninitialized variable ::g_Program";
 char            g_Mapname[_MAX_PATH] = "Uninitialized variable ::g_Mapname";
 char            g_Wadpath[_MAX_PATH] = "Uninitialized variable ::g_Wadpath";
 
@@ -457,7 +457,7 @@ void CDECL FORMAT_PRINTF(2,3)      Fatal(assume_msgs msgid, const char* const wa
 #else
 		safe_snprintf(message, MAX_MESSAGE, "%s\nDescription: %s\nHowto Fix: %s\n", msg->title, msg->text, msg->howto);
 #endif
-		PrintOnce(message);
+		PrintOnce("%s", message);
 	}
 
 	fatal = 1;
@@ -608,7 +608,7 @@ static void     DisplayDeveloperLevel()
 	if (g_developer)
 	{
 		safe_strncat(message, "]\n", MAX_MESSAGE);
-		Log(message);
+		Log("%s", message);
 	}
 }
 
@@ -717,7 +717,7 @@ void            hlassume(bool exp, assume_msgs msgid)
 #else
 		safe_snprintf(message, MAX_MESSAGE, "%s\nDescription: %s\nHowto Fix: %s\n", msg->title, msg->text, msg->howto);
 #endif
-		Error(message);
+		Error("%s", message);
 	}
 }
 

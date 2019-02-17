@@ -31,7 +31,7 @@
 
 /*
  * ==============
- * getfiletime        
+ * getfiletime
  * ==============
  */
 
@@ -47,7 +47,7 @@ time_t          getfiletime(const char* const filename)
 }
 
 /*
- * ==============      
+ * ==============
  * getfilesize
  * ==============
  */
@@ -87,7 +87,7 @@ long            getfiledata(const char* const filename, char* buffer, const int 
         }
         _close(handle);
         time(&end);
-        Log("%10.3fMB] (%d)\n", size / (1024.0 * 1024.0), end - start);
+        Log("%10.3fMB] (%d)\n", size / (1024.0 * 1024.0), (int)(end - start));
     }
 
     if (buffersize != size)
@@ -214,4 +214,3 @@ void            SaveFile(const char* const filename, const void* const buffer, i
     SafeWrite(f, buffer, count);
     fclose(f);
 }
-
