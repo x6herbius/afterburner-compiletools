@@ -5,13 +5,6 @@
 #define MAXWADNAME 16
 #define MAX_TEXFILES 128
 
-//  FindMiptex
-//  TEX_InitFromWad
-//  FindTexture
-//  LoadLump
-//  AddAnimatingTextures
-
-
 typedef struct
 {
     char            identification[4];                     // should be WAD2/WAD3
@@ -650,11 +643,7 @@ short FaceinfoForTexinfo( const char *landname, const int in_texture_step, const
 // =====================================================================================
 //  LoadLump
 // =====================================================================================
-int             LoadLump(const lumpinfo_t* const source, byte* dest, int* texsize
-#ifdef HLCSG_FILEREADFAILURE_FIX
-						, int dest_maxsize
-#endif
-						)
+int LoadLump(const lumpinfo_t* const source, int* texsize)
 {
     //Log("** PnFNFUNC: LoadLump\n");
 
@@ -664,9 +653,7 @@ int             LoadLump(const lumpinfo_t* const source, byte* dest, int* texsiz
         if (fseek(texfiles[source->iTexFile], source->filepos, SEEK_SET))
         {
             Warning("fseek to %d failed\n", source->filepos);
-#ifdef HLCSG_FILEREADFAILURE_FIX
 			Error ("File read failure");
-#endif
         }
         *texsize = source->disksize;
 
@@ -688,26 +675,27 @@ int             LoadLump(const lumpinfo_t* const source, byte* dest, int* texsiz
             // Just read the miptex header and zero out the data offsets.
             // We will load the entire texture from the WAD at engine runtime
 
-#ifdef HLCSG_FILEREADFAILURE_FIX
-			hlassume ((int)sizeof(miptex_t) <= dest_maxsize, assume_MAX_MAP_MIPTEX);
-#endif
             miptex_t miptex;
             SafeRead(texfiles[source->iTexFile], &miptex, sizeof(miptex_t));
-            TextureCollectionLoader(g_TextureCollection).appendMiptex(&miptex, sizeof(miptex_t), true);
-            return sizeof(miptex_t);
+
+            if ( TextureCollectionLoader(g_TextureCollection).appendMiptex(&miptex, sizeof(miptex_t), true) )
+            {
+                return sizeof(miptex_t);
+            }
         }
         else
         {
 			Developer(DEVELOPER_LEVEL_MESSAGE,"Including texture %s\n",source->name);
+
             // Load the entire texture here so the BSP contains the texture
-#ifdef HLCSG_FILEREADFAILURE_FIX
-			hlassume (source->disksize <= dest_maxsize, assume_MAX_MAP_MIPTEX);
-#endif
             std::vector<byte> tempData;
             tempData.resize(source->disksize);
             SafeRead(texfiles[source->iTexFile], tempData.data(), tempData.size());
-            TextureCollectionLoader(g_TextureCollection).appendMiptex(tempData.data(), tempData.size(), false);
-            return source->disksize;
+
+            if ( TextureCollectionLoader(g_TextureCollection).appendMiptex(tempData.data(), tempData.size(), false) )
+            {
+                return tempData.size();
+            }
         }
     }
 
@@ -797,22 +785,19 @@ char*           GetWadPath()
 void            WriteMiptex()
 {
     int             len, texsize, totaltexsize = 0;
-    byte*           data;
-    dmiptexlump_t*  l;
     double          start, end;
-
-    // ABTEXTURES: Load textures from files
-    // This is gonna take a bit of investigating and refactoring.
-    g_texdatasize = 0;
 
     start = I_FloatTime();
     {
         if (!TEX_InitFromWad())
+        {
             return;
+        }
 
         AddAnimatingTextures();
     }
     end = I_FloatTime();
+
     Verbose("TEX_InitFromWad & AddAnimatingTextures elapsed time = %ldms\n", (long)(end - start));
 
     start = I_FloatTime();
@@ -838,6 +823,7 @@ void            WriteMiptex()
         }
     }
     end = I_FloatTime();
+
     Verbose("FindTextures elapsed time = %ldms\n", (long)(end - start));
 
 #ifdef HLCSG_AUTOWAD_NEW
@@ -895,19 +881,18 @@ void            WriteMiptex()
 #endif
     start = I_FloatTime();
     {
-        int             i;
-        texinfo_t*      tx = g_texinfo;
+        texinfo_t* tx = g_texinfo;
 
         // Sort them FIRST by wadfile and THEN by name for most efficient loading in the engine.
         qsort((void*)localMiptex, (size_t) numLocalMiptex, sizeof(localMiptex[0]), lump_sorter_by_wad_and_name);
 
         // Sleazy Hack 104 Pt 2 - After sorting the miptex array, reset the texinfos to point to the right miptexs
-        for (i = 0; i < g_numtexinfo; i++, tx++)
+        for (int i = 0; i < g_numtexinfo; i++, tx++)
         {
 #ifdef HLCSG_TEXMAP64_FIX
-            char*          miptex_name = texmap_retrieve(tx->miptex);
+            char* miptex_name = texmap_retrieve(tx->miptex);
 #else
-            char*          miptex_name = texmap64_retrieve(tx->miptex);
+            char* miptex_name = texmap64_retrieve(tx->miptex);
 #endif
 
             tx->miptex = FindMiptex(miptex_name);
@@ -917,48 +902,30 @@ void            WriteMiptex()
             free(miptex_name);
 #endif
         }
+
 #ifdef HLCSG_TEXMAP64_FIX
-		texmap_clear ();
+		texmap_clear();
 #endif
     }
     end = I_FloatTime();
+
     Verbose("qsort(localMiptex) elapsed time = %ldms\n", (long)(end - start));
 
     start = I_FloatTime();
     {
-        int             i;
-
         // Now setup to get the miptex data (or just the headers if using -wadtextures) from the wadfile
-        l = (dmiptexlump_t*)g_dtexdata;
-        data = (byte*) & l->dataofs[numLocalMiptex]; // Data = pointer to beginning of texture data after header
-        l->nummiptex = numLocalMiptex;               // Set number of textures
+        g_TextureCollection.clear();
 
-        for (i = 0; i < numLocalMiptex; i++)
+        for (int i = 0; i < numLocalMiptex; i++)
         {
-            l->dataofs[i] = data - (byte*) l;   // Set data offset for this texture.
+            len = LoadLump(localMiptex + i, &texsize);
 
-            // Call LoadLump which copies actual miptex data into place in global array.
-            len = LoadLump(localMiptex + i, data, &texsize
-#ifdef HLCSG_FILEREADFAILURE_FIX
-							, &g_dtexdata[g_max_map_miptex] - data
-#endif
-							);
-
-            if (!len)
-            {
-                l->dataofs[i] = -1;                        // didn't find the texture
-            }
-            else
+            if (len > 0)
             {
                 totaltexsize += texsize;
-
                 hlassume(totaltexsize < g_max_map_miptex, assume_MAX_MAP_MIPTEX);
             }
-
-            data += len;
         }
-
-        g_texdatasize = data - g_dtexdata;  // Set tht total size of all the texture data
     }
     end = I_FloatTime();
 

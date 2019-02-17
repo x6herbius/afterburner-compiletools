@@ -289,7 +289,6 @@
 	#ifdef ZHLT_DETAILBRUSH
 #define HLBSP_REMOVECOVEREDFACES //--vluzacn
 	#endif
-#define HLCSG_FILEREADFAILURE_FIX //--vluzacn
 #define HLBSP_DELETETEMPFILES //--vluzacn
 	#ifdef HLCSG_ONLYENTS_NOWADCHANGE
 	#ifdef HLCSG_AUTOWAD
