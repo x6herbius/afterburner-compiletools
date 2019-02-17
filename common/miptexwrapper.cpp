@@ -237,7 +237,7 @@ const MiptexWrapper::rgbpixel_t* MiptexWrapper::rawPaletteData() const
 
 // According to the old code in bspfile.cpp, only the dmiptexlump_t data needs to be swapped for endianness.
 // Once the miptex_t is being referenced, it's fine.
-bool MiptexWrapper::setFromMiptex(const miptex_t* miptex)
+bool MiptexWrapper::setFromMiptex(const miptex_t* miptex, bool headerOnly)
 {
 	if ( !miptex )
 	{
@@ -254,6 +254,11 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex)
 		WARNING("Invalid dimensions %dx%d.", miptex->width, miptex->height);
 		invalidate();
 		return false;
+	}
+
+	if ( headerOnly )
+	{
+		return true;
 	}
 
 	const byte* mipmapAddresses[MIPLEVELS];
@@ -348,6 +353,8 @@ bool MiptexWrapper::exportToMiptex(miptex_t* miptex) const
 
 	// Terminator
 	*reinterpret_cast<uint16_t*>(paletteData + m_Palette.size()) = 0;
+
+	return true;
 }
 
 bool MiptexWrapper::canExport() const
@@ -372,6 +379,8 @@ size_t MiptexWrapper::dataSize() const
 	size += sizeof(uint16_t);	// Palette size
 	size += m_Palette.size();
 	size += sizeof(uint16_t);	// Null terminator
+
+	return size;
 }
 
 uint32_t MiptexWrapper::widthForMipLevel(uint32_t level) const
@@ -416,4 +425,6 @@ uint32_t MiptexWrapper::totalIdealBytesRequired(uint32_t width, uint32_t height)
 	size += sizeof(uint16_t);					// Palette size
 	size += PALETTE_SIZE * sizeof(rgbpixel_t);	// Palette data
 	size += sizeof(uint16_t);					// Null terminator
+
+	return size;
 }

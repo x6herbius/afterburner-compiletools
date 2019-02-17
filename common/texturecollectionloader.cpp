@@ -16,6 +16,27 @@ TextureCollectionLoader::TextureCollectionLoader(TextureCollection& collection) 
 {
 }
 
+bool TextureCollectionLoader::appendMiptex(const void* miptex, uint32_t length, bool headerOnly)
+{
+	if ( !miptex || length < sizeof(miptex_t) )
+	{
+		WARNING("Data provided to append() was invalid or too short.");
+		return false;
+	}
+
+	if ( !validateMiptex(reinterpret_cast<const byte*>(miptex), length, std::string(""), false) )
+	{
+		return false;
+	}
+
+	m_Collection.allocateAndAppend(1, TextureCollection::ItemType::Miptex);
+
+	MiptexWrapper* wrapper = m_Collection.miptexAt(m_Collection.count() - 1);
+	hlassert(wrapper);
+
+	return wrapper->setFromMiptex(reinterpret_cast<const miptex_t*>(miptex), headerOnly);
+}
+
 bool TextureCollectionLoader::load(const void* data, uint32_t length)
 {
 	clearInternalData();
@@ -174,35 +195,9 @@ void TextureCollectionLoader::invalidateTexturesWithInsufficientData(std::vector
 			: m_ReadData.dataLength;
 		const uint32_t availableSize = nextOffset - textureOffset;
 
-		const miptex_t* miptex = reinterpret_cast<const miptex_t*>(m_ReadData.data + textureOffset);
-
-		if ( miptex->width < 1 || miptex->width % 16 != 0 || miptex->height < 1 || miptex->height % 16 != 0 )
+		if ( !validateMiptex(m_ReadData.data + textureOffset, availableSize, std::string(" ") + std::to_string(index)) )
 		{
-			WARNING("Texture %u has invalid dimensions %ux%u.", index, miptex->width, miptex->height);
 			pair.second = 0;
-			continue;
-		}
-
-		const uint32_t sizeRequired = MiptexWrapper::totalIdealBytesRequired(miptex->width, miptex->height);
-
-		if ( availableSize < sizeRequired )
-		{
-			WARNING("Texture %u invalid - %u bytes required, but data layout only had space for %u bytes.",
-					textureIndex,
-					sizeRequired,
-					availableSize);
-
-			pair.second = 0;
-			continue;
-		}
-
-		if ( availableSize > sizeRequired )
-		{
-			WARNING("Data layout provided texture %u with %u bytes of data, when only %u bytes were required. "
-					"Extra bytes are ignored.",
-					textureIndex,
-					availableSize,
-					sizeRequired);
 		}
 	}
 }
@@ -212,4 +207,55 @@ void TextureCollectionLoader::clearInternalData()
 	m_Collection.clear();
 	m_TextureIndexReordering.clear();
 	m_ReadData = ReadData();
+}
+
+// indexString is blank if an index is not applicable.
+bool TextureCollectionLoader::validateMiptex(const byte* proposedMiptex,
+											 uint32_t availableSize,
+											 const std::string& indexString,
+											 bool availableSizeShouldBeExact)
+{
+	// Sanity:
+	if ( !proposedMiptex || availableSize < 1 )
+	{
+		WARNING("Internal error. Could not validate texture%s: input data was not valid.", indexString.c_str());
+		return false;
+	}
+
+	if ( availableSize < sizeof(miptex_t) )
+	{
+		WARNING("Texture%s invalid: not enough space in buffer to read header.", indexString.c_str());
+		return false;
+	}
+
+	const miptex_t* const miptex = reinterpret_cast<const miptex_t*>(proposedMiptex);
+
+	if ( miptex->width < 1 || miptex->width % 16 != 0 || miptex->height < 1 || miptex->height % 16 != 0 )
+	{
+		WARNING("Texture%s has invalid dimensions %ux%u.", indexString.c_str(), miptex->width, miptex->height);
+		return false;
+	}
+
+	const uint32_t sizeRequired = MiptexWrapper::totalIdealBytesRequired(miptex->width, miptex->height);
+
+	if ( availableSize < sizeRequired )
+	{
+		WARNING("Texture%s invalid - %u bytes required, but data buffer only had space for %u bytes.",
+				indexString.c_str(),
+				sizeRequired,
+				availableSize);
+
+		return false;
+	}
+
+	if ( availableSizeShouldBeExact && availableSize > sizeRequired )
+	{
+		WARNING("Data layout provided texture%s with %u bytes of data, when only %u bytes were required. "
+				"Extra bytes are ignored.",
+				indexString.c_str(),
+				availableSize,
+				sizeRequired);
+	}
+
+	return true;
 }

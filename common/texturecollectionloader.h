@@ -3,6 +3,7 @@
 
 #include <cstring>
 #include <vector>
+#include <string>
 #include "mathtypes.h"
 
 class TextureCollection;
@@ -13,6 +14,7 @@ public:
 	TextureCollectionLoader(TextureCollection& collection);
 
 	bool load(const void* data, uint32_t length);
+	bool appendMiptex(const void* miptex, uint32_t maxLength, bool headerOnly = false);
 
 private:
 	typedef std::pair<uint32_t, uint32_t> IndexOffsetPair;
@@ -37,6 +39,11 @@ private:
 		uint32_t count = 0;
 		uint32_t validCount = 0;
 	};
+
+	static bool validateMiptex(const byte* proposedMiptex,
+							   uint32_t availableSize,
+							   const std::string& indexString = std::string(""),
+							   bool availableSizeShouldBeExact = true);
 
 	void clearInternalData();
 	uint32_t populateTextureIndexReorderingMap();

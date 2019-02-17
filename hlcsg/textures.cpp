@@ -1,4 +1,6 @@
 #include "csg.h"
+#include "texturecollection.h"
+#include "texturecollectionloader.h"
 
 #define MAXWADNAME 16
 #define MAX_TEXFILES 128
@@ -679,25 +681,19 @@ int             LoadLump(const lumpinfo_t* const source, byte* dest, int* texsiz
             wadinclude = it->second;
         }
 
-        // ABTEXTURES: Load textures from file
         // Should we just load the texture header w/o the palette & bitmap?
         if (g_wadtextures && !wadinclude)
 #endif
         {
             // Just read the miptex header and zero out the data offsets.
             // We will load the entire texture from the WAD at engine runtime
-            int             i;
-            miptex_t*       miptex = (miptex_t*)dest;
+
 #ifdef HLCSG_FILEREADFAILURE_FIX
-			hlassume ((int)sizeof (miptex_t) <= dest_maxsize, assume_MAX_MAP_MIPTEX);
+			hlassume ((int)sizeof(miptex_t) <= dest_maxsize, assume_MAX_MAP_MIPTEX);
 #endif
-            SafeRead(texfiles[source->iTexFile], dest, sizeof(miptex_t));
-
-            for (i = 0; i < MIPLEVELS; i++)
-            {
-                miptex->offsets[i] = 0;
-            }
-
+            miptex_t miptex;
+            SafeRead(texfiles[source->iTexFile], &miptex, sizeof(miptex_t));
+            TextureCollectionLoader(g_TextureCollection).appendMiptex(&miptex, sizeof(miptex_t), true);
             return sizeof(miptex_t);
         }
         else
@@ -707,7 +703,10 @@ int             LoadLump(const lumpinfo_t* const source, byte* dest, int* texsiz
 #ifdef HLCSG_FILEREADFAILURE_FIX
 			hlassume (source->disksize <= dest_maxsize, assume_MAX_MAP_MIPTEX);
 #endif
-            SafeRead(texfiles[source->iTexFile], dest, source->disksize);
+            std::vector<byte> tempData;
+            tempData.resize(source->disksize);
+            SafeRead(texfiles[source->iTexFile], tempData.data(), tempData.size());
+            TextureCollectionLoader(g_TextureCollection).appendMiptex(tempData.data(), tempData.size(), false);
             return source->disksize;
         }
     }

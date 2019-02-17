@@ -89,7 +89,7 @@ public:
 	void setBlank();
 
 	// Assumes that the miptex pointer contains enough data given its dimensions.
-	bool setFromMiptex(const miptex_t* miptex);
+	bool setFromMiptex(const miptex_t* miptex, bool headerOnly = false);
 
 	// Assumes that the miptex pointer points to exportDataSize() bytes of data.
 	bool exportToMiptex(miptex_t* miptex) const;
