@@ -32,6 +32,7 @@ private:
 		inline ReadData& operator =(const ReadData& other)
 		{
 			memcpy(this, &other, sizeof(*this));
+			return *this;
 		}
 
 		const byte* data = NULL;

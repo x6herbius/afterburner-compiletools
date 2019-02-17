@@ -51,6 +51,7 @@ PLATFORM_CONFIG = \
 
 		"CFLAGS":
 		[
+			"-Werror",
 			"-Wint-to-pointer-cast",
 			"-Ofast",
 			"-funsafe-math-optimizations",
@@ -62,8 +63,7 @@ PLATFORM_CONFIG = \
 			"-msse4",
 			"-mavx",
 			"-floop-interchange",
-			"-mfpmath=sse -g",
-			"-Werror"
+			"-mfpmath=sse -g"
 		],
 
 		"CXXFLAGS":
