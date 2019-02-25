@@ -10,8 +10,8 @@ TextureCollectionWriter::TextureCollectionWriter(const TextureCollection& collec
 
 bool TextureCollectionWriter::exportAll()
 {
-	const size_t count = m_Collection.exportableTextureCount();
-	const size_t textureBytesRequired = m_Collection.exportBytesRequired();
+	const uint32_t count = m_Collection.exportableTextureCount();
+	const uint32_t textureBytesRequired = m_Collection.exportBytesRequired();
 
 	// int for overall count, plus count * int for offsets, plus data.
 	const size_t totalBytesRequired = ((count + 1) * sizeof(uint32_t)) + textureBytesRequired;

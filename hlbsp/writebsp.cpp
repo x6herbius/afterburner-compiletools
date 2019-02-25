@@ -11,6 +11,7 @@
 //  FinishBSPFile
 
 #include <map>
+#include "miptexwrapper.h"
 
 typedef std::map< int, int > PlaneMap;
 static PlaneMap gPlaneMap;
@@ -810,6 +811,123 @@ void            BeginBSPFile()
     g_dleafs[0].contents = CONTENTS_SOLID;
 }
 
+#ifdef HLCSG_HLBSP_REDUCETEXTURE
+static void ReduceTexInfo()
+{
+	Log ("Reduced %d texinfos to %d\n", g_numtexinfo, g_nummappedtexinfo);
+
+	for (int i = 0; i < g_nummappedtexinfo; i++)
+	{
+		g_texinfo[i] = g_mappedtexinfo[i];
+	}
+
+	g_numtexinfo = g_nummappedtexinfo;
+}
+
+static void ReduceTextures()
+{
+	const uint32_t textureCount = g_TextureCollection.count();
+	const uint32_t textureBytes = g_TextureCollection.exportBytesRequired();
+	std::vector<bool> textureReferenced;
+	textureReferenced.resize(textureCount);
+
+	for (uint32_t index = 0; index < g_numtexinfo; index++)
+	{
+		texinfo_t *t = &g_texinfo[index];
+
+		if (t->miptex < 0 || t->miptex >= textureCount)
+		{
+			Warning ("Texinfo %d referenced invalid texture %d.\n", index, t->miptex);
+
+			// Skip
+			return;
+		}
+
+		textureReferenced[t->miptex] = true;
+	}
+
+	for (uint32_t index = 0; index < textureCount; index++)
+	{
+		const int MAXWADNAME = 16;
+		char name[MAXWADNAME];
+
+		if ( !textureReferenced[index] )
+		{
+			continue;
+		}
+
+		const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(index);
+		if ( !wrapper )
+		{
+			continue;
+		}
+
+		const char* textureName = wrapper->name();
+		if ( !textureName )
+		{
+			continue;
+		}
+
+		if (textureName[0] != '+' && textureName[0] != '-')
+		{
+			continue;
+		}
+
+		safe_strncpy (name, textureName, MAXWADNAME);
+
+		if (name[1] == '\0')
+		{
+			continue;
+		}
+
+		for (uint32_t altCharIndex = 0; altCharIndex < 20; altCharIndex++)
+		{
+			if (altCharIndex < 10)
+			{
+				name[1] = '0' + altCharIndex;
+			}
+			else
+			{
+				name[1] = 'A' + altCharIndex - 10;
+			}
+
+			for (uint32_t otherTextureIndex = 0; otherTextureIndex < textureCount; otherTextureIndex++)
+			{
+				const MiptexWrapper* otherWrapper = g_TextureCollection.miptexAt(otherTextureIndex);
+				if ( !otherWrapper )
+				{
+					continue;
+				}
+
+				if (!strcasecmp (name, otherWrapper->name))
+				{
+					textureReferenced[otherTextureIndex] = true;
+				}
+			}
+		}
+	}
+
+	std::vector<int32_t> textureIndexMap;
+	g_TextureCollection.filter([&textureReferenced](uint32_t index, TextureCollection::ItemType type)
+	{
+		return textureReferenced[index];
+	},
+	textureIndexMap);
+
+	for (uint32_t index = 0; index < g_numtexinfo; index++)
+	{
+		texinfo_t *t = &g_texinfo[index];
+		t->miptex = textureIndexMap[t->miptex];
+	}
+
+	Log("Reduced %u texdatas to %u (%u bytes to %u bytes)\n",
+		textureCount,
+		g_TextureCollection.count(),
+		textureBytes,
+		g_TextureCollection.exportBytesRequired());
+}
+#endif
+
 // =====================================================================================
 //  FinishBSPFile
 // =====================================================================================
@@ -848,139 +966,8 @@ void            FinishBSPFile()
 	if(!g_noopt)
 	{
 #ifdef HLCSG_HLBSP_REDUCETEXTURE
-		{
-			Log ("Reduced %d texinfos to %d\n", g_numtexinfo, g_nummappedtexinfo);
-			for (int i = 0; i < g_nummappedtexinfo; i++)
-			{
-				g_texinfo[i] = g_mappedtexinfo[i];
-			}
-			g_numtexinfo = g_nummappedtexinfo;
-		}
-		{
-			// ABTEXTURES: Filter textures
-			dmiptexlump_t *l = (dmiptexlump_t *)g_dtexdata;
-			int &g_nummiptex = l->nummiptex;
-			bool *Used = (bool *)calloc (g_nummiptex, sizeof(bool));
-			int Num = 0, Size = 0;
-			int *Map = (int *)malloc (g_nummiptex * sizeof(int));
-			int i;
-			hlassume (Used != NULL && Map != NULL, assume_NoMemory);
-			int *lumpsizes = (int *)malloc (g_nummiptex * sizeof (int));
-			const int newdatasizemax = g_texdatasize - ((byte *)&l->dataofs[g_nummiptex] - (byte *)l);
-			byte *newdata = (byte *)malloc (newdatasizemax);
-			int newdatasize = 0;
-			hlassume (lumpsizes != NULL && newdata != NULL, assume_NoMemory);
-			int total = 0;
-			for (i = 0; i < g_nummiptex; i++)
-			{
-				if (l->dataofs[i] == -1)
-				{
-					lumpsizes[i] = -1;
-					continue;
-				}
-				lumpsizes[i] = g_texdatasize - l->dataofs[i];
-				for (int j = 0; j < g_nummiptex; j++)
-				{
-					int lumpsize = l->dataofs[j] - l->dataofs[i];
-					if (l->dataofs[j] == -1 || lumpsize < 0 || lumpsize == 0 && j <= i)
-						continue;
-					if (lumpsize < lumpsizes[i])
-						lumpsizes[i] = lumpsize;
-				}
-				total += lumpsizes[i];
-			}
-			if (total != newdatasizemax)
-			{
-				Warning ("Bad texdata structure.\n");
-				goto skipReduceTexdata;
-			}
-			for (i = 0; i < g_numtexinfo; i++)
-			{
-				texinfo_t *t = &g_texinfo[i];
-				if (t->miptex < 0 || t->miptex >= g_nummiptex)
-				{
-					Warning ("Bad miptex number %d.\n", t->miptex);
-					goto skipReduceTexdata;
-				}
-				Used[t->miptex] = true;
-			}
-			for (i = 0; i < g_nummiptex; i++)
-			{
-				const int MAXWADNAME = 16;
-				char name[MAXWADNAME];
-				int j, k;
-				if (l->dataofs[i] < 0)
-					continue;
-				if (Used[i] == true)
-				{
-					miptex_t *m = (miptex_t *)((byte *)l + l->dataofs[i]);
-					if (m->name[0] != '+' && m->name[0] != '-')
-						continue;
-					safe_strncpy (name, m->name, MAXWADNAME);
-					if (name[1] == '\0')
-						continue;
-					for (j = 0; j < 20; j++)
-					{
-						if (j < 10)
-							name[1] = '0' + j;
-						else
-							name[1] = 'A' + j - 10;
-						for (k = 0; k < g_nummiptex; k++)
-						{
-							if (l->dataofs[k] < 0)
-								continue;
-							miptex_t *m2 = (miptex_t *)((byte *)l + l->dataofs[k]);
-							if (!strcasecmp (name, m2->name))
-								Used[k] = true;
-						}
-					}
-				}
-			}
-			for (i = 0; i < g_nummiptex; i++)
-			{
-				if (Used[i])
-				{
-					Map[i] = Num;
-					Num++;
-				}
-				else
-				{
-					Map[i] = -1;
-				}
-			}
-			for (i = 0; i < g_numtexinfo; i++)
-			{
-				texinfo_t *t = &g_texinfo[i];
-				t->miptex = Map[t->miptex];
-			}
-			Size += (byte *)&l->dataofs[Num] - (byte *)l;
-			for (i = 0; i < g_nummiptex; i++)
-			{
-				if (Used[i])
-				{
-					if (lumpsizes[i] == -1)
-					{
-						l->dataofs[Map[i]] = -1;
-					}
-					else
-					{
-						memcpy ((byte *)newdata + newdatasize, (byte *)l + l->dataofs[i], lumpsizes[i]);
-						l->dataofs[Map[i]] = Size;
-						newdatasize += lumpsizes[i];
-						Size += lumpsizes[i];
-					}
-				}
-			}
-			memcpy (&l->dataofs[Num], newdata, newdatasize);
-			Log ("Reduced %d texdatas to %d (%d bytes to %d)\n", g_nummiptex, Num, g_texdatasize, Size);
-			g_nummiptex = Num;
-			g_texdatasize = Size;
-			skipReduceTexdata:;
-			free (lumpsizes);
-			free (newdata);
-			free (Used);
-			free (Map);
-		}
+	ReduceTexInfo();
+	ReduceTextures();
 #endif
 		Log ("Reduced %d planes to %d\n", g_numplanes, gNumMappedPlanes);
 		for(int counter = 0; counter < gNumMappedPlanes; counter++)
