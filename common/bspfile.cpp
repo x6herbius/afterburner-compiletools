@@ -10,6 +10,7 @@
 #include "checksum.h"
 #include "texturecollection.h"
 #include "texturecollectionloader.h"
+#include "texturecollectionwriter.h"
 #include "miptexwrapper.h"
 
 //=============================================================================
@@ -695,7 +696,7 @@ void LoadBSPImage( dheader_t* const header )
 //  AddLump
 //      balh
 // =====================================================================================
-static void AddLump( int lumpnum, void* data, int len, dheader_t* header, FILE* bspfile )
+static void AddLump( int lumpnum, const void* data, int len, dheader_t* header, FILE* bspfile )
 {
 	lump_t* lump = &header->lumps[lumpnum];
 	lump->fileofs = LittleLong( ftell( bspfile ));
@@ -704,7 +705,7 @@ static void AddLump( int lumpnum, void* data, int len, dheader_t* header, FILE* 
 }
 
 #ifdef ZHLT_PARANOIA_BSP
-static void AddExtraLump( int lumpnum, void* data, int len, dextrahdr_t* header, FILE* bspfile )
+static void AddExtraLump( int lumpnum, const void* data, int len, dextrahdr_t* header, FILE* bspfile )
 {
 	lump_t* lump = &header->lumps[lumpnum];
 	lump->fileofs = LittleLong( ftell( bspfile ));
@@ -781,10 +782,9 @@ void WriteBSPFile( const char* const filename )
 	AddLump( LUMP_VISIBILITY,   g_dvisdata,      g_visdatasize,                          header, bspfile );
 	AddLump( LUMP_ENTITIES,     g_dentdata,      g_entdatasize,                          header, bspfile );
 
-	// ABTEXTURES: Export texture list
-	// At the moment this is OK, since g_dtexdata is flat and contiguous.
-	// It may need to change in the future.
-	AddLump( LUMP_TEXTURES,     g_dtexdata,      g_texdatasize,                          header, bspfile );
+	// AddLump() writes directly to the file, so the data does not need to exist after the call.
+	TextureCollectionWriter writer(g_TextureCollection);
+	AddLump(LUMP_TEXTURES, writer.exportedData().data(), writer.exportedData().size(), header, bspfile);
 
 #ifdef ZHLT_PARANOIA_BSP
 //    Log( "num extra faces %i, num faces %i, num worldlights %i, num ambient lights %i, num extra leafs %i, num leafs %i\n",

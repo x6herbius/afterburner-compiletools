@@ -6,17 +6,6 @@
 #include <functional>
 #include "cppmemory.h"
 
-// Need functionality for:
-// - Exporting lump data
-// - Importing lump data
-// - Returning whether a texture at a given index is valid
-// - Getting number of textures in list - done
-// - Getting a texture by index - done
-// - Returning the type of the texture at the given index - done
-// - Creating textures with arbitrary user data
-// - Filtering the list and outputting a map of old -> new
-//   texture indices - done
-
 class MiptexWrapper;
 
 class TextureCollection
@@ -42,6 +31,7 @@ public:
 
 	// Only counts textures that can currently be exported.
 	size_t exportBytesRequired() const;
+	size_t exportableTextureCount() const;
 
 	// If index is out of range, or type does not match, returns NULL.
 	MiptexWrapper* miptexAt(uint32_t index);

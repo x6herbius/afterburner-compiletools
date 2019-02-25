@@ -238,6 +238,44 @@ size_t TextureCollection::exportBytesRequired() const
 			}
 		}
 	}
+
+	return size;
+}
+
+size_t TextureCollection::exportableTextureCount() const
+{
+	size_t count = 0;
+
+	for ( const ItemPtr& item : m_Items )
+	{
+		if ( !item.get() )
+		{
+			continue;
+		}
+
+		switch ( item->type() )
+		{
+			case ItemType::Miptex:
+			{
+				const MiptexItem* miptexItem = static_cast<const MiptexItem*>(item.get());
+				const MiptexWrapper* wrapper = miptexItem->miptex();
+
+				if ( wrapper->canExport() )
+				{
+					++count;
+				}
+
+				break;
+			}
+
+			default:
+			{
+				break;
+			}
+		}
+	}
+
+	return count;
 }
 
 TextureCollection::ItemPtr TextureCollection::createItem(ItemType type)
