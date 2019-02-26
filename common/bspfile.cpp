@@ -35,10 +35,6 @@ int		g_deluxdatasize;
 byte*		g_ddeluxdata;
 int		g_ddeluxdata_checksum;
 
-int		g_texdatasize;
-byte*		g_dtexdata;                                  // (dmiptexlump_t)
-int		g_dtexdata_checksum;
-
 TextureCollection g_TextureCollection;
 int g_TextureCollectionChecksum;
 
@@ -514,9 +510,7 @@ static int CopyLump( int lump, void *dest, int size, const dheader_t *header )
 	}
 
 	// special handling for tex and lightdata to keep things from exploding - KGP
-	if( lump == LUMP_TEXTURES && dest == (void*)g_dtexdata )
-		hlassume( g_max_map_miptex > length, assume_MAX_MAP_MIPTEX );
-	else if( lump == LUMP_LIGHTING && dest == (void*)g_dlightdata )
+	if( lump == LUMP_LIGHTING && dest == (void*)g_dlightdata )
 		hlassume( g_max_map_lightdata > length, assume_MAX_MAP_LIGHTING );
 
 	memcpy( dest, (byte *)header + ofs, length );
@@ -2125,10 +2119,6 @@ entity_t *FindTargetEntity(const char* const target)
 
 void dtexdata_init( void )
 {
-	// Remove this once all texture operations have been replaced using the texture collection.
-	// This is here so that the program doesn't attempt to run while the g_dtexdata stuff is
-	// still half-removed.
-	hlassert(false);
 	g_TextureCollection.clear();
 	g_dlightdata = (byte *)AllocBlock( g_max_map_lightdata );
 	hlassume( g_dlightdata != NULL, assume_NoMemory );

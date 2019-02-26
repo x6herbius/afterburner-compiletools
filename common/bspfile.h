@@ -547,10 +547,6 @@ extern int      g_deluxdatasize;
 extern byte*    g_ddeluxdata;
 extern int      g_ddeluxdata_checksum;
 
-extern int      g_texdatasize;
-extern byte*    g_dtexdata;                                  // (dmiptexlump_t)
-extern int      g_dtexdata_checksum;
-
 extern TextureCollection g_TextureCollection;
 extern int g_TextureCollectionChecksum;
 
