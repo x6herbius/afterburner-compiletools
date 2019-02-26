@@ -158,6 +158,8 @@ bool TextureCollection::allocateAndAppend(size_t count, ItemType type)
 		m_Items[index] = createItem(type);
 		hlassert(m_Items[index]);
 	}
+
+	return true;
 }
 
 void TextureCollection::truncate(size_t newCount)
@@ -202,6 +204,8 @@ size_t TextureCollection::totalBytesInUse() const
 			}
 		}
 	}
+
+	return size;
 }
 
 size_t TextureCollection::exportBytesRequired() const

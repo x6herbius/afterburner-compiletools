@@ -117,12 +117,20 @@ PLATFORM_CONFIG = \
 			"-msse4",
 			"-mavx",
 			"-floop-interchange",
-			"-mfpmath=sse -g"
+			"-mfpmath=sse -g",
+
+			# These are annoying and (for this codebase) permissible:
+			"-Wno-deprecated-declarations",
+			"-Wno-deprecated-register"
 		],
 
 		"CXXFLAGS":
 		[
-			"-std=c++11"
+			"-std=c++11",
+
+			# These are annoying and (for this codebase) permissible:
+			"-Wno-deprecated-declarations",
+			"-Wno-deprecated-register"
 		]
 	}
 }

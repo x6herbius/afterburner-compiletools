@@ -924,7 +924,7 @@ static void ReduceTextures()
 		textureCount,
 		g_TextureCollection.count(),
 		textureBytes,
-		g_TextureCollection.exportBytesRequired());
+		(uint32_t)g_TextureCollection.exportBytesRequired());
 }
 #endif
 
