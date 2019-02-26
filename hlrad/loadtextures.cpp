@@ -359,20 +359,22 @@ static void LoadTexture(radtexture_t *tex, const MiptexWrapper& miptex)
 		}
 	}
 
-	for (i = 0; i < 256; i++)
+	for (uint32_t i = 0; i < 256; i++)
 	{
 		const rgbpixel_t* colour = miptex.paletteColour(i);
-		Texture_SetPaletteColour(tex, i, colour);
+		Texture_SetPaletteColour(tex, i, *colour);
 	}
 }
 
 static void LoadTextureFromWad(radtexture_t *tex, MiptexWrapper& miptex)
 {
+	wadfile_t* wad = NULL;
+
 	tex->width = miptex.width();
 	tex->height = miptex.height();
-	safe_strncpy(tex->name, miptex->name(), sizeof(tex->name));
+	safe_strncpy(tex->name, miptex.name(), sizeof(tex->name));
 
-	for (wadfile_t* wad = g_wadfiles; wad; wad = wad->next)
+	for (wad = g_wadfiles; wad; wad = wad->next)
 	{
 		lumpinfo_t temp, *found;
 
@@ -456,6 +458,8 @@ void LoadTextures ()
 
 	for (int i = 0; i < g_numtextures; i++)
 	{
+		radtexture_t* tex = &g_textures[i];
+
 		if (g_notextures)
 		{
 			DefaultTexture(tex, "DEFAULT");
@@ -1108,7 +1112,7 @@ void EmbedLightmapInTextures ()
 		// hlrad hasn't run
 		return;
 	}
-	if (!g_texdatasize)
+	if (g_TextureCollection.count() < 1)
 	{
 		// texdata hasn't been initialized
 		return;

@@ -899,7 +899,7 @@ static void ReduceTextures()
 					continue;
 				}
 
-				if (!strcasecmp (name, otherWrapper->name))
+				if (strcasecmp (name, otherWrapper->name()) == 0)
 				{
 					textureReferenced[otherTextureIndex] = true;
 				}
