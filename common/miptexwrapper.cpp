@@ -126,6 +126,24 @@ bool MiptexWrapper::hasAnyMipmap() const
 	return false;
 }
 
+bool MiptexWrapper::hasMipmaps(uint32_t level) const
+{
+	if ( level >= MIPLEVELS )
+	{
+		return false;
+	}
+
+	for ( uint32_t testLevel = 0; testLevel <= level; ++testLevel )
+	{
+		if ( m_Mipmaps[testLevel].empty() )
+		{
+			return false;
+		}
+	}
+
+	return true;
+}
+
 bool MiptexWrapper::hasMipmap(uint32_t level) const
 {
 	return level < MIPLEVELS && !m_Mipmaps[level].empty();
@@ -163,7 +181,7 @@ void MiptexWrapper::setName(const char* name)
 	safe_strncpy(m_Name, name, sizeof(m_Name));
 }
 
-int32_t MiptexWrapper::paletteIndexAt(uint32_t x, uint32_t y, uint32_t mipLevel) const
+int32_t MiptexWrapper::paletteIndexAt(uint32_t mipLevel, uint32_t x, uint32_t y) const
 {
 	if ( !hasMipmap(mipLevel) || mipLevel >= MIPLEVELS || x >= widthForMipLevel(mipLevel) || y >= heightForMipLevel(mipLevel) )
 	{
@@ -184,9 +202,9 @@ const MiptexWrapper::rgbpixel_t* MiptexWrapper::paletteColour(uint8_t paletteInd
 	return reinterpret_cast<const rgbpixel_t*>(&m_Palette[paletteIndex * sizeof(rgbpixel_t)]);
 }
 
-const MiptexWrapper::rgbpixel_t* MiptexWrapper::colourAt(uint32_t x, uint32_t y, uint32_t mipLevel) const
+const MiptexWrapper::rgbpixel_t* MiptexWrapper::colourAt(uint32_t mipLevel, uint32_t x, uint32_t y) const
 {
-	int32_t paletteIndex = paletteIndexAt(x, y, mipLevel);
+	int32_t paletteIndex = paletteIndexAt(mipLevel, x, y);
 	if ( paletteIndex < 0 )
 	{
 		return NULL;
@@ -267,9 +285,10 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex, bool headerOnly)
 
 	for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )
 	{
-		if ( miptex->offsets[mipLevel] < 0 )
+		if ( miptex->offsets[mipLevel] < 1 )
 		{
-			continue;
+			// Exit out at the first missing mipmap.
+			break;
 		}
 
 		mipmapAddresses[mipLevel] = reinterpret_cast<const byte*>(miptex) + miptex->offsets[mipLevel];

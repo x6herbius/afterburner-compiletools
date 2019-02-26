@@ -50,15 +50,18 @@ public:
 	void initialisePalette();
 
 	bool hasAnyMipmap() const;
+	bool hasMipmaps(uint32_t level) const;	// Up to and including the given level.
 	bool hasMipmap(uint32_t level) const;
 	void initialiseMipmap(int32_t level = -1);	// -1 will init all.
 
+	// These functions are purely mathematical - they do not require data to
+	// have been allocated yet for the target mip level.
 	uint32_t widthForMipLevel(uint32_t level) const;
 	uint32_t heightForMipLevel(uint32_t level) const;
 	uint32_t areaForMipLevel(uint32_t level) const;
 
 	// Returns an index into the colour palette for the specified pixel, or -1 on error.
-	int32_t paletteIndexAt(uint32_t x, uint32_t y, uint32_t mipLevel) const;
+	int32_t paletteIndexAt(uint32_t mipLevel, uint32_t x, uint32_t y) const;
 
 	// Length of data is areaForMipLevel(level) bytes.
 	// Data is stored in row-major order ((y * width) + x).
@@ -74,7 +77,7 @@ public:
 
 	// Convenience function to get the colour at a given position on the texture.
 	// Returns NULL on error.
-	const rgbpixel_t* colourAt(uint32_t x, uint32_t y, uint32_t mipLevel) const;
+	const rgbpixel_t* colourAt(uint32_t mipLevel, uint32_t x, uint32_t y) const;
 
 	// Palette and mipmaps will be initialised to blank (ie. black, index 0).
 	// Returns true on success, or false if the dimensions are not valid.

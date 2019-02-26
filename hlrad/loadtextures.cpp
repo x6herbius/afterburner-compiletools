@@ -5,6 +5,8 @@
 #error "HLRAD_TEXTURE doesn't support WORDS_BIGENDIAN, because I have no big endian machine to test it"
 #endif
 
+#include "miptexwrapper.h"
+
 int g_numtextures;
 radtexture_t *g_textures;
 
@@ -75,6 +77,25 @@ static inline void Texture_GetPaletteColour(const radtexture_t* const texture, c
 	VectorCopy(texture->palette[paletteIndex], outColour);
 }
 
+static inline void Texture_SetPaletteColour(radtexture_t* const texture, const unsigned char paletteIndex, const rgbpixel_t colour)
+{
+	if ( !texture || !colour )
+	{
+		return;
+	}
+
+#ifdef ZHLT_AFTERBURNER
+	if ( texture->ignorePalette )
+	{
+		Warning("TODO: Implement non-palette RAD textures!");
+		hlassert(false);
+		return;
+	}
+#endif
+
+	VectorCopy(colour, texture->palette[paletteIndex]);
+}
+
 static inline void Texture_GetPaletteTransparentColour(const radtexture_t* const texture, rgbpixel_t outColour)
 {
 	Texture_GetPaletteColour(texture, 255, outColour);
@@ -93,12 +114,56 @@ static inline void Texture_GetCanvasColourBySequentialIndex(const radtexture_t* 
 	if ( texture->ignorePalette )
 	{
 		Warning("TODO: Implement non-palette RAD textures!");
+		hlassert(false);
 		Texture_GetPaletteColour(0, 0, outColour);
 		return;
 	}
 #endif
 
 	Texture_GetPaletteColour(texture, texture->canvas[index], outColour);
+}
+
+static inline void Texture_SetCanvasValueBySequentialIndex(radtexture_t* const texture, const unsigned int index, const unsigned char paletteIndex)
+{
+	if ( !texture )
+	{
+		return;
+	}
+
+#ifdef ZHLT_AFTERBURNER
+	if ( texture->ignorePalette )
+	{
+		Warning("TODO: Implement non-palette RAD textures!");
+		hlassert(false);
+		return;
+	}
+#endif
+
+	if ( index >= texture->width * texture->height )
+	{
+		return;
+	}
+
+	texture->canvas[index] = paletteIndex;
+}
+
+static inline void Texture_SetCanvasValue(radtexture_t* const texture, const unsigned int x, const unsigned int y, const unsigned char paletteIndex)
+{
+	if ( !texture )
+	{
+		return;
+	}
+
+#ifdef ZHLT_AFTERBURNER
+	if ( texture->ignorePalette )
+	{
+		Warning("TODO: Implement non-palette RAD textures!");
+		hlassert(false);
+		return;
+	}
+#endif
+
+	Texture_SetCanvasValueBySequentialIndex(texture, (y * texture->width) + x, paletteIndex);
 }
 
 static inline void Texture_GetCanvasColour(const radtexture_t* const texture, const unsigned int x, const unsigned int y, rgbpixel_t outColour)
@@ -256,7 +321,7 @@ void TryCloseWadFiles ()
 	}
 }
 
-void DefaultTexture (radtexture_t *tex, const char *name)
+void DefaultTexture(radtexture_t *tex, const char* name)
 {
 	int i;
 	tex->width = 16;
@@ -275,102 +340,98 @@ void DefaultTexture (radtexture_t *tex, const char *name)
 	}
 }
 
-void LoadTexture (radtexture_t *tex, const miptex_t *mt, int size)
+static void LoadTexture(radtexture_t *tex, const MiptexWrapper& miptex)
 {
-	// ABTEXTURES: Populate radtexture from miptex
-	int i, j;
-	const miptex_t *header = mt;
-	const byte *data = (const byte *)mt;
-	tex->width = header->width;
-	tex->height = header->height;
-	safe_strncpy(tex->name, header->name, sizeof(tex->name));
-	if (tex->width <= 0 || tex->height <= 0 ||
-		tex->width % (2 * 1 << (MIPLEVELS - 1)) != 0 || tex->height % (2 * (1 << (MIPLEVELS - 1))) != 0)
+	tex->width = miptex.width();
+	tex->height = miptex.height();
+	tex->ignorePalette = false;
+
+	safe_strncpy(tex->name, miptex.name(), sizeof(tex->name));
+
+	tex->canvas = (byte*)malloc(tex->width * tex->height);
+	hlassume(tex->canvas != NULL, assume_NoMemory);
+
+	for (uint32_t y = 0; y < tex->height; y++)
 	{
-		Error ("Texture '%s': dimension (%dx%d) is not multiple of %d.", tex->name, tex->width, tex->height, 2 * (1 << (MIPLEVELS - 1)));
-	}
-	int mipsize;
-	for (mipsize = 0, i = 0; i < MIPLEVELS; i++)
-	{
-		if ((int)mt->offsets[i] != (int)sizeof (miptex_t) + mipsize)
+		for (uint32_t x = 0; x < tex->width; x++)
 		{
-			Error ("Texture '%s': unexpected miptex offset.", tex->name);
-		}
-		mipsize += (tex->width >> i) * (tex->height >> i);
-	}
-	if (size < (int)sizeof (miptex_t) + mipsize + 2 + 256 * 3)
-	{
-		Error ("Texture '%s': not enough data.", tex->name);
-	}
-	if (*(unsigned short *)&data[sizeof (miptex_t) + mipsize] != 256)
-	{
-		Error ("Texture '%s': palette size is not 256.", tex->name);
-	}
-	tex->canvas = (byte *)malloc (tex->width * tex->height);
-	hlassume (tex->canvas != NULL, assume_NoMemory);
-	for (i = 0; i < tex->height; i++)
-	{
-		for (j = 0; j < tex->width; j++)
-		{
-			tex->canvas[i * tex->width + j] = data[sizeof (miptex_t) + i * tex->width + j];
+			Texture_SetCanvasValue(tex, x, y, miptex.paletteIndexAt(0, x, y));
 		}
 	}
+
 	for (i = 0; i < 256; i++)
 	{
-		for (j = 0; j < 3; j++)
-		{
-			tex->palette[i][j] = data[sizeof (miptex_t) + mipsize + 2 + i * 3 + j];
-		}
+		const rgbpixel_t* colour = miptex.paletteColour(i);
+		Texture_SetPaletteColour(tex, i, colour);
 	}
 }
 
-void LoadTextureFromWad (radtexture_t *tex, const miptex_t *header)
+static void LoadTextureFromWad(radtexture_t *tex, MiptexWrapper& miptex)
 {
-	// ABTEXTURES: Load texture from WAD
-	tex->width = header->width;
-	tex->height = header->height;
-	safe_strncpy(tex->name, header->name, sizeof(tex->name));
-	wadfile_t *wad;
-	for (wad = g_wadfiles; wad; wad = wad->next)
+	tex->width = miptex.width();
+	tex->height = miptex.height();
+	safe_strncpy(tex->name, miptex->name(), sizeof(tex->name));
+
+	for (wadfile_t* wad = g_wadfiles; wad; wad = wad->next)
 	{
 		lumpinfo_t temp, *found;
+
 		safe_strncpy(temp.name, tex->name, sizeof(temp.name));
-		found = (lumpinfo_t *)bsearch (&temp, wad->lumpinfos, wad->numlumps, sizeof (lumpinfo_t), lump_sorter_by_name);
+		found = (lumpinfo_t*)bsearch(&temp, wad->lumpinfos, wad->numlumps, sizeof(lumpinfo_t), lump_sorter_by_name);
+
 		if (found)
 		{
 			Developer (DEVELOPER_LEVEL_MESSAGE, "Texture '%s': found in '%s'.\n", tex->name, wad->path);
+
+			// TODO: Make the type a proper constant, dammit
 			if (found->type != 67 || found->compression != 0)
+			{
 				continue;
-			if (found->disksize < (int)sizeof (miptex_t) || found->filepos < 0 || found->filepos + found->disksize > wad->filesize)
+			}
+
+			if (found->disksize != MiptexWrapper::totalIdealBytesRequired(tex->width, tex->height) ||
+				found->filepos < 0 || found->filepos + found->disksize > wad->filesize)
 			{
 				Warning ("Texture '%s': invalid texture data in '%s'.", tex->name, wad->path);
 				continue;
 			}
-			miptex_t *mt = (miptex_t *)malloc (found->disksize);
-			hlassume (mt != NULL, assume_NoMemory);
+
+			miptex_t* mt = (miptex_t*)malloc(found->disksize);
+			hlassume(mt != NULL, assume_NoMemory);
+
 			if (fseek (wad->file, found->filepos, SEEK_SET))
+			{
 				Error ("File read failure");
-			SafeRead (wad->file, mt, found->disksize);
-			if (!TerminatedString(mt->name, 16))
+			}
+
+			SafeRead(wad->file, mt, found->disksize);
+
+			if (!TerminatedString(mt->name, MIPTEX_NAME_LENGTH))
 			{
 				Warning("Texture '%s': invalid texture data in '%s'.", tex->name, wad->path);
-				free (mt);
+				free(mt);
 				continue;
 			}
+
 			Developer (DEVELOPER_LEVEL_MESSAGE, "Texture '%s': name '%s', width %d, height %d.\n", tex->name, mt->name, mt->width, mt->height);
+
 			if (strcasecmp (mt->name, tex->name))
 			{
 				Warning("Texture '%s': texture name '%s' differs from its reference name '%s' in '%s'.", tex->name, mt->name, tex->name, wad->path);
 			}
-			LoadTexture (tex, mt, found->disksize);
-			free (mt);
+
+			miptex.setFromMiptex(mt);
+			LoadTexture(tex, miptex);
+
+			free(mt);
 			break;
 		}
 	}
+
 	if (!wad)
 	{
-		Warning ("Texture '%s': texture is not found in wad files.", tex->name);
-		DefaultTexture (tex, tex->name);
+		Warning("Texture '%s': texture is not found in wad files.", tex->name);
+		DefaultTexture(tex, tex->name);
 		return;
 	}
 }
@@ -381,8 +442,7 @@ void LoadTextures ()
 	{
 		Log ("Load Textures:\n");
 	}
-	// ABTEXTURES: Get total count
-	g_numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
+	g_numtextures = g_TextureCollection.count();
 
 	if ( g_numtextures > 0 )
 	{
@@ -394,36 +454,35 @@ void LoadTextures ()
 		g_textures = NULL;
 	}
 
-	int i;
-	for (i = 0; i < g_numtextures; i++)
+	for (int i = 0; i < g_numtextures; i++)
 	{
-		// ABTEXTURES: Get texture by index, then get target mipmap
-		int offset = ((dmiptexlump_t *)g_dtexdata)->dataofs[i];
-		int size = g_texdatasize - offset;
-		radtexture_t *tex = &g_textures[i];
 		if (g_notextures)
 		{
-			DefaultTexture (tex, "DEFAULT");
-		}
-		else if (offset < 0 || size < (int)sizeof (miptex_t))
-		{
-			Warning ("Invalid texture data in '%s'.", g_source);
-			DefaultTexture (tex, "");
+			DefaultTexture(tex, "DEFAULT");
 		}
 		else
 		{
-			// ABTEXTURES: Get target mipmap
-			miptex_t *mt = (miptex_t *)&g_dtexdata[offset];
-			if (mt->offsets[0])
+			MiptexWrapper* miptexWrapper = g_TextureCollection.miptexAt(i);
+			hlassert(miptexWrapper);
+
+			if ( miptexWrapper->hasMipmap(0) && miptexWrapper->hasPalette() )
 			{
-				Developer (DEVELOPER_LEVEL_MESSAGE, "Texture '%s': found in '%s'.\n", mt->name, g_source);
-				Developer (DEVELOPER_LEVEL_MESSAGE, "Texture '%s': name '%s', width %d, height %d.\n", mt->name, mt->name, mt->width, mt->height);
-				LoadTexture (tex, mt, size);
+				Developer (DEVELOPER_LEVEL_MESSAGE, "Texture '%s': found in '%s'.\n",
+					miptexWrapper->name(),
+					g_source);
+
+				Developer (DEVELOPER_LEVEL_MESSAGE, "Texture '%s': name '%s', width %u, height %u.\n",
+					miptexWrapper->name(),
+					miptexWrapper->name(),
+					miptexWrapper->width(),
+					miptexWrapper->height());
+
+				LoadTexture(tex, *miptexWrapper);
 			}
 			else
 			{
-				TryOpenWadFiles ();
-				LoadTextureFromWad (tex, mt);
+				TryOpenWadFiles();
+				LoadTextureFromWad(tex, *miptexWrapper);
 			}
 		}
 #ifdef HLRAD_REFLECTIVITY
@@ -917,18 +976,16 @@ static int g_newtextures_num = 0;
 static byte *g_newtextures_data[RADTEXTURES_MAX];
 static int g_newtextures_size[RADTEXTURES_MAX];
 
-int NewTextures_GetCurrentMiptexIndex ()
+int NewTextures_GetCurrentMiptexIndex()
 {
-	// ABTEXTURES: Get total texture count
-	dmiptexlump_t *texdata = (dmiptexlump_t *)g_dtexdata;
-	return texdata->nummiptex + g_newtextures_num;
+	return g_TextureCollection.count() + g_newtextures_num;
 }
 
 void NewTextures_PushTexture (int size, void *data)
 {
 	if (g_newtextures_num >= RADTEXTURES_MAX)
 	{
-		Error ("the number of textures created by hlrad has exceeded its internal limit(%d).", (int)RADTEXTURES_MAX);
+		Error("the number of textures created by hlrad has exceeded its internal limit (%d).", (int)RADTEXTURES_MAX);
 	}
 	g_newtextures_data[g_newtextures_num] = (byte *)malloc (size);
 	hlassume (g_newtextures_data[g_newtextures_num] != NULL, assume_NoMemory);
@@ -937,51 +994,29 @@ void NewTextures_PushTexture (int size, void *data)
 	g_newtextures_num++;
 }
 
-void NewTextures_Write ()
+void NewTextures_Write()
 {
 	if (!g_newtextures_num)
 	{
 		return;
 	}
 
-	int i;
-	// ABTEXTURES: Add new textures. The whole implementation
-	// internal to this file will probably need to be overhauled.
-	dmiptexlump_t *texdata = (dmiptexlump_t *)g_dtexdata;
+	const uint32_t oldCount = g_TextureCollection.count();
+	g_TextureCollection.allocateAndAppend(g_newtextures_num, TextureCollection::ItemType::Miptex);
 
-	byte *dataaddr = (byte *)&texdata->dataofs[texdata->nummiptex];
-	int datasize = (g_dtexdata + g_texdatasize) - dataaddr;
-	byte *newdataaddr = (byte *)&texdata->dataofs[texdata->nummiptex + g_newtextures_num];
-	hlassume (g_texdatasize + (newdataaddr - dataaddr) <= g_max_map_miptex, assume_MAX_MAP_MIPTEX);
-
-	memmove (newdataaddr, dataaddr, datasize);
-	g_texdatasize += newdataaddr - dataaddr;
-
-	for (i = 0; i < texdata->nummiptex; i++)
+	for ( uint32_t index = oldCount; index < g_TextureCollection.count(); ++index )
 	{
-		if (texdata->dataofs[i] < 0) // bad texture
-		{
-			continue;
-		}
+		MiptexWrapper* wrapper = g_TextureCollection.miptexAt(index);
+		hlassert(wrapper);
 
-		texdata->dataofs[i] += newdataaddr - dataaddr;
+		const miptex_t* miptex = (const miptex_t*)g_newtextures_data[index];
+		hlassert(g_newtextures_size[index] == MiptexWrapper::totalIdealBytesRequired(miptex->width, miptex->height));
+
+		wrapper->setFromMiptex(miptex);
+		free(g_newtextures_data[index]);
 	}
 
-	hlassume (texdata->nummiptex + g_newtextures_num < MAX_MAP_TEXTURES, assume_MAX_MAP_TEXTURES);
-
-	for (i = 0; i < g_newtextures_num; i++)
-	{
-		hlassume (g_texdatasize + g_newtextures_size[i] <= g_max_map_miptex, assume_MAX_MAP_MIPTEX);
-		memcpy (g_dtexdata + g_texdatasize, g_newtextures_data[i], g_newtextures_size[i]);
-		texdata->dataofs[texdata->nummiptex + i] = g_texdatasize;
-		g_texdatasize += g_newtextures_size[i];
-	}
-	texdata->nummiptex += g_newtextures_num;
-
-	for (i = 0; i < g_newtextures_num; i++)
-	{
-		free(g_newtextures_data[i]);
-	}
+	hlassume(g_TextureCollection.count() < MAX_MAP_TEXTURES, assume_MAX_MAP_TEXTURES);
 
 	g_newtextures_num = 0;
 }
@@ -1043,33 +1078,22 @@ static void GetLight (dface_t *face, const int texsize[2], double x, double y, v
 
 static bool GetValidTextureName (int miptex, char* name, unsigned int length)
 {
-	// ABTEXTURES: Get texture by index, then copy name out
-	int numtextures = g_texdatasize? ((dmiptexlump_t *)g_dtexdata)->nummiptex: 0;
-	int offset;
-	int size;
-	miptex_t *mt;
+	static const char* RAD_PREFIX = "_rad";
 
-	if (miptex < 0 || miptex >= numtextures)
-	{
-		return false;
-	}
-	offset = ((dmiptexlump_t *)g_dtexdata)->dataofs[miptex];
-	size = g_texdatasize - offset;
-	if (offset < 0 || g_dtexdata + offset < (byte *)&((dmiptexlump_t *)g_dtexdata)->dataofs[numtextures] ||
-		size < (int)sizeof (miptex_t))
+	const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(miptex);
+	if ( !wrapper )
 	{
 		return false;
 	}
 
-	mt = (miptex_t *)&g_dtexdata[offset];
-	safe_strncpy (name, mt->name, length);
+	safe_strncpy (name, wrapper->name(), length);
 
-	if (strcmp (name, mt->name))
+	if (strcmp(name, wrapper->name()) != 0)
 	{
 		return false;
 	}
 
-	if (strlen (name) >= 5 && !strncasecmp (&name[1], "_rad", 4))
+	if (strlen(name) >= sizeof(RAD_PREFIX) && strncasecmp(&name[1], RAD_PREFIX, sizeof(RAD_PREFIX) - 1) == 0)
 	{
 		return false;
 	}
@@ -1442,7 +1466,6 @@ void EmbedLightmapInTextures ()
 		}
 		info->miptex = NewTextures_GetCurrentMiptexIndex ();
 
-		// ABTEXTURES: Add a new texture and fill its data
 		// emit a texture
 
 		int miptexsize;
