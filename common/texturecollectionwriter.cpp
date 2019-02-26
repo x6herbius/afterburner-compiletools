@@ -2,10 +2,26 @@
 #include "texturecollection.h"
 #include "miptexwrapper.h"
 #include "hlassert.h"
+#include "checksum.h"
 
 TextureCollectionWriter::TextureCollectionWriter(const TextureCollection& collection) :
 	m_Collection(collection)
 {
+}
+
+int TextureCollectionWriter::calculateChecksum()
+{
+	if ( m_ExportData.size() < 1 )
+	{
+		exportAll();
+	}
+
+	if ( m_ExportData.size() < 1 )
+	{
+		return 0;
+	}
+
+	return FastChecksum(m_ExportData.data(), m_ExportData.size());
 }
 
 bool TextureCollectionWriter::exportAll()

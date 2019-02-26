@@ -48,8 +48,6 @@ public:
 	// If newCount is >= current count, nothing happens.
 	void truncate(size_t newCount);
 
-	int calculateChecksum() const;
-
 private:
 	typedef std::shared_ptr<Item> ItemPtr;
 	typedef std::vector<ItemPtr> ItemList;

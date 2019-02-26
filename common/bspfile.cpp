@@ -664,7 +664,7 @@ void LoadBSPImage( dheader_t* const header )
 	g_dmarksurfaces_checksum = FastChecksum( g_dmarksurfaces, g_nummarksurfaces * sizeof( g_dmarksurfaces[0] ));
 	g_dsurfedges_checksum = FastChecksum( g_dsurfedges, g_numsurfedges * sizeof( g_dsurfedges[0] ));
 	g_dedges_checksum = FastChecksum( g_dedges, g_numedges * sizeof( g_dedges[0] ));
-	g_TextureCollectionChecksum = g_TextureCollection.calculateChecksum();
+	g_TextureCollectionChecksum = TextureCollectionWriter(g_TextureCollection).calculateChecksum();
 	g_dvisdata_checksum = FastChecksum( g_dvisdata, g_visdatasize * sizeof( g_dvisdata[0] ));
 	g_dlightdata_checksum = FastChecksum( g_dlightdata, g_lightdatasize * sizeof( g_dlightdata[0] ));
 	g_dentdata_checksum = FastChecksum( g_dentdata, g_entdatasize * sizeof( g_dentdata[0] ));

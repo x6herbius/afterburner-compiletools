@@ -13,6 +13,7 @@ public:
 
 	bool exportAll();
 	const std::vector<byte>& exportedData() const;
+	int calculateChecksum();
 
 private:
 	int32_t getNextValidTextureIndex(uint32_t begin) const;

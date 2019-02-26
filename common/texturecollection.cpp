@@ -175,13 +175,6 @@ void TextureCollection::clear()
 	m_Items.clear();
 }
 
-int TextureCollection::calculateChecksum() const
-{
-	// TODO
-	hlassert(false);
-	return 0;
-}
-
 size_t TextureCollection::totalBytesInUse() const
 {
 	size_t size = 0;
