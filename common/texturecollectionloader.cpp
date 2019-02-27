@@ -24,7 +24,9 @@ bool TextureCollectionLoader::appendMiptex(const void* miptex, uint32_t length, 
 		return false;
 	}
 
-	if ( !validateMiptex(reinterpret_cast<const byte*>(miptex), length, std::string(""), false) )
+	const TextureReadMode mode = headerOnly ? TextureReadMode::HeaderOnly : TextureReadMode::AllData;
+
+	if ( !validateMiptex(reinterpret_cast<const byte*>(miptex), length, std::string(""), mode) )
 	{
 		return false;
 	}
@@ -213,7 +215,7 @@ void TextureCollectionLoader::clearInternalData()
 bool TextureCollectionLoader::validateMiptex(const byte* proposedMiptex,
 											 uint32_t availableSize,
 											 const std::string& indexString,
-											 bool availableSizeShouldBeExact)
+											 TextureReadMode mode)
 {
 	// Sanity:
 	if ( !proposedMiptex || availableSize < 1 )
@@ -236,7 +238,19 @@ bool TextureCollectionLoader::validateMiptex(const byte* proposedMiptex,
 		return false;
 	}
 
-	const uint32_t sizeRequired = MiptexWrapper::totalIdealBytesRequired(miptex->width, miptex->height);
+	if ( availableSize < sizeof(miptex_t) )
+	{
+		WARNING("Texture%s invalid - %u bytes required for header, but data buffer only had space for %u bytes.",
+				indexString.c_str(),
+				sizeof(miptex_t),
+				availableSize);
+
+		return false;
+	}
+
+	const uint32_t sizeRequired = (mode == TextureReadMode::AllData)
+		? MiptexWrapper::totalIdealBytesRequired(miptex->width, miptex->height)
+		: MiptexWrapper::totalBytesRequired(miptex, mode == TextureReadMode::HeaderOnly);
 
 	if ( availableSize < sizeRequired )
 	{
@@ -248,7 +262,7 @@ bool TextureCollectionLoader::validateMiptex(const byte* proposedMiptex,
 		return false;
 	}
 
-	if ( availableSizeShouldBeExact && availableSize > sizeRequired )
+	if ( mode != TextureReadMode::HeaderOnly && availableSize > sizeRequired )
 	{
 		WARNING("Data layout provided texture%s with %u bytes of data, when only %u bytes were required. "
 				"Extra bytes are ignored.",

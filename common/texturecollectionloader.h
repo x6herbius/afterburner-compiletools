@@ -17,6 +17,13 @@ public:
 	bool appendMiptex(const void* miptex, uint32_t maxLength, bool headerOnly = false);
 
 private:
+	enum class TextureReadMode
+	{
+		Infer = 0,
+		HeaderOnly,
+		AllData
+	};
+
 	typedef std::pair<uint32_t, uint32_t> IndexOffsetPair;
 
 	struct TextureIndexRecord
@@ -44,7 +51,7 @@ private:
 	static bool validateMiptex(const byte* proposedMiptex,
 							   uint32_t availableSize,
 							   const std::string& indexString = std::string(""),
-							   bool availableSizeShouldBeExact = true);
+							   TextureReadMode mode = TextureReadMode::Infer);
 
 	void clearInternalData();
 	uint32_t populateTextureIndexReorderingMap();

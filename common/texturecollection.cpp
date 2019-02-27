@@ -257,7 +257,7 @@ size_t TextureCollection::exportableTextureCount() const
 				const MiptexItem* miptexItem = static_cast<const MiptexItem*>(item.get());
 				const MiptexWrapper* wrapper = miptexItem->miptex();
 
-				if ( wrapper->canExport() )
+				if ( wrapper->isValid() )
 				{
 					++count;
 				}

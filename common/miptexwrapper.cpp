@@ -149,24 +149,23 @@ bool MiptexWrapper::hasMipmap(uint32_t level) const
 	return level < MIPLEVELS && !m_Mipmaps[level].empty();
 }
 
+// Initialises up to and including the given level.
 void MiptexWrapper::initialiseMipmap(int32_t level)
 {
-	if ( !isValid() || level >= MIPLEVELS )
+	if ( !isValid() )
 	{
 		return;
 	}
 
-	if ( level >= 0 )
+	if ( level < 0 || level >= MIPLEVELS )
 	{
-		m_Mipmaps[level].clear();
-		m_Mipmaps[level].resize(areaForMipLevel(level), 0);
-		return;
+		level = MIPLEVELS - 1;
 	}
 
-	// Level is negative, so init all.
-	for ( level = 0; level < MIPLEVELS; ++level )
+	for ( uint32_t index = 0; index <= level; ++index )
 	{
-		initialiseMipmap(level);
+		m_Mipmaps[index].clear();
+		m_Mipmaps[index].resize(areaForMipLevel(index), 0);
 	}
 }
 
@@ -282,6 +281,7 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex, bool headerOnly)
 	const byte* mipmapAddresses[MIPLEVELS];
 	memset(mipmapAddresses, 0, MIPLEVELS * sizeof(byte*));
 	size_t totalMipDataSize = 0;
+	int32_t maxMipLevel = -1;
 
 	for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )
 	{
@@ -293,6 +293,7 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex, bool headerOnly)
 
 		mipmapAddresses[mipLevel] = reinterpret_cast<const byte*>(miptex) + miptex->offsets[mipLevel];
 		totalMipDataSize += areaForMipLevel(mipLevel);
+		maxMipLevel = mipLevel;
 	}
 
 	const byte* paletteBase = NULL;
@@ -312,16 +313,22 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex, bool headerOnly)
 		}
 	}
 
+	if ( maxMipLevel >= 0 )
+	{
+		initialiseMipmap(maxMipLevel);
+	}
+
 	// Copy in the mipmap data.
 	for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )
 	{
 		if ( !mipmapAddresses[mipLevel] )
 		{
-			continue;
+			break;
 		}
-
-		initialiseMipmap(mipLevel);
-		memcpy(rawMipmapData(mipLevel), mipmapAddresses[mipLevel], m_Mipmaps[mipLevel].size());
+		else
+		{
+			memcpy(rawMipmapData(mipLevel), mipmapAddresses[mipLevel], m_Mipmaps[mipLevel].size());
+		}
 	}
 
 	if ( paletteSize > 0 )
@@ -337,7 +344,7 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex, bool headerOnly)
 
 bool MiptexWrapper::exportToMiptex(miptex_t* miptex) const
 {
-	if ( !canExport() )
+	if ( !isValid() )
 	{
 		return false;
 	}
@@ -346,6 +353,12 @@ bool MiptexWrapper::exportToMiptex(miptex_t* miptex) const
 	miptex->width = m_Width;
 	miptex->height = m_Height;
 
+	if ( !hasValidImage() )
+	{
+		memset(miptex->offsets, 0, sizeof(miptex->offsets));
+		return true;
+	}
+
 	byte* const mipDataBase = reinterpret_cast<byte*>(miptex) + sizeof(*miptex);
 	int mipDataWritten = 0;
 
@@ -353,7 +366,7 @@ bool MiptexWrapper::exportToMiptex(miptex_t* miptex) const
 	{
 		if ( m_Mipmaps[mipLevel].empty() )
 		{
-			miptex->offsets[mipLevel] = -1;
+			miptex->offsets[mipLevel] = 0;
 			continue;
 		}
 
@@ -376,22 +389,46 @@ bool MiptexWrapper::exportToMiptex(miptex_t* miptex) const
 	return true;
 }
 
-bool MiptexWrapper::canExport() const
+int32_t MiptexWrapper::maxMipLevel() const
+{
+	for ( int32_t index = 0; index < MIPLEVELS; ++index )
+	{
+		if ( m_Mipmaps[index].empty() )
+		{
+			return index - 1;
+		}
+	}
+
+	return MIPLEVELS - 1;
+}
+
+bool MiptexWrapper::hasValidImage() const
 {
 	return isValid() && hasAnyMipmap() && hasPalette();
 }
 
 size_t MiptexWrapper::exportDataSize() const
 {
-	return canExport() ? dataSize() : 0;
+	return isValid() ? dataSize() : 0;
 }
 
 size_t MiptexWrapper::dataSize() const
 {
+	if ( !hasValidImage() )
+	{
+		return sizeof(miptex_t);
+	}
+
 	size_t size = sizeof(miptex_t);
 
 	for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )
 	{
+		// Stop at first invalid mipmap.
+		if ( m_Mipmaps[mipLevel].size() < 1 )
+		{
+			break;
+		}
+
 		size += m_Mipmaps[mipLevel].size();
 	}
 
@@ -444,6 +481,47 @@ uint32_t MiptexWrapper::totalIdealBytesRequired(uint32_t width, uint32_t height)
 	size += sizeof(uint16_t);					// Palette size
 	size += PALETTE_SIZE * sizeof(rgbpixel_t);	// Palette data
 	size += sizeof(uint16_t);					// Null terminator
+
+	return size;
+}
+
+// Nothing past the end of the miptex header should be assumed to be readable.
+uint32_t MiptexWrapper::totalBytesRequired(const miptex_t* miptex, bool headerOnly)
+{
+	if ( !miptex )
+	{
+		return 0;
+	}
+
+	uint32_t size = 0;
+
+	if ( !headerOnly )
+	{
+		for ( uint32_t mipLevel = 0; mipLevel < MIPLEVELS; ++mipLevel )
+		{
+			if ( miptex->offsets[mipLevel] >= sizeof(miptex_t) )
+			{
+				size += areaForMipLevel(miptex->width, miptex->height, mipLevel);
+			}
+		}
+
+		if ( size < 1 )
+		{
+			headerOnly = true;
+		}
+	}
+
+	if ( headerOnly )
+	{
+		return sizeof(miptex_t);
+	}
+
+	// We definitely have some mipmap data, so add on the rest of the data sizes.
+	// We already calculated mipmap bytes, so we need:
+	size += sizeof(miptex_t);					// Header
+	size += sizeof(uint16_t);					// Palette size
+	size += MiptexWrapper::PALETTE_SIZE * 3;	// Required number of palette colours
+	size += sizeof(uint16_t);					// Terminator
 
 	return size;
 }

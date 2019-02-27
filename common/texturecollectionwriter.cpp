@@ -80,7 +80,7 @@ int32_t TextureCollectionWriter::getNextValidTextureIndex(uint32_t begin) const
 		const MiptexWrapper* wrapper = m_Collection.miptexAt(index);
 		hlassert(wrapper);
 
-		if ( wrapper->canExport() )
+		if ( wrapper->isValid() )
 		{
 			return index;
 		}

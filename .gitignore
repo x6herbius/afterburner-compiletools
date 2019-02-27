@@ -7,3 +7,7 @@ build*/
 
 __pycache__
 .vscode/*
+
+.DS_Store
+._DS_Store
+*.log

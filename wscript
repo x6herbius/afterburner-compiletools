@@ -130,7 +130,10 @@ PLATFORM_CONFIG = \
 
 			# These are annoying and (for this codebase) permissible:
 			"-Wno-deprecated-declarations",
-			"-Wno-deprecated-register"
+			"-Wno-deprecated-register",
+
+			# FIXME
+			"-g"
 		]
 	}
 }

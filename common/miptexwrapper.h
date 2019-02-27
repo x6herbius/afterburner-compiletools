@@ -52,7 +52,8 @@ public:
 	bool hasAnyMipmap() const;
 	bool hasMipmaps(uint32_t level) const;	// Up to and including the given level.
 	bool hasMipmap(uint32_t level) const;
-	void initialiseMipmap(int32_t level = -1);	// -1 will init all.
+	void initialiseMipmap(int32_t level = -1);	// Up to and including the given level. -1 initialises all.
+	int32_t maxMipLevel() const;
 
 	// These functions are purely mathematical - they do not require data to
 	// have been allocated yet for the target mip level.
@@ -97,7 +98,7 @@ public:
 	// Assumes that the miptex pointer points to exportDataSize() bytes of data.
 	bool exportToMiptex(miptex_t* miptex) const;
 	size_t exportDataSize() const;
-	bool canExport() const;
+	bool hasValidImage() const;
 
 	// Numebr of bytes currently being used by the texture, regardless of
 	// whether it is in an exportable state.
@@ -106,6 +107,7 @@ public:
 	static uint32_t dimensionForMipLevel(uint32_t dim, uint32_t level);
 	static uint32_t areaForMipLevel(uint32_t width, uint32_t height, uint32_t level);
 	static uint32_t totalIdealBytesRequired(uint32_t width, uint32_t height);
+	static uint32_t totalBytesRequired(const miptex_t* miptex, bool headerOnly = false);
 
 private:
 	typedef std::vector<byte> ByteArray;

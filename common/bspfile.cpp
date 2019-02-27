@@ -778,6 +778,7 @@ void WriteBSPFile( const char* const filename )
 
 	// AddLump() writes directly to the file, so the data does not need to exist after the call.
 	TextureCollectionWriter writer(g_TextureCollection);
+	writer.exportAll();
 	AddLump(LUMP_TEXTURES, writer.exportedData().data(), writer.exportedData().size(), header, bspfile);
 
 #ifdef ZHLT_PARANOIA_BSP

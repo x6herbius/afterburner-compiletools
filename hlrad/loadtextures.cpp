@@ -204,7 +204,7 @@ void OpenWadFile (const char *name)
 	waddir_t *dir;
 	for (dir = g_waddirs; dir; dir = dir->next)
 	{
-		safe_snprintf (wad->path, _MAX_PATH, "%s\\%s", dir->path, name);
+		safe_snprintf (wad->path, _MAX_PATH, "%s" SYSTEM_SLASH_STR "%s", dir->path, name);
 		wad->file = fopen (wad->path, "rb");
 		if (wad->file)
 		{
