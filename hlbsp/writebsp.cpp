@@ -838,9 +838,7 @@ static void ReduceTextures()
 		if (t->miptex < 0 || t->miptex >= textureCount)
 		{
 			Warning ("Texinfo %d referenced invalid texture %d.\n", index, t->miptex);
-
-			// Skip
-			return;
+			continue;
 		}
 
 		textureReferenced[t->miptex] = true;

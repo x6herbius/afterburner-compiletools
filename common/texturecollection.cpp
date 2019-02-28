@@ -59,7 +59,7 @@ TextureCollection::~TextureCollection()
 
 TextureCollection::ItemType TextureCollection::itemType(uint32_t index) const
 {
-	if ( index >= m_Items.size() )
+	if ( index >= m_Items.size() || !m_Items[index].get() )
 	{
 		return ItemType::Undefined;
 	}
@@ -129,15 +129,15 @@ void TextureCollection::mapItems(const std::vector<int32_t>& map, uint32_t newCo
 	ItemList tempItems;
 	tempItems.resize(newCount);
 
-	for ( uint32_t index = 0; index < newCount; ++index )
+	for ( uint32_t oldIndex = 0; oldIndex < m_Items.size(); ++oldIndex )
 	{
-		const int32_t newIndex = map[index];
+		const int32_t newIndex = map[oldIndex];
 		if ( newIndex < 0 || newIndex >= newCount )
 		{
-			return;
+			continue;
 		}
 
-		tempItems[newIndex] = m_Items[index];
+		tempItems[newIndex] = m_Items[oldIndex];
 	}
 
 	m_Items = tempItems;
