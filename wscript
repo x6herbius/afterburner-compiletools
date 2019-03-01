@@ -135,6 +135,35 @@ PLATFORM_CONFIG = \
 	}
 }
 
+DEBUG_SWITCHES = \
+{
+	"darwin":
+	{
+		"CFLAGS":
+		[
+			"-g"
+		],
+
+		"CXXFLAGS":
+		[
+			"-g"
+		]
+	},
+
+	"linux":
+	{
+		"CFLAGS":
+		[
+			"-g"
+		],
+
+		"CXXFLAGS":
+		[
+			"-g"
+		]
+	}
+}
+
 SUBDIRS = \
 [
 	"hlcsg",
@@ -171,14 +200,28 @@ def __setPlatformConfig(ctx):
 	else:
 		ctx.fatal(f"Platform '{destOS if isinstance(destOS, str) else '<unknown>'}' is not currently supported by this build script.")
 
+	if ctx.env.BUILD_TYPE == "debug" and destOS in DEBUG_SWITCHES:
+		osDict = DEBUG_SWITCHES[destOS]
+
+		for category in osDict:
+			ctx.env.append_unique(category, osDict[category])
+
 def options(ctx):
 	ctx.load("compiler_cxx")
+
+	ctx.add_option('--build-type',
+				   action='store',
+				   type='string',
+				   dest='BUILD_TYPE',
+				   default = "release",
+				   help = 'Build type: release (default) or debug.')
 
 	ctx.recurse(SUBDIRS)
 
 def configure(ctx):
 	ctx.load("compiler_cxx")
 	ctx.env.IS_32BIT = ctx.env.DEST_CPU == "x86_64"
+	ctx.env.BUILD_TYPE = ctx.options.BUILD_TYPE
 
 	__setPlatformConfig(ctx)
 
