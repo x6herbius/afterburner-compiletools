@@ -38,7 +38,7 @@ static lumpinfo_t* lumpinfo = NULL;
 static int      nTexFiles = 0;
 static FILE*    texfiles[MAX_TEXFILES];
 #ifdef HLCSG_AUTOWAD_NEW
-static wadpath_t* texwadpathes[MAX_TEXFILES]; // maps index of the wad to its path
+static wadpath_t* texwadpaths[MAX_TEXFILES]; // maps index of the wad to its path
 #endif
 
 #ifdef HLCSG_TEXMAP64_FIX
@@ -290,7 +290,7 @@ bool            TEX_InitFromWad()
 #endif
 
 #ifdef HLCSG_AUTOWAD_NEW
-		texwadpathes[nTexFiles] = currentwad;
+		texwadpaths[nTexFiles] = currentwad;
 #endif
         texfiles[nTexFiles] = fopen(pszWadFile, "rb");
 
@@ -558,8 +558,8 @@ lumpinfo_t*     FindTexture(const lumpinfo_t* const source)
 			}
 			else if (found->iTexFile != best->iTexFile)
 			{
-				wadpath_t *found_wadpath = texwadpathes[found->iTexFile];
-				wadpath_t *best_wadpath = texwadpathes[best->iTexFile];
+				wadpath_t *found_wadpath = texwadpaths[found->iTexFile];
+				wadpath_t *best_wadpath = texwadpaths[best->iTexFile];
 				if (found_wadpath->usedbymap != best_wadpath->usedbymap)
 				{
 					better = !found_wadpath->usedbymap; // included wad is better
@@ -658,7 +658,7 @@ int LoadLump(const lumpinfo_t* const source, int* texsize)
         *texsize = source->disksize;
 
 #ifdef HLCSG_AUTOWAD_NEW
-		if (texwadpathes[source->iTexFile]->usedbymap)
+		if (texwadpaths[source->iTexFile]->usedbymap)
 #else
         bool wadinclude = false;
         std::map< int, bool >::iterator it;
@@ -813,7 +813,7 @@ void            WriteMiptex()
             {
                 localMiptex[i] = *found;
 #ifdef HLCSG_AUTOWAD_NEW
-				texwadpathes[found->iTexFile]->usedtextures++;
+				texwadpaths[found->iTexFile]->usedtextures++;
 #endif
             }
             else
@@ -835,7 +835,7 @@ void            WriteMiptex()
 		szTmpWad[0] = 0;
 		for (i = 0; i < nTexFiles; i++)
 		{
-			wadpath_t *currentwad = texwadpathes[i];
+			wadpath_t *currentwad = texwadpaths[i];
 			if (!currentwad->usedbymap && (currentwad->usedtextures > 0 || !g_bWadAutoDetect))
 			{
 				Log ("Including Wadfile: %s\n", currentwad->path);
@@ -846,7 +846,7 @@ void            WriteMiptex()
 		}
 		for (i = 0; i < nTexFiles; i++)
 		{
-			wadpath_t *currentwad = texwadpathes[i];
+			wadpath_t *currentwad = texwadpaths[i];
 			if (currentwad->usedbymap && (currentwad->usedtextures > 0 || !g_bWadAutoDetect))
 			{
 				Log ("Using Wadfile: %s\n", currentwad->path);

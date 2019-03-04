@@ -1632,7 +1632,7 @@ static void FreeLeafBrushes (node_t *leaf)
 #endif
 
 #ifdef HLBSP_WARNMIXEDCONTENTS
-const char*     ContentsToString(int contents)
+const char* ContentsToString(int contents)
 {
     switch (contents)
     {

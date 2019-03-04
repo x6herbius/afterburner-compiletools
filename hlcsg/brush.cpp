@@ -1669,7 +1669,7 @@ static contents_t TextureContents(const char* const name)
 // =====================================================================================
 //  ContentsToString
 // =====================================================================================
-const char*     ContentsToString(const contents_t type)
+const char* ContentsToString(const contents_t type)
 {
     switch (type)
     {
