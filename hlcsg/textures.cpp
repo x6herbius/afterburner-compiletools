@@ -5,6 +5,8 @@
 #define MAXWADNAME 16
 #define MAX_TEXFILES 128
 
+TextureDirectoryListing g_TexDirListing;
+
 typedef struct
 {
     char            identification[4];                     // should be WAD2/WAD3
@@ -789,6 +791,8 @@ void            WriteMiptex()
 
     start = I_FloatTime();
     {
+        g_TexDirListing.makeListing();
+
         if (!TEX_InitFromWad())
         {
             return;

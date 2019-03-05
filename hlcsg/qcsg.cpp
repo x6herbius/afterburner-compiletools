@@ -16,6 +16,8 @@
 #include <windows.h> //--vluzacn
 #endif
 
+#include "texturedirectorylisting.h"
+
 /*
 
  NOTES
@@ -2016,6 +2018,9 @@ static void     Usage()
 #ifdef HLCSG_SCALESIZE
 	Log("    -scale #         : Scale the world. Use at your own risk.\n");
 #endif
+#ifdef ZHLT_AFTERBURNER
+    Log("    -texturedir      : Directory in which to find PNG textures for Afterburner maps.\n");
+#endif
     Log("    mapfile          : The mapfile to compile\n\n");
 
     exit(1);
@@ -2610,6 +2615,19 @@ int             main(const int argc, char** argv)
 			g_nullifytrigger = false;
 		}
 #endif
+#ifdef ZHLT_AFTERBURNER
+        else if ( strcasecmp(argv[i], "-texturedir") == 0 )
+        {
+            if (i + 1 < argc)
+            {
+                g_TexDirListing.setTextureDirPath(argv[++i]);
+            }
+            else
+            {
+                Usage();
+            }
+        }
+#endif
         else if (argv[i][0] == '-')
         {
             Log("Unknown option \"%s\"\n", argv[i]);
@@ -2680,6 +2698,11 @@ int             main(const int argc, char** argv)
     atexit(CSGCleanup); // AJM
     dtexdata_init();
     atexit(dtexdata_free);
+
+    if ( g_TexDirListing.textureDirPath().empty() )
+    {
+        Error("No texture directory was set. Please provide one using -texturedir.\n");
+    }
 
     // START CSG
     // AJM: re-arranged some stuff up here so that the mapfile is loaded

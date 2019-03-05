@@ -29,6 +29,8 @@
 #include "cmdlinecfg.h"
 #endif
 
+#include "texturedirectorylisting.h"
+
 #ifndef DOUBLEVEC_T
 #error you must add -dDOUBLEVEC_T to the project!
 #endif
@@ -306,6 +308,7 @@ extern const char* ContentsToString(const contents_t type);
 typedef std::deque< std::string >::iterator WadInclude_i;
 extern std::deque< std::string > g_WadInclude;  // List of substrings to wadinclude
 
+extern TextureDirectoryListing g_TexDirListing;
 extern void     WriteMiptex();
 extern int      TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, const vec3_t origin
 #ifdef ZHLT_HIDDENSOUNDTEXTURE
@@ -340,15 +343,15 @@ extern bool     g_onlyents;
 extern bool     g_noclip;
 extern bool     g_wadtextures;
 extern bool     g_skyclip;
-extern bool     g_estimate;         
-extern const char* g_hullfile;        
+extern bool     g_estimate;
+extern const char* g_hullfile;
 
 #ifdef ZHLT_NULLTEX // AJM:
-extern bool     g_bUseNullTex; 
+extern bool     g_bUseNullTex;
 #endif
 
 #ifdef HLCSG_CLIPECONOMY // AJM:
-extern bool     g_bClipNazi; 
+extern bool     g_bClipNazi;
 #endif
 
 #ifdef HLCSG_PRECISIONCLIP // KGP
@@ -409,7 +412,7 @@ extern void     HandleWadinclude();
 //=============================================================================
 // brushunion.c
 void            CalculateBrushUnions(int brushnum);
- 
+
 //============================================================================
 // hullfile.cpp
 extern void     LoadHullfile(const char* filename);
@@ -421,7 +424,7 @@ extern void LoadWadcfgfile (const char *filename);
 extern void LoadWadconfig (const char *filename, const char *configname);
 #endif
 #ifndef HLCSG_WADCFG_NEW
-#ifdef HLCSG_WADCFG // AJM: 
+#ifdef HLCSG_WADCFG // AJM:
 //============================================================================
 // wadcfg.cpp
 
@@ -438,7 +441,7 @@ extern char     wadconfigname[MAX_WAD_CFG_NAME];
 extern char *g_apppath;
 #endif
 
-//JK: 
+//JK:
 extern char *g_wadcfgfile;
 
 #endif // HLCSG_WADCFG
@@ -448,7 +451,7 @@ extern char *g_wadcfgfile;
 //============================================================================
 // autowad.cpp      AJM
 
-extern bool     g_bWadAutoDetect; 
+extern bool     g_bWadAutoDetect;
 #ifndef HLCSG_AUTOWAD_NEW
 extern int      g_numUsedTextures;
 
