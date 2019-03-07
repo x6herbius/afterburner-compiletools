@@ -724,6 +724,23 @@ void WriteBSPFile( const char* const filename )
 #endif
 	FILE*		bspfile;
 
+	// Do this here, before the file gets byte-swapped.
+	TextureCollectionWriter writer(g_TextureCollection);
+	writer.exportAll();
+	const std::vector<int32_t>& textureIndexMap = writer.indexMap();
+
+	for ( uint32_t index = 0; index < g_numtexinfo; ++index )
+	{
+		texinfo_t* texInfo = &g_texinfo[index];
+		if ( texInfo->miptex < 0 || texInfo->miptex >= textureIndexMap.size() )
+		{
+			Warning("Texingfo %u references invalid texture %d, ignoring remap on export.\n", index, texInfo->miptex);
+			continue;
+		}
+
+		texInfo->miptex = textureIndexMap[texInfo->miptex];
+	}
+
 	header = &outheader;
 	memset( header, 0, sizeof( dheader_t ));
 #ifdef ZHLT_PARANOIA_BSP
@@ -743,6 +760,7 @@ void WriteBSPFile( const char* const filename )
 #ifdef ZHLT_PARANOIA_BSP
 	SafeWrite( bspfile, extrahdr, sizeof( dextrahdr_t ));	// overwritten later
 #endif
+
 	//       LUMP TYPE          DATA             LENGTH                                  HEADER  BSPFILE
 	AddLump( LUMP_PLANES,       g_dplanes,       g_numplanes * sizeof( dplane_t ),       header, bspfile );
 	AddLump( LUMP_LEAFS,        g_dleafs,        g_numleafs * sizeof( dleaf_t),          header, bspfile );
@@ -777,11 +795,7 @@ void WriteBSPFile( const char* const filename )
 	AddLump( LUMP_LIGHTING,     g_dlightdata,    g_lightdatasize,                        header, bspfile );
 	AddLump( LUMP_VISIBILITY,   g_dvisdata,      g_visdatasize,                          header, bspfile );
 	AddLump( LUMP_ENTITIES,     g_dentdata,      g_entdatasize,                          header, bspfile );
-
-	// AddLump() writes directly to the file, so the data does not need to exist after the call.
-	TextureCollectionWriter writer(g_TextureCollection);
-	writer.exportAll();
-	AddLump(LUMP_TEXTURES, writer.exportedData().data(), writer.exportedData().size(), header, bspfile);
+	AddLump( LUMP_TEXTURES, writer.exportedData().data(), writer.exportedData().size(),  header, bspfile );
 
 #ifdef ZHLT_PARANOIA_BSP
 //    Log( "num extra faces %i, num faces %i, num worldlights %i, num ambient lights %i, num extra leafs %i, num leafs %i\n",
