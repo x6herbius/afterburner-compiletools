@@ -98,11 +98,11 @@ void            ParseFromMemory(char* buffer, const int size)
 /*
  * Signals that the current g_token was not used, and should be reported
  * for the next GetToken.  Note that
- * 
+ *
  * GetToken (true);
  * UnGetToken ();
  * GetToken (false);
- * 
+ *
  * could cross a line boundary.
  */
 // =====================================================================================
@@ -253,91 +253,6 @@ skipspace:
 
     return true;
 }
-
-#if 0
-// AJM: THIS IS REDUNDANT
-// =====================================================================================
-//  ParseWadToken
-//      basically the same as gettoken, except it isnt limited by MAXTOKEN and is
-//      specificaly designed to parse out the wadpaths from the wad keyvalue and dump
-//      them into the wadpaths list
-//      this was implemented as a hack workaround for Token Too Large errors caused by
-//      having long wadpaths or lots of wads in the map editor.
-extern void        PushWadPath(const char* const path, bool inuse);
-// =====================================================================================
-void            ParseWadToken(const bool crossline)
-{
-    // code somewhat copied from GetToken()
-    int             i, j;
-    char*           token_p;
-    char            temp[_MAX_PATH];
-
-    if (s_script->script_p >= s_script->end_p)
-        return;
-
-    // skip space
-    while (*s_script->script_p <= 32)
-    {
-        if (s_script->script_p >= s_script->end_p)
-            return;
-
-        if (*s_script->script_p++ == '\n')
-        {
-            if (!crossline)
-                Error("Line %i is incomplete (did you place a \" inside an entity string?) \n", s_scriptline);
-            s_scriptline = s_script->line++;
-        }
-    }
-
-    // EXPECT A QUOTE
-    if (*s_script->script_p++ != '"')
-        Error("Line %i: Expected a wadpaths definition, got '%s'\n", s_scriptline, *--s_script->script_p);
-
-    // load wadpaths manually
-    bool    endoftoken = false;
-    for (i = 0; !endoftoken; i++)
-    {
-        // get the path
-        for (j = 0; ; j++)
-        {
-            token_p = ++s_script->script_p;
-            
-            // assert max path length
-            if (j > _MAX_PATH)
-                Error("Line %i: Wadpath definition %i is too long (%s)\n", s_scriptline, temp);
-
-            if (*token_p == '\n')
-                Error("Line %i: Expected a wadpaths definition, got linebreak\n", s_scriptline);
-
-            if (*token_p == '"')            // end of wadpath definition
-            {
-                if (i == 0 && j == 0)       // no wadpaths!
-                {
-                    Warning("No wadpaths specified.\n");
-                    return;
-                }
-
-                endoftoken = true;
-                break;
-            }
-
-            if (*token_p == ';')            // end of this wadpath
-                break;
-
-            temp[j] = *token_p;
-            temp[j + 1] = 0;
-        }
-
-        // push it into the list
-        PushWadPath(temp, true);
-        temp[0] = 0;
-    }
-
-    for (; *s_script->script_p != '\n'; s_script->script_p++)
-    {
-    }
-}
-#endif
 
 // =====================================================================================
 //  TokenAvailable

@@ -1643,18 +1643,4 @@ void LoadMapFile( const char* const filename )
 	Verbose( "%5i brushes\n", g_nummapbrushes );
 	Verbose( "%5i map entities \n", g_numentities - num_engine_entities );
 	Verbose( "%5i engine entities\n", num_engine_entities );
-
-	// AJM: added in
-#ifdef HLCSG_AUTOWAD
-#ifndef HLCSG_AUTOWAD_TEXTURELIST_FIX
-#ifdef HLCSG_ONLYENTS_NOWADCHANGE
-	if( !g_onlyents )
-	{
-#endif
-		GetUsedTextures();
-#ifdef HLCSG_ONLYENTS_NOWADCHANGE
-	}
-#endif
-#endif
-#endif
 }

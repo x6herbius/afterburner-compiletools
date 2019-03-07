@@ -20,7 +20,6 @@ extern void     SafeWrite(FILE* f, const void* const buffer, int count);
 extern int      LoadFile(const char* const filename, char** bufferptr);
 extern void     SaveFile(const char* const filename, const void* const buffer, int count);
 
-#ifdef ZHLT_NEW_FILESYSTEM
 // new filesystem funcs
 void FS_Init( void );
 void FS_Shutdown( void );
@@ -32,6 +31,5 @@ const char *FS_FileWithoutPath( const char *in );
 byte *FS_LoadFile( const char *path, long *filesizeptr, bool gamedironly );
 bool FS_FileExists( const char *filename, bool gamedironly );
 long FS_FileTime( const char *filename, bool gamedironly );
-#endif
 
 #endif //**/ FILELIB_H__

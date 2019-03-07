@@ -44,7 +44,6 @@
 
 const char*           g_Program = "Uninitialized variable ::g_Program";
 char            g_Mapname[_MAX_PATH] = "Uninitialized variable ::g_Mapname";
-char            g_Wadpath[_MAX_PATH] = "Uninitialized variable ::g_Wadpath";
 
 developer_level_t g_developer = DEFAULT_DEVELOPER;
 bool            g_verbose = DEFAULT_VERBOSE;
@@ -103,10 +102,6 @@ void            ResetTmpFiles()
 		safe_snprintf(filename, _MAX_PATH, "%s.lin", g_Mapname);
 		_unlink(filename);
 
-#ifndef HLCSG_ONLYENTS_NOWADCHANGE
-		safe_snprintf(filename, _MAX_PATH, "%s.wic", g_Mapname);
-		_unlink(filename);
-#endif
 #ifdef HLCSG_HLBSP_ALLOWEMPTYENTITY
 
 		safe_snprintf(filename, _MAX_PATH, "%s.hsz", g_Mapname);

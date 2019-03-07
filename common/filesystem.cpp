@@ -33,7 +33,6 @@ GNU General Public License for more details.
 #include "blockmem.h"
 #include "filelib.h"
 
-#ifdef ZHLT_NEW_FILESYSTEM
 /*
 ========================================================================
 PAK FILES
@@ -1656,4 +1655,3 @@ long FS_FileTime( const char *filename, bool gamedironly )
 
 	return -1; // doesn't exist
 }
-#endif

@@ -20,7 +20,6 @@ void LoadStudioModel( const char *modelname, const vec3_t origin, const vec3_t a
 
 	model_t *m = &models[num_models];
 
-#ifdef ZHLT_NEW_FILESYSTEM
 	Q_snprintf( m->name, sizeof( m->name ), "%s", modelname );
 
 	Verbose( "loading %s\n", m->name );
@@ -31,18 +30,7 @@ void LoadStudioModel( const char *modelname, const vec3_t origin, const vec3_t a
 		Warning( "LoadStudioModel: couldn't load %s\n", m->name );
 		return;
 	}
-#else
-	sprintf( m->name, "%s%s", g_Wadpath, modelname );
-	FlipSlashes( m->name );
 
-	if( !q_exists( m->name ))
-	{
-		Warning( "LoadStudioModel: couldn't load %s\n", m->name );
-		return;
-	}
-
-	LoadFile( m->name, (char **)&m->extradata );
-#endif
 	studiohdr_t *phdr = (studiohdr_t *)m->extradata;
 
 	// well the textures place in separate file (very stupid case)
@@ -52,7 +40,6 @@ void LoadStudioModel( const char *modelname, const vec3_t origin, const vec3_t a
 		byte *texdata, *moddata;
 		studiohdr_t *thdr, *newhdr;
 
-#ifdef ZHLT_NEW_FILESYSTEM
 		Q_strncpy( texname, modelname, sizeof( texname ));
 		StripExtension( texname );
 
@@ -66,15 +53,7 @@ void LoadStudioModel( const char *modelname, const vec3_t origin, const vec3_t a
 			free( m->extradata );
 			return;
 		}
-#else
-		safe_strncpy( texname, modelname, 128 );
-		StripExtension( texname );
 
-		sprintf( texpath, "%s%sT.mdl", g_Wadpath, texname );
-		FlipSlashes( texpath );
-
-		LoadFile( texpath, (char **)&texdata );
-#endif
 		moddata = (byte *)m->extradata;
 		phdr = (studiohdr_t *)moddata;
 
@@ -144,9 +123,9 @@ void LoadStudioModels( void )
 	num_models = 0;
 
 	if( g_nostudioshadow ) return;
-#ifdef ZHLT_NEW_FILESYSTEM
+
 	FS_Init();
-#endif
+
 	for( int i = 0; i < g_numentities; i++ )
 	{
 		const char *name, *model;
@@ -159,7 +138,7 @@ void LoadStudioModels( void )
 		{
 			int spawnflags = IntForKey( e, "spawnflags" );
 			if( spawnflags & 4 ) continue; // shadow disabled
-		
+
 			model = ValueForKey( e, "model" );
 
 			if( !model || !*model )
@@ -230,9 +209,8 @@ void FreeStudioModels( void )
 
 	memset( models, 0, sizeof( models ));
 	num_models = 0;
-#ifdef ZHLT_NEW_FILESYSTEM
+
 	FS_Shutdown();
-#endif
 }
 
 void MoveBounds( const vec3_t start, const vec3_t mins, const vec3_t maxs, const vec3_t end, vec3_t outmins, vec3_t outmaxs )

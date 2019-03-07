@@ -90,7 +90,6 @@
 #define ZHLT_WRITE_MODEL_ORIGIN // g-cont. store into dmodel_t their real origins
 #define ZHLT_CALC_AMBIENT_SOUNDS // g-cont. calc auto-ambient sounds like Quake1
 //#define ZHLT_TRANSLUCENT_WORLD_WATER // g-cont. allow to make world water is translucency (disabled because invoke crash somewhere into TestLine_r)
-#define ZHLT_NEW_FILESYSTEM	// g-cont. allow to search reosources in pak-files
 #define ZHLT_NEW_PACIFIER	// g-cont. new pacifier style like in Source
 #define ZHLT_DEFAULTEXTENSION_FIX //--vluzacn
 #define ZHLT_FREETEXTUREAXIS //--vluzacn
@@ -114,9 +113,6 @@
 
 // tool specific settings below only mean a recompile of the tool affected
 #define HLCSG_CLIPECONOMY
-#define HLCSG_WADCFG
-#define HLCSG_WADCFG_NEW // rewritten HLCSG_WADCFG. --vluzacn
-#define HLCSG_AUTOWAD
 #define HLCSG_SKYFIXEDSTYLE	// g-cont
 #define HLCSG_PRECISIONCLIP
 #define HLCSG_FASTFIND
@@ -134,7 +130,6 @@
 	#ifdef ZHLT_DELETEKEY
 #define HLCSG_SCALESIZE //--vluzacn
 	#endif
-#define HLCSG_SEARCHWADPATH_VL //--vluzacn
 	#ifdef SYSTEM_WIN32
 //#define HLCSG_GAMETEXTMESSAGE_UTF8 //--vluzacn
 	#endif
@@ -169,7 +164,6 @@
 #define HLBSP_FILL //--vluzacn
 //#define HLBSP_WARNMIXEDCONTENTS //--vluzacn
 #define HLBSP_NULLFACEOUTPUT_FIX //--vluzacn
-#define HLCSG_STRIPWADPATH //--vluzacn
 #define HLCSG_NOREDUNDANTKEY //--vluzacn
 #define HLCSG_HLBSP_CUSTOMBOUNDINGBOX //--vluzacn
 #define HLCSG_HLBSP_VOIDTEXINFO //--vluzacn
@@ -239,7 +233,6 @@
 #define HLCSG_PASSBULLETSBRUSH //--vluzacn
 	#endif
 	#endif
-#define HLCSG_ONLYENTS_NOWADCHANGE //--vluzacn
 #define HLCSG_NOFAKESPLITS //--vluzacn
 	#ifdef ZHLT_LARGERANGE
 #define HLBSP_MAXNODESIZE_SKYBOX //--vluzacn
@@ -267,15 +260,10 @@
 	#ifdef ZHLT_DETAILBRUSH
 #define HLBSP_SPLITFACE_FIX //--vluzacn
 	#endif
-	#ifdef HLCSG_ONLYENTS_NOWADCHANGE
-#define HLCSG_AUTOWAD_TEXTURELIST_FIX //--vluzacn
-	#endif
 	#ifdef HLCSG_PRECISIONCLIP
 	#ifdef HLCSG_CUSTOMHULL
-	#ifdef HLCSG_AUTOWAD_TEXTURELIST_FIX
 	#ifdef ZHLT_DELETEKEY
 #define HLCSG_HULLBRUSH //--vluzacn
-	#endif
 	#endif
 	#endif
 	#endif
@@ -290,15 +278,6 @@
 #define HLBSP_REMOVECOVEREDFACES //--vluzacn
 	#endif
 #define HLBSP_DELETETEMPFILES //--vluzacn
-	#ifdef HLCSG_ONLYENTS_NOWADCHANGE
-	#ifdef HLCSG_AUTOWAD
-	#ifdef HLCSG_WADCFG_NEW
-	#ifdef HLCSG_TEXMAP64_FIX
-#define HLCSG_AUTOWAD_NEW //--vluzacn
-	#endif
-	#endif
-	#endif
-	#endif
 	#ifdef HLCSG_HLBSP_VOIDTEXINFO
 #define HLCSG_WARNBADTEXINFO //--vluzacn
 	#endif

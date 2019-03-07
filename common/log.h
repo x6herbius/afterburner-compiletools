@@ -27,7 +27,6 @@ developer_level_t;
 
 extern const char*    g_Program;
 extern char     g_Mapname[_MAX_PATH];
-extern char     g_Wadpath[_MAX_PATH];
 
 #define DEFAULT_DEVELOPER   DEVELOPER_LEVEL_ALWAYS
 #define DEFAULT_VERBOSE     false

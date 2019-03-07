@@ -23,8 +23,6 @@
 #include "blockmem.h"
 #include "filelib.h"
 #include "boundingbox.h"
-// AJM: added in
-#include "wadpath.h"
 #ifdef ZHLT_PARAMFILE
 #include "cmdlinecfg.h"
 #endif
@@ -43,7 +41,6 @@
 #endif
 #define DEFAULT_NOCLIP      false
 #define DEFAULT_ONLYENTS    false
-#define DEFAULT_WADTEXTURES true
 #define DEFAULT_SKYCLIP     true
 #define DEFAULT_CHART       false
 #define DEFAULT_INFO        true
@@ -67,10 +64,6 @@
 #else
 #define DEFAULT_CLIPNAZI    true
 #endif
-#endif
-
-#ifdef HLCSG_AUTOWAD //  AJM
-#define DEFAULT_WADAUTODETECT false
 #endif
 
 #ifdef ZHLT_PROGRESSFILE // AJM
@@ -305,9 +298,6 @@ extern const char* ContentsToString(const contents_t type);
 //=============================================================================
 // textures.c
 
-typedef std::deque< std::string >::iterator WadInclude_i;
-extern std::deque< std::string > g_WadInclude;  // List of substrings to wadinclude
-
 extern void     WriteMiptex();
 extern int      TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, const vec3_t origin
 #ifdef ZHLT_HIDDENSOUNDTEXTURE
@@ -340,7 +330,6 @@ extern void		InitDefaultHulls ();
 extern bool     g_chart;
 extern bool     g_onlyents;
 extern bool     g_noclip;
-extern bool     g_wadtextures;
 extern bool     g_skyclip;
 extern bool     g_estimate;
 extern const char* g_hullfile;
@@ -398,16 +387,6 @@ extern void     FreeFaceList(bface_t* f);
 
 extern void     GetParamsFromEnt(entity_t* mapent);
 
-#ifndef HLCSG_ONLYENTS_NOWADCHANGE
-//=============================================================================
-// wadinclude.c
-// passed 'filename' is extensionless, the function cats ".wic" at runtime
-
-extern void     LoadWadincludeFile(const char* const filename);
-extern void     SaveWadincludeFile(const char* const filename);
-extern void     HandleWadinclude();
-#endif
-
 //=============================================================================
 // brushunion.c
 void            CalculateBrushUnions(int brushnum);
@@ -415,59 +394,6 @@ void            CalculateBrushUnions(int brushnum);
 //============================================================================
 // hullfile.cpp
 extern void     LoadHullfile(const char* filename);
-
-#ifdef HLCSG_WADCFG_NEW
-extern const char *g_wadcfgfile;
-extern const char *g_wadconfigname;
-extern void LoadWadcfgfile (const char *filename);
-extern void LoadWadconfig (const char *filename, const char *configname);
-#endif
-#ifndef HLCSG_WADCFG_NEW
-#ifdef HLCSG_WADCFG // AJM:
-//============================================================================
-// wadcfg.cpp
-
-extern void     LoadWadConfigFile();
-extern void     ProcessWadConfiguration();
-extern bool     g_bWadConfigsLoaded;
-extern void     WadCfg_cleanup();
-
-#define MAX_WAD_CFG_NAME 32
-extern char     wadconfigname[MAX_WAD_CFG_NAME];
-
-//JK: needed in wadcfg.cpp for *nix..
-#ifndef SYSTEM_WIN32
-extern char *g_apppath;
-#endif
-
-//JK:
-extern char *g_wadcfgfile;
-
-#endif // HLCSG_WADCFG
-#endif
-
-#ifdef HLCSG_AUTOWAD
-//============================================================================
-// autowad.cpp      AJM
-
-extern bool     g_bWadAutoDetect;
-#ifndef HLCSG_AUTOWAD_NEW
-extern int      g_numUsedTextures;
-
-#ifndef HLCSG_AUTOWAD_TEXTURELIST_FIX
-extern void     GetUsedTextures();
-#endif
-//extern bool     autowad_IsUsedTexture(const char* const texname);
-//extern bool     autowad_IsUsedWad(const char* const path);
-//extern void     autowad_PurgeName(const char* const texname);
-extern void     autowad_cleanup();
-extern void     autowad_UpdateUsedWads();
-#ifdef HLCSG_AUTOWAD_TEXTURELIST_FIX
-extern void     autowad_PushName(const char *texname);
-#endif
-#endif
-
-#endif // HLCSG_AUTOWAD
 
 //=============================================================================
 // properties.cpp

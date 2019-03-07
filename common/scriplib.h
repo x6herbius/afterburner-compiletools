@@ -19,8 +19,4 @@ extern bool     GetToken(bool crossline);
 extern void     UnGetToken();
 extern bool     TokenAvailable();
 
-#define MAX_WAD_PATHS   42
-extern char         g_szWadPaths[MAX_WAD_PATHS][_MAX_PATH];
-extern int          g_iNumWadPaths;
-
 #endif //**/ SCRIPLIB_H__

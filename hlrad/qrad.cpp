@@ -4254,9 +4254,6 @@ static void     Usage()
 #ifdef ZHLT_LANGFILE
 	Log("    -lang file      : localization file\n");
 #endif
-#ifdef HLRAD_TEXTURE
-	Log("    -waddir folder  : Search this folder for wad files.\n");
-#endif
 #ifdef HLRAD_FASTMODE
 	Log("    -fast           : Fast rad\n");
 #endif
@@ -5662,23 +5659,6 @@ int             main(const int argc, char** argv)
 			}
 		}
 #endif
-#ifdef HLRAD_TEXTURE
-		else if (!strcasecmp (argv[i], "-waddir"))
-		{
-			if (i + 1 < argc)
-			{
-				AddWadFolder (argv[++i]);
-			}
-			else
-			{
-				Usage ();
-			}
-		}
-		else if (!strcasecmp (argv[i], "-notextures"))
-		{
-			g_notextures = true;
-		}
-#endif
 #ifdef HLRAD_REFLECTIVITY
 		else if (!strcasecmp (argv[i], "-texreflectgamma"))
 		{
@@ -5789,7 +5769,6 @@ int             main(const int argc, char** argv)
     FlipSlashes(g_Mapname);
 #ifdef ZHLT_STUDIOSHADOWS
     ExtractFilePath(g_Mapname, temp);	// skip mapname
-    ExtractFilePath(temp, g_Wadpath);
 #endif
     StripExtension(g_Mapname);
     OpenLog(g_clientid);
