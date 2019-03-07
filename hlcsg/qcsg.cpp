@@ -16,6 +16,7 @@
 #include <windows.h> //--vluzacn
 #endif
 
+#include "bspfile.h"
 #include "texturedirectorylisting.h"
 
 /*
@@ -2703,6 +2704,10 @@ int             main(const int argc, char** argv)
     {
         Error("No texture directory was set. Please provide one using -texturedir.\n");
     }
+
+    Log("Searching for textures in %s...\n", g_TexDirListing.textureDirPath().c_str());
+    g_TexDirListing.makeListing();
+    Log("%u textures found.\n", static_cast<uint32_t>(g_TexDirListing.count()));
 
     // START CSG
     // AJM: re-arranged some stuff up here so that the mapfile is loaded

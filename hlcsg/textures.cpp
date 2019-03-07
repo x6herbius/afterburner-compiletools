@@ -1,11 +1,10 @@
 #include "csg.h"
 #include "texturecollection.h"
-#include "texturecollectionloader.h"
+#include "texturecollectionreader.h"
+#include "pngtexture.h"
 
 #define MAXWADNAME 16
 #define MAX_TEXFILES 128
-
-TextureDirectoryListing g_TexDirListing;
 
 typedef struct
 {
@@ -33,8 +32,6 @@ std::deque< std::string > g_WadInclude;
 std::map< int, bool > s_WadIncludeMap;
 #endif
 
-static int      numLocalMiptex = 0;
-static lumpinfo_t localMiptex[MAX_MAP_TEXTURES];
 static int      nTexLumps = 0;
 static lumpinfo_t* lumpinfo = NULL;
 static int      nTexFiles = 0;
@@ -192,31 +189,15 @@ static int CDECL lump_sorter_by_name(const void* lump1, const void* lump2)
 //  FindMiptex
 //      Find and allocate a texture into the lump data
 // =====================================================================================
-static int      FindMiptex(const char* const name)
+static int FindMiptex(const char* const name)
 {
-    int             i;
-#ifdef HLCSG_TEXMAP64_FIX
-	if (strlen (name) >= MAXWADNAME)
-	{
-		Error ("Texture name is too long (%s)\n", name);
-	}
-#endif
+    int32_t index = TextureDirectoryListing::INVALID_TEXTURE_INDEX;
 
     ThreadLock();
-    for (i = 0; i < numLocalMiptex; i++)
-    {
-        if (!strcmp(name, localMiptex[i].name))
-        {
-            ThreadUnlock();
-            return i;
-        }
-    }
-
-    hlassume(numLocalMiptex < MAX_MAP_TEXTURES, assume_MAX_MAP_TEXTURES);
-    safe_strncpy(localMiptex[i].name, name, MAXWADNAME);
-    numLocalMiptex++;
+    index = g_TexDirListing.assignNextTextureIndex(name);
     ThreadUnlock();
-    return i;
+
+    return index;
 }
 
 // =====================================================================================
@@ -680,7 +661,7 @@ int LoadLump(const lumpinfo_t* const source, int* texsize)
             miptex_t miptex;
             SafeRead(texfiles[source->iTexFile], &miptex, sizeof(miptex_t));
 
-            if ( TextureCollectionLoader(g_TextureCollection).appendMiptex(&miptex, sizeof(miptex_t), true) )
+            if ( TextureCollectionReader(g_TextureCollection, g_TexDirListing).appendMiptex(&miptex, sizeof(miptex_t), true) )
             {
                 return sizeof(miptex_t);
             }
@@ -694,7 +675,7 @@ int LoadLump(const lumpinfo_t* const source, int* texsize)
             tempData.resize(source->disksize);
             SafeRead(texfiles[source->iTexFile], tempData.data(), tempData.size());
 
-            if ( TextureCollectionLoader(g_TextureCollection).appendMiptex(tempData.data(), tempData.size(), false) )
+            if ( TextureCollectionReader(g_TextureCollection, g_TexDirListing).appendMiptex(tempData.data(), tempData.size(), false) )
             {
                 return tempData.size();
             }
@@ -707,55 +688,6 @@ int LoadLump(const lumpinfo_t* const source, int* texsize)
     Warning("::LoadLump() texture %s not found!", source->name);
 #endif
     return 0;
-}
-
-// =====================================================================================
-//  AddAnimatingTextures
-// =====================================================================================
-void            AddAnimatingTextures()
-{
-    int             base;
-    int             i, j, k;
-    char            name[MAXWADNAME];
-
-    base = numLocalMiptex;
-
-    for (i = 0; i < base; i++)
-    {
-        if ((localMiptex[i].name[0] != '+') && (localMiptex[i].name[0] != '-'))
-        {
-            continue;
-        }
-
-        safe_strncpy(name, localMiptex[i].name, MAXWADNAME);
-
-        for (j = 0; j < 20; j++)
-        {
-            if (j < 10)
-            {
-                name[1] = '0' + j;
-            }
-            else
-            {
-                name[1] = 'A' + j - 10;                    // alternate animation
-            }
-
-            // see if this name exists in the wadfile
-            for (k = 0; k < nTexLumps; k++)
-            {
-                if (!strcmp(name, lumpinfo[k].name))
-                {
-                    FindMiptex(name);                      // add to the miptex list
-                    break;
-                }
-            }
-        }
-    }
-
-    if (numLocalMiptex - base)
-    {
-        Log("added %i additional animating textures.\n", numLocalMiptex - base);
-    }
 }
 
 #ifndef HLCSG_AUTOWAD_NEW
@@ -784,159 +716,21 @@ char*           GetWadPath()
 // =====================================================================================
 //  WriteMiptex
 // =====================================================================================
-void            WriteMiptex()
+void WriteMiptex()
 {
-    int             len, texsize, totaltexsize = 0;
-    double          start, end;
-
-    start = I_FloatTime();
-    {
-        g_TexDirListing.makeListing();
-
-        if (!TEX_InitFromWad())
+   for ( auto iterator = g_TexDirListing.mapBegin(); iterator != g_TexDirListing.mapEnd(); ++iterator )
+   {
+        if ( iterator->second == TextureDirectoryListing::INVALID_TEXTURE_INDEX )
         {
-            return;
+            continue;
         }
 
-        AddAnimatingTextures();
-    }
-    end = I_FloatTime();
+        const uint32_t newIndex = g_TextureCollection.count();
+        g_TextureCollection.allocateAndAppend(1, TextureCollection::ItemType::PngOnDisk);
 
-    Verbose("TEX_InitFromWad & AddAnimatingTextures elapsed time = %ldms\n", (long)(end - start));
-
-    start = I_FloatTime();
-    {
-        int             i;
-
-        for (i = 0; i < numLocalMiptex; i++)
-        {
-            lumpinfo_t*     found;
-
-            found = FindTexture(localMiptex + i);
-            if (found)
-            {
-                localMiptex[i] = *found;
-#ifdef HLCSG_AUTOWAD_NEW
-				texwadpaths[found->iTexFile]->usedtextures++;
-#endif
-            }
-            else
-            {
-                localMiptex[i].iTexFile = localMiptex[i].filepos = localMiptex[i].disksize = 0;
-            }
-        }
-    }
-    end = I_FloatTime();
-
-    Verbose("FindTextures elapsed time = %ldms\n", (long)(end - start));
-
-#ifdef HLCSG_AUTOWAD_NEW
-	// Now we have filled lumpinfo for each miptex and the number of used textures for each wad.
-	{
-		char szTmpWad[MAX_VAL];
-		int i;
-
-		szTmpWad[0] = 0;
-		for (i = 0; i < nTexFiles; i++)
-		{
-			wadpath_t *currentwad = texwadpaths[i];
-			if (!currentwad->usedbymap && (currentwad->usedtextures > 0 || !g_bWadAutoDetect))
-			{
-				Log ("Including Wadfile: %s\n", currentwad->path);
-				double percused = (double)currentwad->usedtextures / (double)numLocalMiptex * 100;
-				Log (" - Contains %i used texture%s, %2.2f percent of map (%d textures in wad)\n",
-					 currentwad->usedtextures, currentwad->usedtextures == 1? "": "s", percused, currentwad->totaltextures);
-			}
-		}
-		for (i = 0; i < nTexFiles; i++)
-		{
-			wadpath_t *currentwad = texwadpaths[i];
-			if (currentwad->usedbymap && (currentwad->usedtextures > 0 || !g_bWadAutoDetect))
-			{
-				Log ("Using Wadfile: %s\n", currentwad->path);
-				double percused = (double)currentwad->usedtextures / (double)numLocalMiptex * 100;
-				Log (" - Contains %i used texture%s, %2.2f percent of map (%d textures in wad)\n",
-					 currentwad->usedtextures, currentwad->usedtextures == 1? "": "s", percused, currentwad->totaltextures);
-	#ifdef HLCSG_STRIPWADPATH
-				char tmp[_MAX_PATH];
-				ExtractFile (currentwad->path, tmp);
-				safe_strncat (szTmpWad, tmp, MAX_VAL);
-	#else
-				safe_strncat (szTmpWad, currentwad->path, MAX_VAL);
-	#endif
-				safe_strncat (szTmpWad, ";", MAX_VAL);
-			}
-		}
-
-	#ifdef HLCSG_CHART_FIX
-		Log("\n");
-		if (*szTmpWad)
-		{
-			Log ("Wad files required to run the map: \"%s\"\n", szTmpWad);
-		}
-		else
-		{
-			Log ("Wad files required to run the map: (None)\n");
-		}
-	#endif
-		SetKeyValue(&g_entities[0], "wad", szTmpWad);
-	}
-
-#endif
-    start = I_FloatTime();
-    {
-        texinfo_t* tx = g_texinfo;
-
-        // Sort them FIRST by wadfile and THEN by name for most efficient loading in the engine.
-        qsort((void*)localMiptex, (size_t) numLocalMiptex, sizeof(localMiptex[0]), lump_sorter_by_wad_and_name);
-
-        // Sleazy Hack 104 Pt 2 - After sorting the miptex array, reset the texinfos to point to the right miptexs
-        for (int i = 0; i < g_numtexinfo; i++, tx++)
-        {
-#ifdef HLCSG_TEXMAP64_FIX
-            char* miptex_name = texmap_retrieve(tx->miptex);
-#else
-            char* miptex_name = texmap64_retrieve(tx->miptex);
-#endif
-
-            tx->miptex = FindMiptex(miptex_name);
-
-#ifndef HLCSG_TEXMAP64_FIX
-            // Free up the originally strdup()'ed miptex_name
-            free(miptex_name);
-#endif
-        }
-
-#ifdef HLCSG_TEXMAP64_FIX
-		texmap_clear();
-#endif
-    }
-    end = I_FloatTime();
-
-    Verbose("qsort(localMiptex) elapsed time = %ldms\n", (long)(end - start));
-
-    start = I_FloatTime();
-    {
-        // Now setup to get the miptex data (or just the headers if using -wadtextures) from the wadfile
-        g_TextureCollection.clear();
-
-        for (int i = 0; i < numLocalMiptex; i++)
-        {
-            len = LoadLump(localMiptex + i, &texsize);
-
-            if (len > 0)
-            {
-                totaltexsize += texsize;
-                hlassume(totaltexsize < g_max_map_miptex, assume_MAX_MAP_MIPTEX);
-            }
-        }
-    }
-    end = I_FloatTime();
-
-    Log("Texture usage is at %1.2f mb (of %1.2f mb MAX)\n", (float)totaltexsize / (1024 * 1024),
-        (float)g_max_map_miptex / (1024 * 1024));
-
-    Verbose("LoadLump() elapsed time = %ldms\n", (long)(end - start));
+        PNGTexture* const texture = g_TextureCollection.pngTextureAt(newIndex);
+        texture->setPath(iterator->first);
+   }
 }
 
 //==========================================================================

@@ -308,7 +308,6 @@ extern const char* ContentsToString(const contents_t type);
 typedef std::deque< std::string >::iterator WadInclude_i;
 extern std::deque< std::string > g_WadInclude;  // List of substrings to wadinclude
 
-extern TextureDirectoryListing g_TexDirListing;
 extern void     WriteMiptex();
 extern int      TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, const vec3_t origin
 #ifdef ZHLT_HIDDENSOUNDTEXTURE

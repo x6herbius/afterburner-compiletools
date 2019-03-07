@@ -2,8 +2,12 @@
 #define BSPFILE_H__
 #include "cmdlib.h" //--vluzacn
 #include "mathlib.h"
-#include "texturecollection.h"
 #include "specialtextures.h"
+
+#ifdef ZHLT_AFTERBURNER
+#include "texturecollection.h"
+#include "texturedirectorylisting.h"
+#endif
 
 #if _MSC_VER >= 1000
 #pragma once
@@ -316,6 +320,23 @@ typedef struct texinfo_s
 #endif
 } texinfo_t;
 
+#ifdef ZHLT_AFTERBURNER
+// This header begins the texture lump.
+// After it there are pngCount consecutive dpngtexturepath_t items,
+// and then miptexCount consective miptex offsets and textures,
+// as per the normal Half Life spec.
+typedef struct
+{
+	uint32_t pngCount;
+	uint32_t miptexCount;
+} dtexturelumpheader_t;
+
+typedef struct
+{
+	char path[MAX_TEXTURE_NAME_LENGTH];
+} dpngtexturepath_t;
+#endif
+
 #define TEX_SPECIAL		1		// sky or slime or null, no lightmap or 256 subdivision
 
 #ifdef ZHLT_HIDDENSOUNDTEXTURE
@@ -460,6 +481,7 @@ extern int      g_ddeluxdata_checksum;
 
 extern TextureCollection g_TextureCollection;
 extern int g_TextureCollectionChecksum;
+extern TextureDirectoryListing g_TexDirListing;
 
 extern int      g_entdatasize;
 extern char     g_dentdata[MAX_MAP_ENTSTRING];

@@ -7,6 +7,7 @@
 #include "cppmemory.h"
 
 class MiptexWrapper;
+class PNGTexture;
 
 class TextureCollection
 {
@@ -23,19 +24,21 @@ public:
 	~TextureCollection();
 
 	ItemType itemType(uint32_t index) const;
-	uint32_t count() const;
+	uint32_t count(ItemType itemType = ItemType::Undefined) const;
 	void clear();
 
 	// Regardless of whether textures are in an exportable state.
-	size_t totalBytesInUse() const;
+	size_t totalBytesInUse(ItemType itemType = ItemType::Undefined) const;
 
 	// Only counts textures that can currently be exported.
-	size_t exportBytesRequired() const;
-	size_t exportableTextureCount() const;
+	size_t exportBytesRequired(ItemType itemType = ItemType::Undefined) const;
+	size_t exportableTextureCount(ItemType itemType = ItemType::Undefined) const;
 
 	// If index is out of range, or type does not match, returns NULL.
 	MiptexWrapper* miptexAt(uint32_t index);
 	const MiptexWrapper* miptexAt(uint32_t index) const;
+	PNGTexture* pngTextureAt(uint32_t index);
+	const PNGTexture* pngTextureAt(uint32_t index) const;
 
 	// The callback should take a uint32_t index and an item type.
 	// It should return true if the item is to be kept, and false otherwise.
@@ -55,6 +58,7 @@ private:
 	static ItemPtr createItem(ItemType type);
 
 	void mapItems(const std::vector<int32_t>& map, uint32_t newCount);
+	uint32_t countItemsOfType(ItemType itemType) const;
 
 	ItemList m_Items;
 };

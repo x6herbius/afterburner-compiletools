@@ -1,6 +1,7 @@
 #include "texturecollection.h"
 #include "miptexwrapper.h"
 #include "hlassert.h"
+#include "pngtexture.h"
 
 class TextureCollection::Item
 {
@@ -18,6 +19,10 @@ public:
 	{
 		return m_Type;
 	}
+
+	virtual bool isExportable() const = 0;
+	virtual size_t bytesInUse() const = 0;
+	virtual size_t exportBytesRequired() const = 0;
 
 private:
 	ItemType m_Type;
@@ -44,8 +49,63 @@ public:
 		return &m_Miptex;
 	}
 
+	virtual bool isExportable() const override
+	{
+		return m_Miptex.isValid();
+	}
+
+	virtual size_t bytesInUse() const override
+	{
+		return m_Miptex.dataSize();
+	}
+
+	virtual size_t exportBytesRequired() const override
+	{
+		return m_Miptex.exportDataSize();
+	}
+
 private:
 	MiptexWrapper m_Miptex;
+};
+
+class PNGTextureItem : public TextureCollection::Item
+{
+public:
+	PNGTextureItem() : TextureCollection::Item(TextureCollection::ItemType::PngOnDisk)
+	{
+	}
+
+	virtual ~PNGTextureItem()
+	{
+	}
+
+	inline PNGTexture* texture()
+	{
+		return &m_Texture;
+	}
+
+	inline const PNGTexture* texture() const
+	{
+		return &m_Texture;
+	}
+
+	virtual bool isExportable() const override
+	{
+		return m_Texture.hasValidPath();
+	}
+
+	virtual size_t bytesInUse() const override
+	{
+		return m_Texture.path().size();
+	}
+
+	virtual size_t exportBytesRequired() const override
+	{
+		return m_Texture.exportDataSize();
+	}
+
+private:
+	PNGTexture m_Texture;
 };
 
 TextureCollection::TextureCollection() :
@@ -67,9 +127,17 @@ TextureCollection::ItemType TextureCollection::itemType(uint32_t index) const
 	return m_Items[index]->type();
 }
 
-uint32_t TextureCollection::count() const
+uint32_t TextureCollection::count(ItemType itemType) const
 {
-	return m_Items.size();
+	if ( itemType != ItemType::Undefined )
+	{
+		return countItemsOfType(itemType);
+	}
+	else
+	{
+		return m_Items.size();
+	}
+
 }
 
 MiptexWrapper* TextureCollection::miptexAt(uint32_t index)
@@ -90,6 +158,26 @@ const MiptexWrapper* TextureCollection::miptexAt(uint32_t index) const
 	}
 
 	return static_cast<const MiptexItem*>(m_Items[index].get())->miptex();
+}
+
+PNGTexture* TextureCollection::pngTextureAt(uint32_t index)
+{
+	if ( itemType(index) != ItemType::PngOnDisk )
+	{
+		return NULL;
+	}
+
+	return static_cast<PNGTextureItem*>(m_Items[index].get())->texture();
+}
+
+const PNGTexture* TextureCollection::pngTextureAt(uint32_t index) const
+{
+	if ( itemType(index) != ItemType::PngOnDisk )
+	{
+		return NULL;
+	}
+
+	return static_cast<const PNGTextureItem*>(m_Items[index].get())->texture();
 }
 
 void TextureCollection::filter(const std::function<bool(uint32_t, TextureCollection::ItemType)>& callback, std::vector<int32_t>& map)
@@ -143,6 +231,21 @@ void TextureCollection::mapItems(const std::vector<int32_t>& map, uint32_t newCo
 	m_Items = tempItems;
 }
 
+uint32_t TextureCollection::countItemsOfType(ItemType itemType) const
+{
+	uint32_t count = 0;
+
+	for ( const ItemPtr& item : m_Items )
+	{
+		if ( item->type() == itemType )
+		{
+			++count;
+		}
+	}
+
+	return count;
+}
+
 bool TextureCollection::allocateAndAppend(size_t count, ItemType type)
 {
 	if ( count < 1 || type == ItemType::Undefined )
@@ -177,98 +280,54 @@ void TextureCollection::clear()
 	m_Items.clear();
 }
 
-size_t TextureCollection::totalBytesInUse() const
+size_t TextureCollection::totalBytesInUse(ItemType itemType) const
 {
 	size_t size = 0;
 
 	for ( const ItemPtr& item : m_Items )
 	{
-		if ( !item.get() )
+		if ( !item.get() || (itemType != ItemType::Undefined && item->type() != itemType) )
 		{
 			continue;
 		}
 
-		switch ( item->type() )
-		{
-			case ItemType::Miptex:
-			{
-				const MiptexItem* miptexItem = static_cast<const MiptexItem*>(item.get());
-				const MiptexWrapper* wrapper = miptexItem->miptex();
-				size += wrapper->dataSize();
-				break;
-			}
-
-			default:
-			{
-				break;
-			}
-		}
+		size += item->bytesInUse();
 	}
 
 	return size;
 }
 
-size_t TextureCollection::exportBytesRequired() const
+size_t TextureCollection::exportBytesRequired(ItemType itemType) const
 {
 	size_t size = 0;
 
 	for ( const ItemPtr& item : m_Items )
 	{
-		if ( !item.get() )
+		if ( !item.get() || (itemType != ItemType::Undefined && item->type() != itemType) )
 		{
 			continue;
 		}
 
-		switch ( item->type() )
-		{
-			case ItemType::Miptex:
-			{
-				const MiptexItem* miptexItem = static_cast<const MiptexItem*>(item.get());
-				const MiptexWrapper* wrapper = miptexItem->miptex();
-				size += wrapper->exportDataSize();
-				break;
-			}
-
-			default:
-			{
-				break;
-			}
-		}
+		size += item->exportBytesRequired();
 	}
 
 	return size;
 }
 
-size_t TextureCollection::exportableTextureCount() const
+size_t TextureCollection::exportableTextureCount(ItemType itemType) const
 {
 	size_t count = 0;
 
 	for ( const ItemPtr& item : m_Items )
 	{
-		if ( !item.get() )
+		if ( !item.get() || (itemType != ItemType::Undefined && item->type() != itemType) )
 		{
 			continue;
 		}
 
-		switch ( item->type() )
+		if ( item->isExportable() )
 		{
-			case ItemType::Miptex:
-			{
-				const MiptexItem* miptexItem = static_cast<const MiptexItem*>(item.get());
-				const MiptexWrapper* wrapper = miptexItem->miptex();
-
-				if ( wrapper->isValid() )
-				{
-					++count;
-				}
-
-				break;
-			}
-
-			default:
-			{
-				break;
-			}
+			++count;
 		}
 	}
 
@@ -282,6 +341,11 @@ TextureCollection::ItemPtr TextureCollection::createItem(ItemType type)
 		case ItemType::Miptex:
 		{
 			return ItemPtr(new MiptexItem());
+		}
+
+		case ItemType::PngOnDisk:
+		{
+			return ItemPtr(new PNGTextureItem());
 		}
 
 		default:

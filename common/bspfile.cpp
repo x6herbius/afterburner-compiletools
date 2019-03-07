@@ -9,8 +9,9 @@
 #include "blockmem.h"
 #include "checksum.h"
 #include "texturecollection.h"
-#include "texturecollectionloader.h"
+#include "texturecollectionreader.h"
 #include "texturecollectionwriter.h"
+#include "texturedirectorylisting.h"
 #include "miptexwrapper.h"
 
 //=============================================================================
@@ -37,6 +38,7 @@ int		g_ddeluxdata_checksum;
 
 TextureCollection g_TextureCollection;
 int g_TextureCollectionChecksum;
+TextureDirectoryListing g_TexDirListing;
 
 int		g_entdatasize;
 char		g_dentdata[MAX_MAP_ENTSTRING];
@@ -605,7 +607,7 @@ void LoadBSPImage( dheader_t* const header )
 	g_nummarksurfaces = CopyLump( LUMP_MARKSURFACES, g_dmarksurfaces, sizeof( g_dmarksurfaces[0] ), header );
 	g_numsurfedges = CopyLump( LUMP_SURFEDGES, g_dsurfedges, sizeof( g_dsurfedges[0] ), header );
 	g_numedges = CopyLump( LUMP_EDGES, g_dedges, sizeof( dedge_t ), header );
-	TextureCollectionLoader(g_TextureCollection)
+	TextureCollectionReader(g_TextureCollection, g_TexDirListing)
 		.load(reinterpret_cast<const byte*>(header) + header->lumps[LUMP_TEXTURES].fileofs,
 			  header->lumps[LUMP_TEXTURES].filelen);
 	g_visdatasize = CopyLump( LUMP_VISIBILITY, g_dvisdata, 1, header );
