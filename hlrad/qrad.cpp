@@ -1915,38 +1915,52 @@ static void     MakePatchForFace( int modelnum, const int fn, Winding* w
 #endif
 
 #ifdef HLRAD_REFLECTIVITY
-		VectorCopy (g_textures[g_texinfo[f->texinfo].miptex].reflectivity, patch->texturereflectivity);
-#ifdef HLRAD_CUSTOMTEXLIGHT_COLOR
-		if (g_face_texlights[fn] && *ValueForKey (g_face_texlights[fn], "_texcolor"))
-		{
-			vec3_t texturecolor;
-			vec3_t texturereflectivity;
-			GetVectorForKey (g_face_texlights[fn], "_texcolor", texturecolor);
-			int k;
+		const int textureIndex = g_texinfo[f->texinfo].miptex;
 
-			for (k = 0; k < 3; k++)
+		if ( textureIndex >= 0 && textureIndex < RadTextures().size() )
+		{
+			const RadTexture& radTex = RadTextures()[textureIndex];
+			vec3_t reflectivity;
+			radTex.reflectivity(reflectivity);
+			VectorCopy(reflectivity, patch->texturereflectivity);
+
+#ifdef HLRAD_CUSTOMTEXLIGHT_COLOR
+			if (g_face_texlights[fn] && *ValueForKey (g_face_texlights[fn], "_texcolor"))
 			{
-				texturecolor[k] = floor (texturecolor[k] + 0.001);
+				vec3_t texturecolor;
+				vec3_t texturereflectivity;
+				GetVectorForKey (g_face_texlights[fn], "_texcolor", texturecolor);
+				int k;
+
+				for (k = 0; k < 3; k++)
+				{
+					texturecolor[k] = floor (texturecolor[k] + 0.001);
+				}
+				if (VectorMinimum (texturecolor) < -0.001 || VectorMaximum (texturecolor) > 255.001)
+				{
+					vec3_t origin;
+					GetVectorForKey (g_face_texlights[fn], "origin", origin);
+					Error ("light_surface entity at (%g,%g,%g): texture color (%g,%g,%g) must be numbers between 0 and 255.", origin[0], origin[1], origin[2], texturecolor[0], texturecolor[1], texturecolor[2]);
+				}
+				VectorScale (texturecolor, 1.0 / 255.0, texturereflectivity);
+				for (k = 0; k < 3; k++)
+				{
+					texturereflectivity[k] = pow (texturereflectivity[k], g_texreflectgamma);
+				}
+				VectorScale (texturereflectivity, g_texreflectscale, texturereflectivity);
+				if (VectorMaximum (texturereflectivity) > 1.0 + NORMAL_EPSILON)
+				{
+					Warning ("Texture '%s': reflectivity (%f,%f,%f) greater than 1.0.", radTex.name().c_str(), texturereflectivity[0], texturereflectivity[1], texturereflectivity[2]);
+				}
+				VectorCopy (texturereflectivity, patch->texturereflectivity);
 			}
-			if (VectorMinimum (texturecolor) < -0.001 || VectorMaximum (texturecolor) > 255.001)
-			{
-				vec3_t origin;
-				GetVectorForKey (g_face_texlights[fn], "origin", origin);
-				Error ("light_surface entity at (%g,%g,%g): texture color (%g,%g,%g) must be numbers between 0 and 255.", origin[0], origin[1], origin[2], texturecolor[0], texturecolor[1], texturecolor[2]);
-			}
-			VectorScale (texturecolor, 1.0 / 255.0, texturereflectivity);
-			for (k = 0; k < 3; k++)
-			{
-				texturereflectivity[k] = pow (texturereflectivity[k], g_texreflectgamma);
-			}
-			VectorScale (texturereflectivity, g_texreflectscale, texturereflectivity);
-			if (VectorMaximum (texturereflectivity) > 1.0 + NORMAL_EPSILON)
-			{
-				Warning ("Texture '%s': reflectivity (%f,%f,%f) greater than 1.0.", g_textures[g_texinfo[f->texinfo].miptex].name, texturereflectivity[0], texturereflectivity[1], texturereflectivity[2]);
-			}
-			VectorCopy (texturereflectivity, patch->texturereflectivity);
-		}
 #endif
+		}
+		else
+		{
+			Warning("MakePatchForFace(): Texinfo %d references invalid texture %d.\n", f->texinfo, textureIndex);
+		}
+
 		{
 			vec_t opacity = 0.0;
 			if (g_face_entity[fn] - g_entities == 0)

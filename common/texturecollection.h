@@ -7,7 +7,7 @@
 #include "cppmemory.h"
 
 class MiptexWrapper;
-class PNGTexture;
+class PNGTexturePath;
 
 class TextureCollection
 {
@@ -37,8 +37,8 @@ public:
 	// If index is out of range, or type does not match, returns NULL.
 	MiptexWrapper* miptexAt(uint32_t index);
 	const MiptexWrapper* miptexAt(uint32_t index) const;
-	PNGTexture* pngTextureAt(uint32_t index);
-	const PNGTexture* pngTextureAt(uint32_t index) const;
+	PNGTexturePath* pngTextureAt(uint32_t index);
+	const PNGTexturePath* pngTextureAt(uint32_t index) const;
 
 	// The callback should take a uint32_t index and an item type.
 	// It should return true if the item is to be kept, and false otherwise.

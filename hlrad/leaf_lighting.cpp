@@ -384,14 +384,16 @@ static void ComputeLightmapColorFromPoint( lightpoint_t *info, dworldlight_t* pS
 	if( info->surf != NULL )
 	{
 		texinfo_t *pTexInfo = &g_texinfo[info->surf->texinfo];
-		radtexture_t *tex = &g_textures[pTexInfo->miptex];
 
-		if( average ) VectorScale( info->average, scale, color );
-		else VectorScale( info->diffuse, scale, color );
-#if 0
-		if( !VectorCompare( tex->reflectivity, vec3_origin ))
-			VectorMultiply( color, tex->reflectivity, color );
-#endif
+		if( average )
+		{
+			VectorScale( info->average, scale, color );
+		}
+		else
+		{
+			VectorScale( info->diffuse, scale, color );
+		}
+
 		VectorAdd( radcolor, color, radcolor );
 	}
 }

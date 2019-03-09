@@ -27,6 +27,8 @@
 */
 
 #define SPECIALTEX_GLOBAL_PREFIX "special/"
+#define SPECIALTEX_INTERNAL_PREFIX "*"
+#define SPECIALTEX_TRANSPARENT_PREFIX "{"
 
 #define SPECIALTEX_ENV_SKY "env_sky"
 

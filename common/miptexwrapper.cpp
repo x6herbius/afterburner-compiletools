@@ -4,8 +4,6 @@
 
 #define WARNING(...) Warning("MiptexWrapper: " __VA_ARGS__)
 
-const uint32_t MiptexWrapper::PALETTE_SIZE = 256;
-
 MiptexWrapper::MiptexWrapper(const char* name, uint32_t width, uint32_t height) :
 	m_Name(),
 	m_Width(0),

@@ -23,6 +23,7 @@ public:
 private:
 	void writePngPaths(dpngtexturepath_t* paths, uint32_t count);
 	void writeMiptexData(uint32_t* headerOffsets, uint32_t count, uint32_t pngCount);
+	void normaliseSlashes(char* path);
 
 	const TextureCollection& m_Collection;
 	std::vector<byte> m_ExportData;

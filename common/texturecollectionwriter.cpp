@@ -3,7 +3,7 @@
 #include "miptexwrapper.h"
 #include "hlassert.h"
 #include "checksum.h"
-#include "pngtexture.h"
+#include "pngtexturepath.h"
 
 TextureCollectionWriter::TextureCollectionWriter(const TextureCollection& collection) :
 	m_Collection(collection),
@@ -88,7 +88,7 @@ void TextureCollectionWriter::writePngPaths(dpngtexturepath_t* paths, uint32_t c
 
 	for ( uint32_t index = 0; index < totalCount; ++index )
 	{
-		const PNGTexture* texture = m_Collection.pngTextureAt(index);
+		const PNGTexturePath* texture = m_Collection.pngTextureAt(index);
 
 		if ( !texture || !texture->hasValidPath() )
 		{
@@ -98,7 +98,11 @@ void TextureCollectionWriter::writePngPaths(dpngtexturepath_t* paths, uint32_t c
 		hlassert(texture->path().size() < MAX_TEXTURE_NAME_LENGTH);
 		hlassert(nextPathIndex < count);
 
-		strncpy(paths[nextPathIndex].path, texture->path().c_str(), sizeof(paths[nextPathIndex].path));
+		dpngtexturepath_t& currentPath = paths[nextPathIndex];
+
+		strncpy(currentPath.path, texture->path().c_str(), sizeof(paths[nextPathIndex].path));
+		currentPath.path[sizeof(currentPath.path) - 1] = '\0';
+		normaliseSlashes(currentPath.path);
 
 		hlassert(m_IndexMap[index] == ~0);
 		m_IndexMap[index] = nextPathIndex;
@@ -143,4 +147,20 @@ void TextureCollectionWriter::writeMiptexData(uint32_t* headerOffsets, uint32_t 
 	}
 
 	hlassert(nextMiptexIndex == count);
+}
+
+void TextureCollectionWriter::normaliseSlashes(char* path)
+{
+	if ( !path )
+	{
+		return;
+	}
+
+	for ( char* current = path; *current; ++current )
+	{
+		if ( *current == '\\' )
+		{
+			*current = '/';
+		}
+	}
 }

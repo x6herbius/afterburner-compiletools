@@ -1,7 +1,7 @@
 #include "texturecollection.h"
 #include "miptexwrapper.h"
 #include "hlassert.h"
-#include "pngtexture.h"
+#include "pngtexturepath.h"
 
 class TextureCollection::Item
 {
@@ -79,12 +79,12 @@ public:
 	{
 	}
 
-	inline PNGTexture* texture()
+	inline PNGTexturePath* texture()
 	{
 		return &m_Texture;
 	}
 
-	inline const PNGTexture* texture() const
+	inline const PNGTexturePath* texture() const
 	{
 		return &m_Texture;
 	}
@@ -105,7 +105,7 @@ public:
 	}
 
 private:
-	PNGTexture m_Texture;
+	PNGTexturePath m_Texture;
 };
 
 TextureCollection::TextureCollection() :
@@ -160,7 +160,7 @@ const MiptexWrapper* TextureCollection::miptexAt(uint32_t index) const
 	return static_cast<const MiptexItem*>(m_Items[index].get())->miptex();
 }
 
-PNGTexture* TextureCollection::pngTextureAt(uint32_t index)
+PNGTexturePath* TextureCollection::pngTextureAt(uint32_t index)
 {
 	if ( itemType(index) != ItemType::PngOnDisk )
 	{
@@ -170,7 +170,7 @@ PNGTexture* TextureCollection::pngTextureAt(uint32_t index)
 	return static_cast<PNGTextureItem*>(m_Items[index].get())->texture();
 }
 
-const PNGTexture* TextureCollection::pngTextureAt(uint32_t index) const
+const PNGTexturePath* TextureCollection::pngTextureAt(uint32_t index) const
 {
 	if ( itemType(index) != ItemType::PngOnDisk )
 	{

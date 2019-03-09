@@ -35,9 +35,12 @@ public:
 	TextureIndexMap::const_iterator mapBegin() const;
 	TextureIndexMap::const_iterator mapEnd() const;
 
+	std::string makeFullTexturePath(const std::string textureRelPath) const;
+
 private:
 	typedef struct dirent dirent_t;
 
+	static std::string makeSystemCanonicalTexturePath(const std::string& origPath);
 	static bool fileNameIsPNG(const char* path);
 
 	bool readTexturesFromDirectory(const std::string& path);

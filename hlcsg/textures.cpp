@@ -1,7 +1,7 @@
 #include "csg.h"
 #include "texturecollection.h"
 #include "texturecollectionreader.h"
-#include "pngtexture.h"
+#include "pngtexturepath.h"
 
 #define MAXWADNAME 16
 
@@ -208,7 +208,7 @@ void WriteMiptex()
         const uint32_t newIndex = g_TextureCollection.count();
         g_TextureCollection.allocateAndAppend(1, TextureCollection::ItemType::PngOnDisk);
 
-        PNGTexture* const texture = g_TextureCollection.pngTextureAt(newIndex);
+        PNGTexturePath* const texture = g_TextureCollection.pngTextureAt(newIndex);
         texture->setPath(iterator->first);
    }
 }
@@ -266,23 +266,23 @@ int             TexinfoForBrushTexture(const plane_t* const plane, brush_texture
 #endif
 
     // set the special flag
-    if (bt->name[0] == '*'
-        || !strncasecmp(bt->name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1)
+    if (strncasecmp(bt->name, SPECIALTEX_INTERNAL_PREFIX, sizeof(SPECIALTEX_INTERNAL_PREFIX) - 1) == 0
+        || strncasecmp(bt->name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1) == 0
 
 // =====================================================================================
 //Cpt_Andrew - Env_Sky Check
 // =====================================================================================
-        || !strncasecmp(bt->name, SPECIALTEX_ENV_SKY, sizeof(SPECIALTEX_ENV_SKY) - 1)
+        || strncasecmp(bt->name, SPECIALTEX_ENV_SKY, sizeof(SPECIALTEX_ENV_SKY) - 1) == 0
 // =====================================================================================
 
 #ifndef HLCSG_CUSTOMHULL
-        || !strncasecmp(bt->name, SPECIALTEX_CLIP, sizeof(SPECIALTEX_CLIP) - 1)
+        || strncasecmp(bt->name, SPECIALTEX_CLIP, sizeof(SPECIALTEX_CLIP) - 1) == 0
 #endif
-        || !strncasecmp(bt->name, SPECIALTEX_ORIGIN, sizeof(SPECIALTEX_ORIGIN) - 1)
+        || strncasecmp(bt->name, SPECIALTEX_ORIGIN, sizeof(SPECIALTEX_ORIGIN) - 1) == 0
 #ifdef ZHLT_NULLTEX // AJM
-        || !strncasecmp(bt->name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1)
+        || strncasecmp(bt->name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1) == 0
 #endif
-        || !strncasecmp(bt->name, SPECIALTEX_AAATRIGGER, sizeof(SPECIALTEX_AAATRIGGER) - 1)
+        || strncasecmp(bt->name, SPECIALTEX_AAATRIGGER, sizeof(SPECIALTEX_AAATRIGGER) - 1) == 0
        )
     {
 		// actually only 'sky' and 'aaatrigger' needs this. --vluzacn

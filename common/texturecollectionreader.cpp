@@ -2,7 +2,7 @@
 #include "texturecollection.h"
 #include "texturedirectorylisting.h"
 #include "miptexwrapper.h"
-#include "pngtexture.h"
+#include "pngtexturepath.h"
 #include "log.h"
 #include "hlassert.h"
 #include "cmdlib.h"
@@ -118,7 +118,7 @@ bool TextureCollectionReader::loadAllPngs()
 
 	for ( uint32_t index = 0; index < m_PngCount; ++index )
 	{
-		PNGTexture* texture = m_Collection.pngTextureAt(prevCount + index);
+		PNGTexturePath* texture = m_Collection.pngTextureAt(prevCount + index);
 		hlassert(texture);
 
 		const dpngtexturepath_t* path = &paths[index];

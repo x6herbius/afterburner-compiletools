@@ -565,14 +565,23 @@ typedef struct
 	dplane_t *edges;
 #ifdef HLRAD_OPAQUE_ALPHATEST
 	int texinfo;
-	bool tex_alphatest;
 	vec_t tex_vecs[2][4];
-	int tex_width;
-	int tex_height;
-	const byte *tex_canvas;
+	int32_t radTextureIndex;
 #endif
 } opaqueface_t;
 opaqueface_t *opaquefaces;
+
+inline static const RadTexture* GetRadTexture(const opaqueface_t& face)
+{
+	const std::vector<RadTexture>& radTextures = RadTextures();
+
+	if ( face.radTextureIndex < 0 || face.radTextureIndex >= radTextures.size() )
+	{
+		return NULL;
+	}
+
+	return &radTextures[face.radTextureIndex];
+}
 
 typedef struct opaquenode_s
 {
@@ -609,7 +618,11 @@ bool TryMerge (opaqueface_t *f, const opaqueface_t *f2)
 		return false;
 	}
 #ifdef HLRAD_OPAQUE_ALPHATEST
-	if ((f->tex_alphatest || f2->tex_alphatest) && f->texinfo != f2->texinfo)
+	const RadTexture* tex1 = GetRadTexture(*f);
+	const RadTexture* tex2 = GetRadTexture(*f2);
+	if (tex1 && tex2 &&
+		((tex1->attributeFlags() | tex2->attributeFlags()) & RadTexture::IsAlphaMasked) &&
+		f->texinfo != f2->texinfo)
 	{
 		return false;
 	}
@@ -811,11 +824,17 @@ void CreateOpaqueNodes ()
 				of->tex_vecs[j][k] = info->vecs[j][k];
 			}
 		}
-		radtexture_t *tex = &g_textures[info->miptex];
-		of->tex_alphatest = tex->name[0] == '{';
-		of->tex_width = tex->width;
-		of->tex_height = tex->height;
-		of->tex_canvas = tex->canvas;
+
+		const std::vector<RadTexture>& radTextures = RadTextures();
+		if ( info->miptex < 0 || info->miptex >= radTextures.size() )
+		{
+			Warning("CreateOpaqueNodes(): Texinfo %d references invalid texture %d.\n", of->texinfo, info->miptex);
+			of->radTextureIndex = -1;
+		}
+		else
+		{
+			of->radTextureIndex = info->miptex;
+		}
 #endif
 	}
 	for (i = 0; i < g_numnodes; i++)
@@ -881,16 +900,19 @@ int TestLineOpaque_face (int facenum, const vec3_t hit)
 		}
 	}
 #ifdef HLRAD_OPAQUE_ALPHATEST
-	if (thisface->tex_alphatest)
+	const RadTexture* radTex = GetRadTexture(*thisface);
+
+	if (radTex && (radTex->attributeFlags() & RadTexture::IsAlphaMasked))
 	{
 		double x, y;
 		x = DotProduct (hit, thisface->tex_vecs[0]) + thisface->tex_vecs[0][3];
 		y = DotProduct (hit, thisface->tex_vecs[1]) + thisface->tex_vecs[1][3];
-		x = floor (x - thisface->tex_width * floor (x / thisface->tex_width));
-		y = floor (y - thisface->tex_height * floor (y / thisface->tex_height));
-		x = x > thisface->tex_width - 1? thisface->tex_width - 1: x < 0? 0: x;
-		y = y > thisface->tex_height - 1? thisface->tex_height - 1: y < 0? 0: y;
-		if (thisface->tex_canvas[(int)y * thisface->tex_width + (int)x] == 0xFF)
+		x = floor (x - (double)radTex->width() * floor (x / (double)radTex->width()));
+		y = floor (y - (double)radTex->height() * floor (y / (double)radTex->height()));
+		x = x > radTex->width() - 1? radTex->width() - 1: x < 0? 0: x;
+		y = y > radTex->height() - 1? radTex->height() - 1: y < 0? 0: y;
+
+		if ( radTex->opacity(x, y) == 0xFF )
 		{
 			return 0;
 		}

@@ -5,270 +5,212 @@
 #error "HLRAD_TEXTURE doesn't support WORDS_BIGENDIAN, because I have no big endian machine to test it"
 #endif
 
+#include <vector>
+#include <memory>
 #include "miptexwrapper.h"
+#include "pngtexturepath.h"
+#include "stb_image.h"
+#include "radtexture.h"
+#include "texturedirectorylisting.h"
 
-int g_numtextures;
-radtexture_t *g_textures;
+std::vector<RadTexture> g_RadTextures;
 
-#ifdef HLRAD_TEXTURE
-typedef byte rgbpixel_t[3];
-
-static inline void Texture_GetPaletteColour(const radtexture_t* const texture, const unsigned char paletteIndex, rgbpixel_t outColour)
+const std::vector<RadTexture>& RadTextures()
 {
-	static const rgbpixel_t DEFAULT_COLOUR = { 0, 0, 0 };
-
-	if ( !outColour )
-	{
-		return;
-	}
-
-	if ( !texture || texture->ignorePalette )
-	{
-		VectorCopy(DEFAULT_COLOUR, outColour);
-		return;
-	}
-
-	VectorCopy(texture->palette[paletteIndex], outColour);
+	return g_RadTextures;
 }
 
-static inline void Texture_SetPaletteColour(radtexture_t* const texture, const unsigned char paletteIndex, const rgbpixel_t colour)
+static void LoadPng(const std::string path, RadTexture& texture)
 {
-	if ( !texture || !colour )
+	const std::string fullPath = g_TexDirListing.makeFullTexturePath(path);
+
+	char* buffer = NULL;
+	const int size = LoadFile(fullPath.c_str(), &buffer);
+
+	if ( size < 1 || !buffer )
 	{
-		return;
+		Error("Could not open texture file %s\n", fullPath.c_str());
 	}
 
-#ifdef ZHLT_AFTERBURNER
-	if ( texture->ignorePalette )
-	{
-		Warning("TODO: Implement non-palette RAD textures!");
-		hlassert(false);
-		return;
-	}
-#endif
+	std::unique_ptr<char> managedBuffer(buffer);
 
-	VectorCopy(colour, texture->palette[paletteIndex]);
+	int width = 0;
+	int height = 0;
+	int channels = 0;
+
+	// We always specify 4 channels to load, as RadTexture always uses RGBA for non-miptex textures.
+	stbi_uc* pngRawData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(managedBuffer.get()), size, &width, &height, &channels, 4);
+
+	if ( !pngRawData )
+	{
+		Error("Failed to load PNG data from texture file %s.\n", fullPath.c_str());
+	}
+
+	if ( width < 1 || height < 1 )
+	{
+		Error("Texture file %s has invalid dimensions %dx%d.\n", fullPath.c_str(), width, height);
+	}
+
+	if ( !texture.loadFromRGBAData(static_cast<uint32_t>(width),
+								   static_cast<uint32_t>(height),
+								   reinterpret_cast<const RadTexture::RGBA*>(managedBuffer.get()),
+								   static_cast<uint32_t>(width * height)) )
+	{
+		Error("Failed construct texture from %s.\n", fullPath.c_str());
+	}
+
+	texture.setName(path, true);
+
+	Developer(DEVELOPER_LEVEL_MESSAGE, "Texture '%s': loaded from '%s'.\n",
+			  texture.name().c_str(),
+			  fullPath.c_str());
+
+	Developer(DEVELOPER_LEVEL_MESSAGE, "Texture '%s': name '%s', width %d, height %d, depth %d.\n",
+		texture.name().c_str(),
+		texture.name().c_str(),
+		width,
+		height,
+		channels);
 }
 
-static inline void Texture_GetPaletteTransparentColour(const radtexture_t* const texture, rgbpixel_t outColour)
-{
-	Texture_GetPaletteColour(texture, 255, outColour);
-}
-
-static inline void Texture_GetCanvasColourBySequentialIndex(const radtexture_t* const texture, const unsigned int index, rgbpixel_t outColour)
-{
-	if ( !texture || index >= texture->width * texture->height )
-	{
-		// Will return default colour.
-		Texture_GetPaletteColour(0, 0, outColour);
-		return;
-	}
-
-#ifdef ZHLT_AFTERBURNER
-	if ( texture->ignorePalette )
-	{
-		Warning("TODO: Implement non-palette RAD textures!");
-		hlassert(false);
-		Texture_GetPaletteColour(0, 0, outColour);
-		return;
-	}
-#endif
-
-	Texture_GetPaletteColour(texture, texture->canvas[index], outColour);
-}
-
-static inline void Texture_SetCanvasValueBySequentialIndex(radtexture_t* const texture, const unsigned int index, const unsigned char paletteIndex)
-{
-	if ( !texture )
-	{
-		return;
-	}
-
-#ifdef ZHLT_AFTERBURNER
-	if ( texture->ignorePalette )
-	{
-		Warning("TODO: Implement non-palette RAD textures!");
-		hlassert(false);
-		return;
-	}
-#endif
-
-	if ( index >= texture->width * texture->height )
-	{
-		return;
-	}
-
-	texture->canvas[index] = paletteIndex;
-}
-
-static inline void Texture_SetCanvasValue(radtexture_t* const texture, const unsigned int x, const unsigned int y, const unsigned char paletteIndex)
-{
-	if ( !texture )
-	{
-		return;
-	}
-
-#ifdef ZHLT_AFTERBURNER
-	if ( texture->ignorePalette )
-	{
-		Warning("TODO: Implement non-palette RAD textures!");
-		hlassert(false);
-		return;
-	}
-#endif
-
-	Texture_SetCanvasValueBySequentialIndex(texture, (y * texture->width) + x, paletteIndex);
-}
-
-static inline void Texture_GetCanvasColour(const radtexture_t* const texture, const unsigned int x, const unsigned int y, rgbpixel_t outColour)
-{
-	if ( !texture )
-	{
-		// Will return default colour.
-		Texture_GetPaletteColour(0, 0, outColour);
-		return;
-	}
-
-	// This call validates the inputs anyway.
-	Texture_GetCanvasColourBySequentialIndex(texture, (y * texture->width) + x, outColour);
-}
-#endif
-
-void DefaultTexture(radtexture_t *tex, const char* name)
-{
-	int i;
-	tex->width = 16;
-	tex->height = 16;
-	tex->ignorePalette = false;
-	safe_strncpy(tex->name, name, sizeof(tex->name));
-	tex->canvas = (byte *)malloc (tex->width * tex->height);
-	hlassume (tex->canvas != NULL, assume_NoMemory);
-	for (i = 0; i < 256; i++)
-	{
-		VectorFill (tex->palette[i], 0x80);
-	}
-	for (i = 0; i < tex->width * tex->height; i++)
-	{
-		tex->canvas[i] = 0x00;
-	}
-}
-
-static void LoadTexture(radtexture_t *tex, const MiptexWrapper& miptex)
-{
-	tex->width = miptex.width();
-	tex->height = miptex.height();
-	tex->ignorePalette = false;
-
-	safe_strncpy(tex->name, miptex.name(), sizeof(tex->name));
-
-	tex->canvas = (byte*)malloc(tex->width * tex->height);
-	hlassume(tex->canvas != NULL, assume_NoMemory);
-
-	for (uint32_t y = 0; y < tex->height; y++)
-	{
-		for (uint32_t x = 0; x < tex->width; x++)
-		{
-			Texture_SetCanvasValue(tex, x, y, miptex.paletteIndexAt(0, x, y));
-		}
-	}
-
-	for (uint32_t i = 0; i < 256; i++)
-	{
-		const rgbpixel_t* colour = miptex.paletteColour(i);
-		Texture_SetPaletteColour(tex, i, *colour);
-	}
-}
-
-void LoadTextures ()
+void LoadTextures()
 {
 	if (!g_notextures)
 	{
-		Log ("Load Textures:\n");
+		Log("Load Textures:\n");
 	}
-	g_numtextures = g_TextureCollection.count();
 
-	if ( g_numtextures > 0 )
+	const uint32_t textureCount = g_TextureCollection.count();
+
+	if ( textureCount > 0 )
 	{
-		g_textures = (radtexture_t *)malloc(g_numtextures * sizeof(radtexture_t));
-		hlassume (g_textures != NULL, assume_NoMemory);
+		g_RadTextures.resize(textureCount);
 	}
 	else
 	{
-		g_textures = NULL;
+		g_RadTextures.clear();
 	}
 
-	for (int i = 0; i < g_numtextures; i++)
+	for (uint32_t textureIndex = 0; textureIndex < textureCount; ++textureIndex)
 	{
-		radtexture_t* tex = &g_textures[i];
+		RadTexture& texture = g_RadTextures[textureIndex];
 
 		if (g_notextures)
 		{
-			DefaultTexture(tex, "DEFAULT");
+			texture.setToDefaultTextureImage("DEFAULT");
 		}
 		else
 		{
-			// TODO: Switch here depending on texture type. We'll need to load PNGs.
-			MiptexWrapper* miptexWrapper = g_TextureCollection.miptexAt(i);
-			hlassert(miptexWrapper);
-
-			if ( miptexWrapper->hasMipmap(0) && miptexWrapper->hasPalette() )
+			switch ( g_TextureCollection.itemType(textureIndex) )
 			{
-				Developer (DEVELOPER_LEVEL_MESSAGE, "Texture '%s': found in '%s'.\n",
-					miptexWrapper->name(),
-					g_source);
+				case TextureCollection::ItemType::Miptex:
+				{
+					// Should already be loaded, so just validate.
+					MiptexWrapper* miptexWrapper = g_TextureCollection.miptexAt(textureIndex);
 
-				Developer (DEVELOPER_LEVEL_MESSAGE, "Texture '%s': name '%s', width %u, height %u.\n",
-					miptexWrapper->name(),
-					miptexWrapper->name(),
-					miptexWrapper->width(),
-					miptexWrapper->height());
+					if ( miptexWrapper->hasMipmap(0) && miptexWrapper->hasPalette() )
+					{
+						texture.loadFromMiptex(*miptexWrapper);
 
-				LoadTexture(tex, *miptexWrapper);
-			}
-			else
-			{
-				// We used to load textures from WADs, but this is not supported any more.
-				Error("Texture %d not present in BSP.\n");
+						Developer(DEVELOPER_LEVEL_MESSAGE, "Texture '%s': found in '%s'.\n",
+							miptexWrapper->name(),
+							g_source);
+
+						Developer(DEVELOPER_LEVEL_MESSAGE, "Texture '%s': name '%s', width %u, height %u.\n",
+							miptexWrapper->name(),
+							miptexWrapper->name(),
+							miptexWrapper->width(),
+							miptexWrapper->height());
+					}
+					else
+					{
+						// We used to load textures from WADs, but this is not supported any more.
+						Error("Texture %u not present in BSP.\n", textureIndex);
+					}
+
+					break;
+				}
+
+				case TextureCollection::ItemType::PngOnDisk:
+				{
+					// This will need to be loaded.
+					PNGTexturePath* pngTex = g_TextureCollection.pngTextureAt(textureIndex);
+					LoadPng(pngTex->path(), texture);
+
+					break;
+				}
+
+				default:
+				{
+					hlassert(false);
+					break;
+				}
 			}
 		}
+
 #ifdef HLRAD_REFLECTIVITY
 		{
-			vec3_t total;
-			VectorClear (total);
-			for (int j = 0; j < tex->width * tex->height; j++)
+			vec3_t totalReflectivity;
+			VectorClear(totalReflectivity);
+
+			const bool textureIsAlphaMasked = texture.attributeFlags() & RadTexture::IsAlphaMasked;
+
+			for ( uint32_t index = 0; index < texture.totalPixels(); ++index )
 			{
 				vec3_t reflectivity;
-				if (tex->name[0] == '{' && tex->canvas[j] == 0xFF)
+				const RadTexture::RGB* pixel = texture.canvasColour(index);
+				const uint8_t opacity = texture.opacity(index);
+
+				if ( opacity == 0 )
 				{
-					VectorFill (reflectivity, 0.0);
+					VectorFill(reflectivity, 0);
 				}
 				else
 				{
-					rgbpixel_t colour;
-					Texture_GetCanvasColourBySequentialIndex(tex, j, colour);
-					VectorScale (colour, 1.0/255.0, reflectivity);
-					for (int k = 0; k < 3; k++)
-					{
-						reflectivity[k] = pow (reflectivity[k], g_texreflectgamma);
-					}
-					VectorScale (reflectivity, g_texreflectscale, reflectivity);
+					vec3_t pixelVec;
+
+					pixelVec[0] = (*pixel)[0];
+					pixelVec[1] = (*pixel)[1];
+					pixelVec[2] = (*pixel)[2];
+
+					VectorScale(pixelVec, static_cast<double>(opacity) / 255.0, pixelVec);
+					VectorScale(pixelVec, 1.0/255.0, reflectivity);
+
+					reflectivity[0] = pow(reflectivity[0], g_texreflectgamma);
+					reflectivity[1] = pow(reflectivity[1], g_texreflectgamma);
+					reflectivity[2] = pow(reflectivity[2], g_texreflectgamma);
+
+					VectorScale(reflectivity, g_texreflectscale, reflectivity);
 				}
-				VectorAdd (total, reflectivity, total);
+
+				VectorAdd (totalReflectivity, reflectivity, totalReflectivity);
 			}
-			VectorScale (total, 1.0 / (double)(tex->width * tex->height), total);
-			VectorCopy (total, tex->reflectivity);
-			Developer (DEVELOPER_LEVEL_MESSAGE, "Texture '%s': reflectivity is (%f,%f,%f).\n",
-				tex->name, tex->reflectivity[0], tex->reflectivity[1], tex->reflectivity[2]);
-			if (VectorMaximum (tex->reflectivity) > 1.0 + NORMAL_EPSILON)
+
+			VectorScale(totalReflectivity, 1.0 / static_cast<double>(texture.totalPixels()), totalReflectivity);
+			texture.setReflectivity(totalReflectivity);
+
+			Developer(DEVELOPER_LEVEL_MESSAGE, "Texture '%s': reflectivity is (%f,%f,%f).\n",
+					 texture.name().c_str(),
+					 totalReflectivity[0],
+					 totalReflectivity[1],
+					 totalReflectivity[2]);
+
+			if (VectorMaximum(totalReflectivity) > 1.0 + NORMAL_EPSILON)
 			{
-				Warning ("Texture '%s': reflectivity (%f,%f,%f) greater than 1.0.", tex->name, tex->reflectivity[0], tex->reflectivity[1], tex->reflectivity[2]);
+				Warning("Texture '%s': reflectivity (%f,%f,%f) greater than 1.0.\n",
+						texture.name().c_str(),
+						totalReflectivity[0],
+						totalReflectivity[1],
+						totalReflectivity[2]);
 			}
 		}
 #endif
+
 	}
+
 	if (!g_notextures)
 	{
-		Log ("%i textures referenced\n", g_numtextures);
+		Log("%u textures referenced\n", g_RadTextures.size());
 	}
 }
 
@@ -894,7 +836,14 @@ void EmbedLightmapInTextures ()
 		{
 			continue;
 		}
-		radtexture_t *tex = &g_textures[originaltexinfo->miptex];
+
+		if ( originaltexinfo->miptex < 0 || originaltexinfo->miptex >= g_RadTextures.size() )
+		{
+			Warning("EmbedLightmapTextures(): Texinfo %d referenced invalid texture %d.\n", originaltexinfonum, originaltexinfo->miptex);
+			continue;
+		}
+
+		RadTexture& radTex = g_RadTextures[originaltexinfo->miptex];
 
 		if (ent == &g_entities[0]) // world
 		{
@@ -1000,8 +949,7 @@ void EmbedLightmapInTextures ()
 				double s_vec, t_vec;
 				double src_s, src_t;
 				int src_is, src_it;
-				byte src_index;
-				rgbpixel_t src_color;
+				byte src_color[3] = {0,0,0};
 				double dest_s, dest_t;
 				int dest_is, dest_it;
 				float (*dest)[5];
@@ -1031,14 +979,22 @@ void EmbedLightmapInTextures ()
 
 				src_s = s_vec;
 				src_t = t_vec;
-				src_s = src_s - tex->width * floor (src_s / tex->width);
-				src_t = src_t - tex->height * floor (src_t / tex->height);
-				src_is = (int)floor (src_s); // src_is = src_s % tex->width
-				src_it = (int)floor (src_t); // src_it = src_t % tex->height
-				src_is = qmax (0, qmin (src_is, tex->width - 1));
-				src_it = qmax (0, qmin (src_it, tex->height - 1));
-				src_index = tex->canvas[src_it * tex->width + src_is];
-				Texture_GetPaletteColour(tex, src_index, src_color);
+				src_s = src_s - radTex.width() * floor (src_s / radTex.width());
+				src_t = src_t - radTex.height() * floor (src_t / radTex.height());
+				src_is = (int)floor (src_s); // src_is = src_s % radTex.width()
+				src_it = (int)floor (src_t); // src_it = src_t % radTex.height()
+				src_is = qmax (0, qmin (src_is, radTex.width() - 1));
+				src_it = qmax (0, qmin (src_it, radTex.height() - 1));
+
+				const RadTexture::RGB* colour = radTex.canvasColour(src_is, src_it);
+				if ( colour )
+				{
+					src_color[0] = (*colour)[0];
+					src_color[1] = (*colour)[1];
+					src_color[2] = (*colour)[2];
+				}
+
+				const uint8_t opacity = radTex.opacity(src_is, src_it);
 
 				// get light from the center of the destination pixel
 				light_s = (s_vec + resolution * (dest_is + 0.5 - dest_s)) / texture_step - texmins[0];
@@ -1046,13 +1002,17 @@ void EmbedLightmapInTextures ()
 				GetLight (f, texsize, light_s, light_t, light);
 
 				(*dest)[4] += 1;
-				if (!(texname[0] == '{' && src_index == 255))
+
+				if (opacity > 0x00)
 				{
+					float flOpacity = (float)opacity / 255.0f;
+
 					for (k = 0; k < 3; k++)
 					{
-						float v = src_color[k] * pow (light[k] / denominator, gamma);
+						float v = (float)src_color[k] * flOpacity * pow(light[k] / denominator, gamma);
 						(*dest)[k] += 255 * qmax (0, qmin (v, 255));
 					}
+
 					(*dest)[3] += 255;
 				}
 			}
@@ -1146,21 +1106,25 @@ void EmbedLightmapInTextures ()
 			int numsamplepoints;
 			unsigned char (*samplepoints)[3];
 
-			if (texname[0] == '{')
+			if (radTex.attributeFlags() & RadTexture::IsAlphaMasked)
 			{
 				paletteoffset = 0;
 				palettemaxcolors = 255;
-				Texture_GetPaletteTransparentColour(tex, palette[255]); // the transparency color
-			}
-			/*else if (texname[0] == '!')
-			{
-				paletteoffset = 16; // because the 4th entry and the 5th entry are reserved for fog color and fog density
-				for (j = 0; j < 16; j++)
+
+				const RadTexture::RGB* transparentColour = radTex.paletteColour(255);
+
+				if ( transparentColour )
 				{
-					VectorCopy (tex->palette[j], palette[j]);
+					palette[255][0] = (*transparentColour)[0];
+					palette[255][1] = (*transparentColour)[1];
+					palette[255][2] = (*transparentColour)[2];
 				}
-				palettemaxcolors = 256 - 16;
-			}*/
+				else
+				{
+					// Should never happen.
+					Error("Internal error: could not get RadTexture transparency colour.\n");
+				}
+			}
 			else
 			{
 				paletteoffset = 0;
@@ -1268,14 +1232,10 @@ void EmbedLightmapInTextures ()
 			Error ("EmbedLightmapInTextures: internal error");
 		}
 
-		if (texname[0] == '{')
+		if (radTex.attributeFlags() & RadTexture::IsAlphaMasked)
 		{
 			safe_strncpy(miptex->name, "{_rad", sizeof(miptex->name));
 		}
-		/*else if (texname[0] == '!')
-		{
-			safe_strncpy(miptex->name, "!_rad", sizeof(miptex->name));
-		}*/
 		else
 		{
 			safe_strncpy(miptex->name, "__rad", sizeof(miptex->name));

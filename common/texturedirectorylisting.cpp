@@ -6,6 +6,31 @@
 
 #define WARNING(...) Warning("TextureDirectoryListing: " __VA_ARGS__)
 
+namespace
+{
+	static inline void ltrim(std::string &str)
+	{
+		str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int ch)
+		{
+			return !std::isspace(ch);
+		}));
+	}
+
+	static inline void rtrim(std::string &str)
+	{
+		str.erase(std::find_if(str.rbegin(), str.rend(), [](int ch)
+		{
+			return !std::isspace(ch);
+		}).base(), str.end());
+	}
+
+	static inline void trim(std::string &str)
+	{
+		ltrim(str);
+		rtrim(str);
+	}
+}
+
 TextureDirectoryListing::TextureDirectoryListing() :
 	m_TextureDirPath(),
 	m_TextureToIndex(),
@@ -20,7 +45,17 @@ std::string TextureDirectoryListing::textureDirPath()
 
 void TextureDirectoryListing::setTextureDirPath(const std::string& path)
 {
-	m_TextureDirPath = path;
+	std::string trimmed = path;
+	trim(trimmed);
+
+	if ( trimmed.at(trimmed.size() - 1) == SYSTEM_SLASH_CHAR )
+	{
+		m_TextureDirPath = trimmed.substr(0, trimmed.length() - 1);
+	}
+	else
+	{
+		m_TextureDirPath = trimmed;
+	}
 }
 
 void TextureDirectoryListing::textureList(std::vector<std::string>& list) const
@@ -55,18 +90,18 @@ TextureDirectoryListing::TextureIndexMap::const_iterator TextureDirectoryListing
 
 bool TextureDirectoryListing::containsTexture(const std::string& textureRelPath) const
 {
-	return m_TextureToIndex.find(textureRelPath) != m_TextureToIndex.end();
+	return m_TextureToIndex.find(makeSystemCanonicalTexturePath(textureRelPath)) != m_TextureToIndex.end();
 }
 
 bool TextureDirectoryListing::textureIsReferenced(const std::string& textureRelPath) const
 {
-	TextureIndexMap::const_iterator iterator = m_TextureToIndex.find(textureRelPath);
+	TextureIndexMap::const_iterator iterator = m_TextureToIndex.find(makeSystemCanonicalTexturePath(textureRelPath));
 	return iterator != m_TextureToIndex.end() && iterator->second != INVALID_TEXTURE_INDEX;
 }
 
 int32_t TextureDirectoryListing::textureIndex(const std::string& textureRelPath) const
 {
-	TextureIndexMap::const_iterator iterator = m_TextureToIndex.find(textureRelPath);
+	TextureIndexMap::const_iterator iterator = m_TextureToIndex.find(makeSystemCanonicalTexturePath(textureRelPath));
 	return iterator != m_TextureToIndex.end() ? iterator->second : INVALID_TEXTURE_INDEX;
 }
 
@@ -78,7 +113,7 @@ int32_t TextureDirectoryListing::assignNextTextureIndex(const std::string& textu
 		return INVALID_TEXTURE_INDEX;
 	}
 
-	TextureIndexMap::iterator iterator = m_TextureToIndex.find(textureRelPath);
+	TextureIndexMap::iterator iterator = m_TextureToIndex.find(makeSystemCanonicalTexturePath(textureRelPath));
 	if ( iterator == m_TextureToIndex.end() )
 	{
 		return INVALID_TEXTURE_INDEX;
@@ -184,4 +219,21 @@ bool TextureDirectoryListing::fileNameIsPNG(const char* path)
 	});
 
 	return extension == std::string("png");
+}
+
+std::string TextureDirectoryListing::makeFullTexturePath(const std::string textureRelPath) const
+{
+	return m_TextureDirPath +
+		   std::string(SYSTEM_SLASH_STR) +
+		   makeSystemCanonicalTexturePath(textureRelPath);
+}
+
+std::string TextureDirectoryListing::makeSystemCanonicalTexturePath(const std::string& origPath)
+{
+	std::vector<char> buffer(origPath.size() + 1);
+
+	memcpy(buffer.data(), origPath.c_str(), origPath.size() + 1);
+	FlipSlashes(buffer.data());
+
+	return std::string(buffer.data());
 }

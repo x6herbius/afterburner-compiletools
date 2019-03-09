@@ -687,27 +687,14 @@ typedef struct
 #define OPAQUE_ARRAY_GROWTH_SIZE 1024
 
 #ifdef HLRAD_TEXTURE
-typedef struct
-{
-	char name[MIPTEX_NAME_LENGTH]; // not always same with the name in texdata
-	int width, height;
-	byte *canvas; //[height][width]
-	byte palette[256][3];
-#ifdef HLRAD_REFLECTIVITY
-	vec3_t reflectivity;
+#include "radtexture.h"
+extern const std::vector<RadTexture>& RadTextures();
+extern void LoadTextures();
+
+#if defined(ZHLT_EMBEDLIGHTMAP) && defined(HLRAD_TEXTURE)
+extern void EmbedLightmapInTextures();
 #endif
-#ifdef ZHLT_AFTERBURNER
-	bool ignorePalette;
-#endif
-} radtexture_t;
-extern int g_numtextures;
-extern radtexture_t *g_textures;
-extern void LoadTextures ();
-#ifdef ZHLT_EMBEDLIGHTMAP
-#ifdef HLRAD_TEXTURE
-extern void EmbedLightmapInTextures ();
-#endif
-#endif
+
 #endif
 
 //

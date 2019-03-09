@@ -24,7 +24,7 @@ class MiptexWrapper
 {
 public:
 	typedef byte rgbpixel_t[3];
-	static const uint32_t PALETTE_SIZE;
+	static constexpr uint32_t PALETTE_SIZE = 256;
 
 	// Passing width and height is equivalent to calling setDimensions().
 	MiptexWrapper(const char* name = NULL, uint32_t width = 0, uint32_t height = 0);
