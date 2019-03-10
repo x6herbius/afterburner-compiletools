@@ -75,11 +75,12 @@ static void LoadPngIntoRadTexture(const std::string path, RadTexture& texture)
 			  texture.name().c_str(),
 			  fullPath.c_str());
 
-	Developer(DEVELOPER_LEVEL_MESSAGE, "Texture '%s': name '%s', width %u, height %u.\n",
+	Developer(DEVELOPER_LEVEL_MESSAGE, "Texture '%s': name '%s', width %u, height %u, attributes %u.\n",
 		texture.name().c_str(),
 		texture.name().c_str(),
 		texture.width(),
-		texture.height());
+		texture.height(),
+		texture.attributeFlags());
 }
 
 void LoadTextures()
@@ -168,7 +169,7 @@ void LoadTextures()
 			{
 				vec3_t reflectivity;
 				const RadTexture::RGB* pixel = texture.canvasColour(index);
-				const uint8_t opacity = texture.opacity(index);
+				const uint8_t opacity = (texture.attributeFlags() & RadTexture::IsSpecial) ? 0 : texture.opacity(index);
 
 				hlassert(pixel);
 

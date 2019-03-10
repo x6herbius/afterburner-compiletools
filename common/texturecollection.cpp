@@ -2,6 +2,7 @@
 #include "miptexwrapper.h"
 #include "hlassert.h"
 #include "pngtexturepath.h"
+#include "log.h"
 
 class TextureCollection::Item
 {
@@ -195,7 +196,11 @@ void TextureCollection::filter(const std::function<bool(uint32_t, TextureCollect
 
 	for ( uint32_t index = 0; index < originalCount; ++index )
 	{
-		if ( callback(index, itemType(index)) )
+		const bool filterResult = callback(index, itemType(index));
+
+		Developer(DEVELOPER_LEVEL_SPAM, "Texture %u remains after filtering: %s\n", index, filterResult ? "true" : "false");
+
+		if ( filterResult )
 		{
 			map[index] = currentRemappedIndex++;
 		}

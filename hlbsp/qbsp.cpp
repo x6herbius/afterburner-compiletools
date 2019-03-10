@@ -881,7 +881,7 @@ bool            CheckFaceForNull(const face_t* const f)
     {
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
 		const char *name = GetTextureByNumber (f->texturenum);
-		if (!strncasecmp(name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1))
+		if (!strncasecmp(name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1) || !strncasecmp(name, SPECIALTEX_NODRAW, sizeof(SPECIALTEX_NODRAW) - 1))
 			return true;
 		return false;
 #else
@@ -889,12 +889,12 @@ bool            CheckFaceForNull(const face_t* const f)
         const MiptexWrapper* miptex = g_TextureCollection.miptexAt(texinfo->miptex);
         const char* miptexName = miptex ? miptex->name() : NULL;
 
-        if (!strcasecmp(miptexName, SPECIALTEX_NULL))
+        if (!strcasecmp(miptexName, SPECIALTEX_NULL) || !strcasecmp(miptexName, SPECIALTEX_NODRAW))
         {
             return true;
         }
 	#ifdef HLCSG_CUSTOMHULL
-        else if (!strncasecmp(miptexName, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1))
+        else if (!strncasecmp(miptexName, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1) || !strncasecmp(miptexName, SPECIALTEX_NODRAW, sizeof(SPECIALTEX_NODRAW) - 1))
         {
             return true;
         }

@@ -921,7 +921,7 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 		{
 			side = &g_brushsides[b->firstside + j];
 
-			if( !strncasecmp( side->td.name, BRUSHKEY_NULL, sizeof(BRUSHKEY_NULL) - 1 ))
+			if( !strncasecmp( side->td.name, BRUSHKEY_NULL, sizeof(BRUSHKEY_NULL) - 1 ) || !strncasecmp(side->td.name, BRUSHKEY_NODRAW, sizeof(BRUSHKEY_NODRAW) - 1))
 			{
 				// this is not supposed to be a HINT brush, so remove all invisible faces from hull 0.
 				strcpy( side->td.name, BRUSHKEY_SKIP );

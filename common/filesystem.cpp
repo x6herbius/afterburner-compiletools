@@ -936,14 +936,15 @@ void FS_Init( void )
 	else Q_snprintf( mapdir, sizeof( mapdir ), "%s.map", g_Mapname );
 
 	// create full path to a map
-	Q_strncpy( workdir, FS_ExpandArg( mapdir ), sizeof( workdir ));
+	char* mapDirExpanded = FS_ExpandArg( mapdir );
+	Q_strncpy( workdir, mapDirExpanded, sizeof( workdir ));
 
 	// search for 'maps' in path
 	pathend = Q_stristr( workdir, "maps" );
 
 	if( !pathend )
 	{
-		Log( "Error: FS_Init: couldn't init game directory!\n" );
+		Log( "Error: FS_Init: couldn't init game directory from proposed directory %s\n", workdir );
 		return;
 	}
 

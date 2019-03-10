@@ -1655,7 +1655,7 @@ static contents_t TextureContents(const char* const name)
         return CONTENTS_TRANSLUCENT;
 
 #ifdef ZHLT_NULLTEX // AJM:
-	if (!strncasecmp(name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1))
+	if (!strncasecmp(name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1) || !strncasecmp(name, SPECIALTEX_NODRAW, sizeof(SPECIALTEX_NODRAW) - 1))
         return CONTENTS_NULL;
 #ifdef HLCSG_PRECISIONCLIP // KGP
 	if(!strncasecmp(name,SPECIALTEX_BEVEL,sizeof(SPECIALTEX_BEVEL) - 1))

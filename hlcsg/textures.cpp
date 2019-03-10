@@ -139,7 +139,7 @@ int TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, cons
 
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
     // Don't return a texinfo if the texture is null.
-	if (!strncasecmp(bt->name, BRUSHKEY_NULL, sizeof(BRUSHKEY_NULL) - 1))
+	if (!strncasecmp(bt->name, BRUSHKEY_NULL, sizeof(BRUSHKEY_NULL) - 1) || !strncasecmp(bt->name, SPECIALTEX_NODRAW, sizeof(SPECIALTEX_NODRAW) - 1))
 	{
 		return -1;
 	}
@@ -178,6 +178,7 @@ int TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, cons
         || strncasecmp(bt->name, SPECIALTEX_ORIGIN, sizeof(SPECIALTEX_ORIGIN) - 1) == 0
 #ifdef ZHLT_NULLTEX // AJM
         || strncasecmp(bt->name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1) == 0
+        || strncasecmp(bt->name, SPECIALTEX_NODRAW, sizeof(SPECIALTEX_NODRAW) - 1) == 0
 #endif
         || strncasecmp(bt->name, SPECIALTEX_AAATRIGGER, sizeof(SPECIALTEX_AAATRIGGER) - 1) == 0
        )

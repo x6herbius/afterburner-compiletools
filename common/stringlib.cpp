@@ -335,6 +335,7 @@ void Q_getwd( char *out, size_t len )
 	Q_strncat( out, "\\", len );
 #else
 	getcwd( out, len );
+	Q_strncat( out, "/", len );
 #endif
 }
 

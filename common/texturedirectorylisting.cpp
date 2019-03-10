@@ -134,7 +134,8 @@ int32_t TextureDirectoryListing::assignTextureIndex(const std::string& textureRe
 		return INVALID_TEXTURE_INDEX;
 	}
 
-	TextureIndexMap::iterator iterator = m_TextureToIndex.find(makeSystemCanonicalTexturePath(textureRelPath));
+	const std::string canonicalPath = makeSystemCanonicalTexturePath(textureRelPath);
+	TextureIndexMap::iterator iterator = m_TextureToIndex.find(canonicalPath);
 	if ( iterator == m_TextureToIndex.end() )
 	{
 		return INVALID_TEXTURE_INDEX;
@@ -146,6 +147,8 @@ int32_t TextureDirectoryListing::assignTextureIndex(const std::string& textureRe
 
 		hlassert(iterator->second < m_IndexToTexturePath.size());
 		m_IndexToTexturePath[iterator->second] = &iterator->first;
+
+		Developer(DEVELOPER_LEVEL_MESSAGE, "Assigned index %u to texture %s\n", iterator->second, canonicalPath.c_str());
 	}
 
 	return iterator->second;
@@ -234,6 +237,8 @@ bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 
 		textureRelPath += fileNameWithoutExtension(entryList[index]->d_name);
 		m_TextureToIndex[textureRelPath] = TextureDirectoryListing::INVALID_TEXTURE_INDEX;
+
+		Developer(DEVELOPER_LEVEL_SPAM, "Discovered texture: %s\n", textureRelPath.c_str());
 	}
 
 	m_IndexToTexturePath.resize(m_TextureToIndex.size(), NULL);

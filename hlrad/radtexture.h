@@ -16,7 +16,8 @@ public:
 	enum AttributeFlag
 	{
 		IsAlphaMasked = (1 << 0),
-		IsTranslucent = (1 << 1)
+		IsTranslucent = (1 << 1),
+		IsSpecial = (1 << 2)
 	};
 
 	RadTexture();
@@ -26,6 +27,7 @@ public:
 	uint32_t height() const;
 	uint32_t totalPixels() const;
 	uint32_t attributeFlags() const;
+
 	void invalidate(bool clearName = true);
 
 	// If the name is a path, the separator is assumed to be '/'
@@ -64,6 +66,7 @@ public:
 	void setToDefaultTextureImage(const std::string& name);
 
 private:
+	static bool isSpecialTexturePath(const std::string& path);
 	const RGB* canvasColourViaPalette(uint32_t sequentialIndex) const;
 	const RGB* canvasColourDirect(uint32_t sequentialIndex) const;
 	void computeAttributesFromName(bool treatAsPath);

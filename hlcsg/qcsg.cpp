@@ -1272,7 +1272,7 @@ void     ReuseModel ()
 		}
 		if (j == g_numentities)
 		{
-			if (!strcasecmp (name, SPECIALTEX_NULL))
+			if (!strcasecmp (name, SPECIALTEX_NULL) || !strcasecmp(name, SPECIALTEX_NODRAW))
 			{
 				SetKeyValue (&g_entities[i], "model", "");
 				continue;
@@ -1372,7 +1372,7 @@ static void SetLightStyles( void )
 		if( *ValueForKey( e, "zhlt_usestyle" ))
 		{
 			t = ValueForKey( e, "zhlt_usestyle" );
-			if( !strcasecmp( t, SPECIALTEX_NULL ))
+			if( !strcasecmp( t, SPECIALTEX_NULL ) || !strcasecmp(t, SPECIALTEX_NODRAW) )
 			{
 				t = "";
 			}
