@@ -147,7 +147,7 @@ const RadTexture::RGB* RadTexture::canvasColour(uint32_t x, uint32_t y) const
 
 const RadTexture::RGBA* RadTexture::canvasColourWithAlpha(uint32_t sequentialIndex) const
 {
-	if ( !isValid() || !hasPalette() || sequentialIndex >= m_Canvas.size() / sizeof(RGBA) )
+	if ( !isValid() || hasPalette() || sequentialIndex >= m_Canvas.size() / sizeof(RGBA) )
 	{
 		return NULL;
 	}

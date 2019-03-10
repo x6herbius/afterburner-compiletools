@@ -149,9 +149,9 @@ void ViewTNode ()
 					for (j=i; j=parents[j], j>=0;)
 						cprintf ("|");
 					if (nodes[i] == CONTENTS_SOLID)
-						cprintf (BRUSHKEY_SOLID);
+						cprintf ("SOLID");
 					else if (nodes[i] == CONTENTS_SKY)
-						cprintf (BRUSHKEY_SKY);
+						cprintf ("SKY");
 					else if (nodes[i] < 0)
 						cprintf ("EMPTY (%d)", nodes[i]);
 					else

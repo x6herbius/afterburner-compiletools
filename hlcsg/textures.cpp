@@ -5,101 +5,6 @@
 
 #define MAXWADNAME 16
 
-#ifdef HLCSG_TEXMAP64_FIX
-// The old buggy code in effect limit the number of brush sides to MAX_MAP_BRUSHES
-#ifdef HLCSG_HLBSP_REDUCETEXTURE
-static char *texmap[MAX_INTERNAL_MAP_TEXINFO];
-#else
-static char *texmap[MAX_MAP_TEXINFO];
-#endif
-static int numtexmap = 0;
-
-static int texmap_store (char *texname, bool shouldlock = true)
-	// This function should never be called unless a new entry in g_texinfo is being allocated.
-{
-	int i;
-	if (shouldlock)
-	{
-		ThreadLock ();
-	}
-#ifdef HLCSG_HLBSP_REDUCETEXTURE
-	hlassume (numtexmap < MAX_INTERNAL_MAP_TEXINFO, assume_MAX_MAP_TEXINFO); // This error should never appear.
-#else
-	hlassume (numtexmap < MAX_MAP_TEXINFO, assume_MAX_MAP_TEXINFO); // This error should never appear.
-#endif
-	i = numtexmap;
-	texmap[numtexmap] = strdup (texname);
-	numtexmap++;
-	if (shouldlock)
-	{
-		ThreadUnlock ();
-	}
-	return i;
-}
-
-static char *texmap_retrieve (int index)
-{
-	hlassume (0 <= index && index < numtexmap, assume_first);
-	return texmap[index];
-}
-
-static void texmap_clear ()
-{
-	int i;
-	ThreadLock ();
-	for (i = 0; i < numtexmap; i++)
-	{
-		free (texmap[i]);
-	}
-	numtexmap = 0;
-	ThreadUnlock ();
-}
-#else
-// fix for 64 bit machines
-#if /* 64 bit */
-    static char* texmap64[MAX_MAP_BRUSHES];
-    static int   tex_max64=0;
-
-    static inline int texmap64_store(char *texname)
-    {
-        int curr_tex;
-        ThreadLock();
-        if (tex_max64 >= MAX_MAP_BRUSHES)   // no assert?
-        {
-#ifdef ZHLT_CONSOLE
-			Error ("MAX_MAP_BRUSHES exceeded!");
-#else
-            printf("MAX_MAP_BRUSHES exceeded!\n");
-            exit(-1);
-#endif
-        }
-        curr_tex = tex_max64;
-        texmap64[tex_max64] = texname;
-        tex_max64++;
-        ThreadUnlock();
-        return curr_tex;
-    }
-
-    static inline char* texmap64_retrieve( int index)
-    {
-        if(index > tex_max64)
-        {
-#ifdef ZHLT_CONSOLE
-			Error ("retrieving bogus texture index %d", index);
-#else
-            printf("retrieving bogus texture index %d\n", index);
-            exit(-1);
-#endif
-        }
-        return texmap64[index];
-    }
-
-#else
-    #define texmap64_store( A ) ( (int) A)
-    #define texmap64_retrieve( A ) ( (char*) A)
-#endif
-#endif
-
 // =====================================================================================
 //  CleanupName
 // =====================================================================================
@@ -132,7 +37,7 @@ static int FindMiptex(const char* const name)
     int32_t index = TextureDirectoryListing::INVALID_TEXTURE_INDEX;
 
     ThreadLock();
-    index = g_TexDirListing.assignNextTextureIndex(name);
+    index = g_TexDirListing.assignTextureIndex(name);
     ThreadUnlock();
 
     return index;
@@ -218,7 +123,7 @@ void WriteMiptex()
 // =====================================================================================
 //  TexinfoForBrushTexture
 // =====================================================================================
-int             TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, const vec3_t origin
+int TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, const vec3_t origin
 #ifdef ZHLT_HIDDENSOUNDTEXTURE
 					, bool shouldhide
 #endif
@@ -233,33 +138,25 @@ int             TexinfoForBrushTexture(const plane_t* const plane, brush_texture
     int             i, j, k;
 
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
+    // Don't return a texinfo if the texture is null.
 	if (!strncasecmp(bt->name, BRUSHKEY_NULL, sizeof(BRUSHKEY_NULL) - 1))
 	{
 		return -1;
 	}
 #endif
+
     memset(&tx, 0, sizeof(tx));
-#ifndef HLCSG_CUSTOMHULL
-#ifdef HLCSG_PRECISIONCLIP
+
+#if !defined(HLCSG_CUSTOMHULL) && defined(HLCSG_PRECISIONCLIP)
+    // If texture is bevel, set bevel flag and replace texture with null.
 	if(!strncmp(bt->name,BRUSHKEY_BEVEL,sizeof(BRUSHKEY_BEVEL) - 1))
 	{
 		tx.flags |= TEX_BEVEL;
 		safe_strncpy(bt->name,BRUSHKEY_NULL,sizeof(BRUSHKEY_NULL));
 	}
 #endif
-#endif
 
-#ifdef HLCSG_TEXMAP64_FIX
-	FindMiptex (bt->name);
-#else
-    tx.miptex = FindMiptex(bt->name);
-
-    // Note: FindMiptex() still needs to be called here to add it to the global miptex array
-
-    // Very Sleazy Hack 104 - since the tx.miptex index will be bogus after we sort the miptex array later
-    // Put the string name of the miptex in this "index" until after we are done sorting it in WriteMiptex().
-    tx.miptex = texmap64_store(strdup(bt->name));
-#endif
+	tx.miptex = FindMiptex(bt->name);
 
 #ifdef ZHLT_PARANOIA_BSP
     tx.faceinfo = bt->faceinfo;
@@ -306,6 +203,7 @@ int             TexinfoForBrushTexture(const plane_t* const plane, brush_texture
     }
     else
     {
+        // Do some absolute bullshit to calculate the texture vectors here.
         if (g_nMapFileVersion < 220)
         {
             TextureAxisFromPlane(plane, vecs[0], vecs[1]);
@@ -414,12 +312,7 @@ int             TexinfoForBrushTexture(const plane_t* const plane, brush_texture
     tc = g_texinfo;
     for (i = 0; i < g_numtexinfo; i++, tc++)
     {
-        // Sleazy hack 104, Pt 3 - Use strcmp on names to avoid dups
-#ifdef HLCSG_TEXMAP64_FIX
-		if (strcmp (texmap_retrieve (tc->miptex), bt->name) != 0)
-#else
-        if (strcmp(texmap64_retrieve((tc->miptex)), texmap64_retrieve((tx.miptex))) != 0)
-#endif
+        if ( tc->miptex != tx.miptex )
         {
             continue;
         }
@@ -457,9 +350,6 @@ skip:;
 #endif
 
     *tc = tx;
-#ifdef HLCSG_TEXMAP64_FIX
-	tc->miptex = texmap_store (bt->name, false);
-#endif
     g_numtexinfo++;
     ThreadUnlock();
     return i;
@@ -467,14 +357,14 @@ skip:;
 
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
 // Before WriteMiptex(), for each texinfo in g_texinfo, .miptex is a string rather than texture index, so this function should be used instead of GetTextureByNumber.
-const char *GetTextureByNumber_CSG(int texturenumber)
+const char* GetTextureByNumber_CSG(int texturenumber)
 {
-	if (texturenumber == -1)
-		return "";
-#ifdef HLCSG_TEXMAP64_FIX
-	return texmap_retrieve (g_texinfo[texturenumber].miptex);
-#else
-	return texmap64_retrieve (g_texinfo[texturenumber].miptex);
-#endif
+    if ( texturenumber < 0 || texturenumber >= g_numtexinfo )
+    {
+        return "";
+    }
+
+	const char* path = g_TexDirListing.texturePath(texturenumber);
+    return path ? path : "";
 }
 #endif

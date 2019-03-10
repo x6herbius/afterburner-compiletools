@@ -4,6 +4,7 @@
 #include "log.h"
 #include "filelib.h"
 #include "cmdlib.h"
+#include "hlassert.h"
 
 #define WARNING(...) Warning("TextureDirectoryListing: " __VA_ARGS__)
 
@@ -36,7 +37,8 @@ TextureDirectoryListing::TextureDirectoryListing() :
 	m_TextureDirPath(),
 	m_TextureToIndex(),
 	m_NextTextureIndex(0),
-	m_NumTexturePathsSearched(0)
+	m_NumTexturePathsSearched(0),
+	m_IndexToTexturePath()
 {
 }
 
@@ -73,6 +75,7 @@ void TextureDirectoryListing::textureList(std::vector<std::string>& list) const
 void TextureDirectoryListing::clear()
 {
 	m_TextureToIndex.clear();
+	m_IndexToTexturePath.clear();
 }
 
 size_t TextureDirectoryListing::count() const
@@ -83,6 +86,17 @@ size_t TextureDirectoryListing::count() const
 uint32_t TextureDirectoryListing::texturePathsSearched() const
 {
 	return m_NumTexturePathsSearched;
+}
+
+const char* TextureDirectoryListing::texturePath(const uint32_t index) const
+{
+	if ( index >= m_IndexToTexturePath.size() )
+	{
+		return NULL;
+	}
+
+	const std::string* path = m_IndexToTexturePath[index];
+	return path ? path->c_str() : NULL;
 }
 
 TextureDirectoryListing::TextureIndexMap::const_iterator TextureDirectoryListing::mapBegin() const
@@ -129,6 +143,9 @@ int32_t TextureDirectoryListing::assignTextureIndex(const std::string& textureRe
 	if ( iterator->second == INVALID_TEXTURE_INDEX )
 	{
 		iterator->second = m_NextTextureIndex++;
+
+		hlassert(iterator->second < m_IndexToTexturePath.size());
+		m_IndexToTexturePath[iterator->second] = &iterator->first;
 	}
 
 	return iterator->second;
@@ -219,6 +236,8 @@ bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 		m_TextureToIndex[textureRelPath] = TextureDirectoryListing::INVALID_TEXTURE_INDEX;
 	}
 
+	m_IndexToTexturePath.resize(m_TextureToIndex.size(), NULL);
+
 	free(entryList);
 	return true;
 }
@@ -256,9 +275,13 @@ std::string TextureDirectoryListing::fileNameWithoutExtension(const char* origNa
 
 std::string TextureDirectoryListing::makeFullTexturePath(const std::string textureRelPath) const
 {
+	const std::string textureRelPathWithExt = fileNameIsPNG(textureRelPath.c_str())
+		? textureRelPath
+		: textureRelPath + std::string(".png");
+
 	return m_TextureDirPath +
 		   std::string(SYSTEM_SLASH_STR) +
-		   makeSystemCanonicalTexturePath(textureRelPath);
+		   makeSystemCanonicalTexturePath(textureRelPathWithExt);
 }
 
 std::string TextureDirectoryListing::makeSystemCanonicalTexturePath(const std::string& origPath)

@@ -267,7 +267,6 @@
 	#endif
 	#endif
 	#endif
-#define HLCSG_TEXMAP64_FIX //--vluzacn
 	#ifdef HLBSP_FAST_SELECTPARTITION
 #define HLBSP_CHOOSEMIDPLANE //--vluzacn
 	#endif

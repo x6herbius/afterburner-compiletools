@@ -1674,56 +1674,56 @@ const char* ContentsToString(const contents_t type)
     switch (type)
     {
     case CONTENTS_EMPTY:
-        return BRUSHKEY_EMPTY;
+        return "EMPTY";
     case CONTENTS_SOLID:
-        return BRUSHKEY_SOLID;
+        return "SOLID";
     case CONTENTS_WATER:
-        return BRUSHKEY_WATER;
+        return "WATER";
     case CONTENTS_SLIME:
-        return BRUSHKEY_SLIME;
+        return "SLIME";
     case CONTENTS_LAVA:
-        return BRUSHKEY_LAVA;
+        return "LAVA";
     case CONTENTS_SKY:
-        return BRUSHKEY_SKY;
+        return "SKY";
     case CONTENTS_ORIGIN:
-        return BRUSHKEY_ORIGIN;
+        return "ORIGIN";
 #ifdef HLCSG_HLBSP_CUSTOMBOUNDINGBOX
 	case CONTENTS_BOUNDINGBOX:
-		return BRUSHKEY_BOUNDINGBOX;
+		return "BOUNDINGBOX";
 #endif
 #ifndef HLCSG_CUSTOMHULL
     case CONTENTS_CLIP:
-        return BRUSHKEY_CLIP;
+        return "CLIP";
 #endif
     case CONTENTS_CURRENT_0:
-        return BRUSHKEY_CURRENT_0;
+        return "CURRENT_0";
     case CONTENTS_CURRENT_90:
-        return BRUSHKEY_CURRENT_90;
+        return "CURRENT_90";
     case CONTENTS_CURRENT_180:
-        return BRUSHKEY_CURRENT_180;
+        return "CURRENT_180";
     case CONTENTS_CURRENT_270:
-        return BRUSHKEY_CURRENT_270;
+        return "CURRENT_270";
     case CONTENTS_CURRENT_UP:
-        return BRUSHKEY_CURRENT_UP;
+        return "CURRENT_UP";
     case CONTENTS_CURRENT_DOWN:
-        return BRUSHKEY_CURRENT_DOWN;
+        return "CURRENT_DOWN";
     case CONTENTS_TRANSLUCENT:
-        return BRUSHKEY_TRANSLUCENT;
+        return "TRANSLUCENT";
     case CONTENTS_HINT:
-        return BRUSHKEY_HINT;
+        return "HINT";
 
 #ifdef ZHLT_NULLTEX // AJM
     case CONTENTS_NULL:
-        return BRUSHKEY_NULL;
+        return "NULL";
 #endif
 
 #ifdef HLCSG_EMPTYBRUSH
 	case CONTENTS_TOEMPTY:
-		return BRUSHKEY_EMPTY;
+		return "EMPTY";
 #endif
 
     default:
-        return BRUSHKEY_UNKNOWN;
+        return "UNKNOWN";
     }
 }
 

@@ -20,44 +20,54 @@ const std::vector<RadTexture>& RadTextures()
 	return g_RadTextures;
 }
 
-static void LoadPng(const std::string path, RadTexture& texture)
+static void LoadPngFromFileData(const char* fullPath, RadTexture& texture, const char* fileData, int dataSize)
 {
-	const std::string fullPath = g_TexDirListing.makeFullTexturePath(path);
-
-	char* buffer = NULL;
-	const int size = LoadFile(fullPath.c_str(), &buffer);
-
-	if ( size < 1 || !buffer )
-	{
-		Error("Could not open texture file %s\n", fullPath.c_str());
-	}
-
-	std::unique_ptr<char> managedBuffer(buffer);
-
 	int width = 0;
 	int height = 0;
 	int channels = 0;
 
 	// We always specify 4 channels to load, as RadTexture always uses RGBA for non-miptex textures.
-	stbi_uc* pngRawData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(managedBuffer.get()), size, &width, &height, &channels, 4);
+	stbi_uc* pngRawData = stbi_load_from_memory(reinterpret_cast<const stbi_uc*>(fileData), dataSize, &width, &height, &channels, 4);
 
 	if ( !pngRawData )
 	{
-		Error("Failed to load PNG data from texture file %s.\n", fullPath.c_str());
+		Error("Failed to load PNG data from texture file %s.\n", fullPath);
 	}
 
 	if ( width < 1 || height < 1 )
 	{
-		Error("Texture file %s has invalid dimensions %dx%d.\n", fullPath.c_str(), width, height);
+		Error("Texture file %s has invalid dimensions %dx%d.\n", fullPath, width, height);
 	}
 
 	if ( !texture.loadFromRGBAData(static_cast<uint32_t>(width),
 								   static_cast<uint32_t>(height),
-								   reinterpret_cast<const RadTexture::RGBA*>(managedBuffer.get()),
+								   reinterpret_cast<const RadTexture::RGBA*>(pngRawData),
 								   static_cast<uint32_t>(width * height)) )
 	{
-		Error("Failed construct texture from %s.\n", fullPath.c_str());
+		Error("Failed construct texture from %s.\n", fullPath);
 	}
+
+	stbi_image_free(pngRawData);
+}
+
+static void LoadPngFromFile(const char* fullPath, RadTexture& texture)
+{
+	char* buffer = NULL;
+	const int size = LoadFile(fullPath, &buffer);
+
+	if ( size < 1 || !buffer )
+	{
+		Error("Could not open texture file %s\n", fullPath);
+	}
+
+	LoadPngFromFileData(fullPath, texture, buffer, size);
+	Free(buffer);
+}
+
+static void LoadPngIntoRadTexture(const std::string path, RadTexture& texture)
+{
+	const std::string fullPath = g_TexDirListing.makeFullTexturePath(path);
+	LoadPngFromFile(fullPath.c_str(), texture);
 
 	texture.setName(path, true);
 
@@ -65,12 +75,11 @@ static void LoadPng(const std::string path, RadTexture& texture)
 			  texture.name().c_str(),
 			  fullPath.c_str());
 
-	Developer(DEVELOPER_LEVEL_MESSAGE, "Texture '%s': name '%s', width %d, height %d, depth %d.\n",
+	Developer(DEVELOPER_LEVEL_MESSAGE, "Texture '%s': name '%s', width %u, height %u.\n",
 		texture.name().c_str(),
 		texture.name().c_str(),
-		width,
-		height,
-		channels);
+		texture.width(),
+		texture.height());
 }
 
 void LoadTextures()
@@ -135,7 +144,7 @@ void LoadTextures()
 				{
 					// This will need to be loaded.
 					PNGTexturePath* pngTex = g_TextureCollection.pngTextureAt(textureIndex);
-					LoadPng(pngTex->path(), texture);
+					LoadPngIntoRadTexture(pngTex->path(), texture);
 
 					break;
 				}
@@ -160,6 +169,8 @@ void LoadTextures()
 				vec3_t reflectivity;
 				const RadTexture::RGB* pixel = texture.canvasColour(index);
 				const uint8_t opacity = texture.opacity(index);
+
+				hlassert(pixel);
 
 				if ( opacity == 0 )
 				{

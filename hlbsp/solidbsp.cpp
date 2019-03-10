@@ -1637,33 +1637,33 @@ const char* ContentsToString(int contents)
     switch (contents)
     {
     case CONTENTS_EMPTY:
-        return BRUSHKEY_EMPTY;
+        return "EMPTY";
     case CONTENTS_SOLID:
-        return BRUSHKEY_SOLID;
+        return "SOLID";
     case CONTENTS_WATER:
-        return BRUSHKEY_WATER;
+        return "WATER";
     case CONTENTS_SLIME:
-        return BRUSHKEY_SLIME;
+        return "SLIME";
     case CONTENTS_LAVA:
-        return BRUSHKEY_LAVA;
+        return "LAVA";
     case CONTENTS_SKY:
-        return BRUSHKEY_SKY;
+        return "SKY";
     case CONTENTS_CURRENT_0:
-        return BRUSHKEY_CURRENT_0;
+        return "CURRENT_O";
     case CONTENTS_CURRENT_90:
-        return BRUSHKEY_CURRENT_90;
+        return "CURRENT_90";
     case CONTENTS_CURRENT_180:
-        return BRUSHKEY_CURRENT_180;
+        return "CURRENT_180";
     case CONTENTS_CURRENT_270:
-        return BRUSHKEY_CURRENT_270;
+        return "CURRENT_270";
     case CONTENTS_CURRENT_UP:
-        return BRUSHKEY_CURRENT_UP;
+        return "CURRENT_UP";
     case CONTENTS_CURRENT_DOWN:
-        return BRUSHKEY_CURRENT_DOWN;
+        return "CURRENT_DOWN";
     case CONTENTS_TRANSLUCENT:
-        return BRUSHKEY_TRANSLUCENT;
+        return "TRANSLUCENT";
     default:
-        return BRUSHKEY_UNKNOWN;
+        return "UNKNOWN";
     }
 }
 #endif

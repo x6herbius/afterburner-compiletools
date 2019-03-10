@@ -5755,6 +5755,20 @@ int             main(const int argc, char** argv)
 		}
 #endif
 
+#ifdef ZHLT_AFTERBURNER
+        else if ( strcasecmp(argv[i], "-texturedir") == 0 )
+        {
+            if (i + 1 < argc)
+            {
+                g_TexDirListing.setTextureDirPath(argv[++i]);
+            }
+            else
+            {
+                Usage();
+            }
+        }
+#endif
+
         else if (argv[i][0] == '-')
         {
             Log("Unknown option \"%s\"\n", argv[i]);
@@ -5776,6 +5790,17 @@ int             main(const int argc, char** argv)
         Log("No mapname specified\n");
         Usage();
     }
+
+	if ( g_TexDirListing.textureDirPath().empty() )
+    {
+        Error("No texture directory was set. Please provide one using -texturedir.\n");
+    }
+
+    Log("Searching for textures in %s...\n", g_TexDirListing.textureDirPath().c_str());
+    g_TexDirListing.makeListing();
+    Log("%u textures found in %u search directories.\n",
+        static_cast<uint32_t>(g_TexDirListing.count()),
+        g_TexDirListing.texturePathsSearched());
 
     g_smoothing_threshold = (float)cos(g_smoothing_value * (Q_PI / 180.0));
 
