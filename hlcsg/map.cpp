@@ -2,6 +2,19 @@
 
 #include "csg.h"
 
+/*
+	Note that the Nightfire .map syntax differs slightly. Each brush face is comprised of:
+	- 3x plane points in the format "(x y z)"
+	- Texture path as string
+	- 2x texture axes in the format "[x y z t]"
+	- Unknown number
+	- Texture scale X as a number
+	- Texture scale Y as a number
+	- Face flags as an integer
+	- Material name as a string
+	- Lightmap scale and rotation in the format "[scale rot]"
+*/
+
 short	g_groupid = 0;
 short	g_world_faceinfo = -1;	// shared faceinfo in case level-desginer apply it to the world but except landscapes
 int	g_nummapbrushes;
