@@ -256,7 +256,7 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex, bool headerOnly)
 {
 	if ( !miptex )
 	{
-		WARNING("Invalid miptex input.\n");
+		WARNING("Invalid miptex input.");
 		return false;
 	}
 
@@ -266,7 +266,7 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex, bool headerOnly)
 
 	if ( !setDimensions(miptex->width, miptex->height) )
 	{
-		WARNING("Invalid dimensions %dx%d.\n", miptex->width, miptex->height);
+		WARNING("Invalid dimensions %dx%d.", miptex->width, miptex->height);
 		invalidate();
 		return false;
 	}
@@ -305,7 +305,7 @@ bool MiptexWrapper::setFromMiptex(const miptex_t* miptex, bool headerOnly)
 
 		if ( paletteSize != PALETTE_SIZE)
 		{
-			WARNING("Invalid palette size - expected %u but got %u.\n", PALETTE_SIZE, paletteSize);
+			WARNING("Invalid palette size - expected %u but got %u.", PALETTE_SIZE, paletteSize);
 			invalidate();
 			return false;
 		}

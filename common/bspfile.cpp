@@ -734,7 +734,7 @@ void WriteBSPFile( const char* const filename )
 		texinfo_t* texInfo = &g_texinfo[index];
 		if ( texInfo->miptex < 0 || texInfo->miptex >= textureIndexMap.size() )
 		{
-			Warning("Texingfo %u references invalid texture %d, ignoring remap on export.\n", index, texInfo->miptex);
+			Warning("Texinfo %u references invalid texture %d, ignoring remap on export.\n", index, texInfo->miptex);
 			continue;
 		}
 

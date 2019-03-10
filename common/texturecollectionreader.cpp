@@ -25,7 +25,7 @@ bool TextureCollectionReader::appendMiptex(const void* miptex, uint32_t length, 
 {
 	if ( !miptex || length < sizeof(miptex_t) )
 	{
-		WARNING("Data provided to appendMiptex() was invalid or too short.\n");
+		WARNING("Data provided to appendMiptex() was invalid or too short.");
 		return false;
 	}
 
@@ -57,7 +57,7 @@ bool TextureCollectionReader::load(const void* data, uint32_t length)
 
 	if ( !m_InputData || m_InputLength < 1 )
 	{
-		WARNING("Invalid input data provided.\n");
+		WARNING("Invalid input data provided.");
 		return false;
 	}
 
@@ -84,7 +84,7 @@ bool TextureCollectionReader::validateAllPngPaths() const
 	const uint32_t pngPathDataLength = m_PngCount * sizeof(dpngtexturepath_t);
 	if ( sizeof(dtexturelumpheader_t) + pngPathDataLength > m_InputLength )
 	{
-		WARNING("Not enough data to read %u PNG paths.\n", m_PngCount);
+		WARNING("Not enough data to read %u PNG paths.", m_PngCount);
 		return false;
 	}
 
@@ -94,14 +94,14 @@ bool TextureCollectionReader::validateAllPngPaths() const
 	{
 		if ( !TerminatedString(paths[index].path, MAX_TEXTURE_NAME_LENGTH) )
 		{
-			WARNING("PNG path %u is unterminated.\n", index);
+			WARNING("PNG path %u is unterminated.", index);
 			return false;
 		}
 
 		const uint32_t pathLength = strlen(paths[index].path);
 		if ( pathLength < 1 || pathLength >= MAX_TEXTURE_NAME_LENGTH )
 		{
-			WARNING("PNG path %u has invalid length %u.\n", index, pathLength);
+			WARNING("PNG path %u has invalid length %u.", index, pathLength);
 			return false;
 		}
 	}
@@ -135,7 +135,7 @@ bool TextureCollectionReader::loadMiptex()
 
 	if ( priorDataLength + offsetsDataLength > m_InputLength )
 	{
-		WARNING("Not enough data to read miptex offsets.\n");
+		WARNING("Not enough data to read miptex offsets.");
 		return false;
 	}
 
@@ -157,7 +157,7 @@ bool TextureCollectionReader::validateAllMiptex() const
 		const uint32_t offset = m_MiptexOffsets[index];
 		if ( offset >= m_InputLength )
 		{
-			WARNING("Not enough data to read miptex %u at offset %u.\n", index, offset);
+			WARNING("Not enough data to read miptex %u at offset %u.", index, offset);
 			return false;
 		}
 
@@ -188,7 +188,7 @@ bool TextureCollectionReader::fillAllMiptex()
 		const miptex_t* miptex = reinterpret_cast<const miptex_t*>(m_InputData + m_MiptexOffsets[index]);
 		if ( !wrapper->setFromMiptex(miptex) )
 		{
-			WARNING("Failed to load miptex at index %u.\n", prevCount + index);
+			WARNING("Failed to load miptex at index %u.", prevCount + index);
 			return false;
 		}
 	}
@@ -206,13 +206,13 @@ bool TextureCollectionReader::validateMiptex(const byte* proposedMiptex,
 	// Sanity:
 	if ( !proposedMiptex || availableSize < 1 )
 	{
-		WARNING("Internal error. Could not validate texture%s: input data was not valid.\n", indexString.c_str());
+		WARNING("Internal error. Could not validate texture%s: input data was not valid.", indexString.c_str());
 		return false;
 	}
 
 	if ( availableSize < sizeof(miptex_t) )
 	{
-		WARNING("Texture%s invalid: not enough space in buffer to read header.\n", indexString.c_str());
+		WARNING("Texture%s invalid: not enough space in buffer to read header.", indexString.c_str());
 		return false;
 	}
 
@@ -220,7 +220,7 @@ bool TextureCollectionReader::validateMiptex(const byte* proposedMiptex,
 
 	if ( miptex->width < 1 || miptex->width % 16 != 0 || miptex->height < 1 || miptex->height % 16 != 0 )
 	{
-		WARNING("Texture%s has invalid dimensions %ux%u. Dimensions must be a multiple of 16.\n",
+		WARNING("Texture%s has invalid dimensions %ux%u. Dimensions must be a multiple of 16.",
 				indexString.c_str(),
 				miptex->width,
 				miptex->height);
@@ -230,7 +230,7 @@ bool TextureCollectionReader::validateMiptex(const byte* proposedMiptex,
 
 	if ( availableSize < sizeof(miptex_t) )
 	{
-		WARNING("Texture%s invalid - %u bytes required for header, but data buffer only had space for %u bytes.\n",
+		WARNING("Texture%s invalid - %u bytes required for header, but data buffer only had space for %u bytes.",
 				indexString.c_str(),
 				static_cast<uint32_t>(sizeof(miptex_t)),
 				availableSize);
@@ -244,7 +244,7 @@ bool TextureCollectionReader::validateMiptex(const byte* proposedMiptex,
 
 	if ( availableSize < sizeRequired )
 	{
-		WARNING("Texture%s invalid - %u bytes required, but data buffer only had space for %u bytes.\n",
+		WARNING("Texture%s invalid - %u bytes required, but data buffer only had space for %u bytes.",
 				indexString.c_str(),
 				sizeRequired,
 				availableSize);
@@ -255,7 +255,7 @@ bool TextureCollectionReader::validateMiptex(const byte* proposedMiptex,
 	if ( mode != TextureReadMode::HeaderOnly && availableSize > sizeRequired )
 	{
 		WARNING("Data layout provided texture%s with %u bytes of data, when only %u bytes were required. "
-				"Extra bytes are ignored.\n",
+				"Extra bytes are ignored.",
 				indexString.c_str(),
 				availableSize,
 				sizeRequired);

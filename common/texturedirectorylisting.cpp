@@ -1,5 +1,6 @@
 #include "texturedirectorylisting.h"
 #include <vector>
+#include <algorithm>
 #include "log.h"
 #include "filelib.h"
 #include "cmdlib.h"
@@ -34,7 +35,8 @@ namespace
 TextureDirectoryListing::TextureDirectoryListing() :
 	m_TextureDirPath(),
 	m_TextureToIndex(),
-	m_NextTextureIndex(0)
+	m_NextTextureIndex(0),
+	m_NumTexturePathsSearched(0)
 {
 }
 
@@ -78,6 +80,11 @@ size_t TextureDirectoryListing::count() const
 	return m_TextureToIndex.size();
 }
 
+uint32_t TextureDirectoryListing::texturePathsSearched() const
+{
+	return m_NumTexturePathsSearched;
+}
+
 TextureDirectoryListing::TextureIndexMap::const_iterator TextureDirectoryListing::mapBegin() const
 {
 	return m_TextureToIndex.begin();
@@ -105,7 +112,7 @@ int32_t TextureDirectoryListing::textureIndex(const std::string& textureRelPath)
 	return iterator != m_TextureToIndex.end() ? iterator->second : INVALID_TEXTURE_INDEX;
 }
 
-int32_t TextureDirectoryListing::assignNextTextureIndex(const std::string& textureRelPath)
+int32_t TextureDirectoryListing::assignTextureIndex(const std::string& textureRelPath)
 {
 	// In practice we should never reach this.
 	if ( m_NextTextureIndex < 0 )
@@ -119,24 +126,29 @@ int32_t TextureDirectoryListing::assignNextTextureIndex(const std::string& textu
 		return INVALID_TEXTURE_INDEX;
 	}
 
-	iterator->second = m_NextTextureIndex++;
+	if ( iterator->second == INVALID_TEXTURE_INDEX )
+	{
+		iterator->second = m_NextTextureIndex++;
+	}
+
 	return iterator->second;
 }
 
 bool TextureDirectoryListing::makeListing()
 {
 	m_TextureToIndex.clear();
+	m_NumTexturePathsSearched = 0;
 
 	if ( m_TextureDirPath.empty() )
 	{
-		WARNING("No texture directory path was set.\n");
+		WARNING("No texture directory path was set.");
 		return false;
 	}
 
 	DIR* directory = opendir(m_TextureDirPath.c_str());
 	if ( !directory )
 	{
-		WARNING("Could not open texture directory: %s\n", m_TextureDirPath.c_str());
+		WARNING("Could not open texture directory: %s", m_TextureDirPath.c_str());
 		return false;
 	}
 
@@ -162,6 +174,8 @@ bool TextureDirectoryListing::makeListing()
 		{
 			return false;
 		}
+
+		++m_NumTexturePathsSearched;
 	}
 
 	return true;
@@ -186,9 +200,9 @@ bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 		},
 		NULL);
 
-	if ( texturesFound < 0 || !entryList )
+	if ( texturesFound < 0 || (texturesFound > 0 && !entryList) )
 	{
-		WARNING("Could not scan texture subdirectory %s for texture files.\n", fullPath.c_str());
+		WARNING("Could not scan texture subdirectory %s for texture files.", fullPath.c_str());
 		return false;
 	}
 
@@ -201,7 +215,7 @@ bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 			textureRelPath += path + std::string(SYSTEM_SLASH_STR);
 		}
 
-		textureRelPath += std::string(entryList[index]->d_name);
+		textureRelPath += fileNameWithoutExtension(entryList[index]->d_name);
 		m_TextureToIndex[textureRelPath] = TextureDirectoryListing::INVALID_TEXTURE_INDEX;
 	}
 
@@ -219,6 +233,25 @@ bool TextureDirectoryListing::fileNameIsPNG(const char* path)
 	});
 
 	return extension == std::string("png");
+}
+
+std::string TextureDirectoryListing::fileNameWithoutExtension(const char* origName)
+{
+	if ( !origName )
+	{
+		return std::string();
+	}
+
+	const size_t origLength = strlen(origName);
+	if ( origLength < 1 )
+	{
+		return std::string();
+	}
+
+	std::vector<char> buffer(origLength);
+	FS_FileBase(origName, buffer.data());
+
+	return std::string(buffer.data());
 }
 
 std::string TextureDirectoryListing::makeFullTexturePath(const std::string textureRelPath) const

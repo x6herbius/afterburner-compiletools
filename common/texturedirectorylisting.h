@@ -19,6 +19,8 @@ public:
 	void setTextureDirPath(const std::string& path);
 
 	bool makeListing();
+	uint32_t texturePathsSearched() const;
+
 	bool containsTexture(const std::string& textureRelPath) const;
 	bool textureIsReferenced(const std::string& textureRelPath) const;
 
@@ -26,7 +28,7 @@ public:
 	int32_t textureIndex(const std::string& textureRelPath) const;
 
 	// Returns the assigned index, or INVALID_TEXTURE_INDEX if the texture did not exist.
-	int32_t assignNextTextureIndex(const std::string& textureRelPath);
+	int32_t assignTextureIndex(const std::string& textureRelPath);
 
 	void textureList(std::vector<std::string>& list) const;
 	size_t count() const;
@@ -42,12 +44,14 @@ private:
 
 	static std::string makeSystemCanonicalTexturePath(const std::string& origPath);
 	static bool fileNameIsPNG(const char* path);
+	static std::string fileNameWithoutExtension(const char* origName);
 
 	bool readTexturesFromDirectory(const std::string& path);
 
 	std::string m_TextureDirPath;
 	TextureIndexMap m_TextureToIndex;
 	int32_t m_NextTextureIndex;
+	uint32_t m_NumTexturePathsSearched;
 };
 
 #endif // TEXTUREDIRECTORYLISTING_H

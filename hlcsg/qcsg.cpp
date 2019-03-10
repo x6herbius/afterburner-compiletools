@@ -2454,7 +2454,9 @@ int             main(const int argc, char** argv)
 
     Log("Searching for textures in %s...\n", g_TexDirListing.textureDirPath().c_str());
     g_TexDirListing.makeListing();
-    Log("%u textures found.\n", static_cast<uint32_t>(g_TexDirListing.count()));
+    Log("%u textures found in %u search directories.\n",
+        static_cast<uint32_t>(g_TexDirListing.count()),
+        g_TexDirListing.texturePathsSearched());
 
     // START CSG
     // AJM: re-arranged some stuff up here so that the mapfile is loaded

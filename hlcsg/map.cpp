@@ -7,7 +7,7 @@
 	- 3x plane points in the format "(x y z)"
 	- Texture path as string
 	- 2x texture axes in the format "[x y z t]"
-	- Unknown number
+	- Texture rotation as a number?
 	- Texture scale X as a number
 	- Texture scale Y as a number
 	- Face flags as an integer
@@ -464,7 +464,11 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 
 		// read the texturedef
 		GetToken( false );
+
+#ifndef ZHLT_AFTERBURNER
 		_strupr( g_token );
+#endif
+
 #ifdef HLCSG_CUSTOMHULL
 		if( !strncasecmp( g_token, BRUSHKEY_NOCLIP, sizeof(BRUSHKEY_NOCLIP) - 1 ) || !strncasecmp( g_token, BRUSHKEY_NULLNOCLIP, sizeof(BRUSHKEY_NULLNOCLIP) - 1 ))
 		{
@@ -584,6 +588,49 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 			GetToken( false );
 			side->td.vects.valve.scale[1] = atof( g_token );
 		}
+
+#ifdef ZHLT_AFTERBURNER
+		// Nightfire - read:
+		// - Face flags as an integer
+		// - Material name as a string
+		// - Lightmap scale and rotation in the format "[scale rot]"
+
+		GetToken(false);
+		side->td.faceFlags = atoi(g_token);
+
+		GetToken(false);
+		safe_strncpy( side->td.materialName, g_token, sizeof( side->td.materialName ));
+
+		GetToken(false);
+		if( strcmp( g_token, "[" ) != 0 )
+		{
+			Error("Parsing Entity %i, Brush %i, Side %i : Expecting '[' for lightmap parameters, got '%s'",
+#ifdef HLCSG_COUNT_NEW
+					b->originalentitynum, b->originalbrushnum,
+#else
+					b->entitynum, b->brushnum,
+#endif
+					b->numsides, g_token );
+		}
+
+		GetToken(false);
+		side->td.lightmapScale = atof(g_token);
+
+		GetToken(false);
+		side->td.lightmapRot = atof(g_token);
+
+		GetToken(false);
+		if( strcmp( g_token, "]" ) != 0 )
+		{
+			Error("Parsing Entity %i, Brush %i, Side %i : Expecting ']' to end lightmap parameters, got '%s'",
+#ifdef HLCSG_COUNT_NEW
+					b->originalentitynum, b->originalbrushnum,
+#else
+					b->entitynum, b->brushnum,
+#endif
+					b->numsides, g_token );
+		}
+#endif // ZHLT_AFTERBURNER
 
 		ok = GetToken( true );	// Done with line, this reads the first item from the next line
 

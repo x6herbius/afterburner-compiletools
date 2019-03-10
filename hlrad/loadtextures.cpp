@@ -210,7 +210,7 @@ void LoadTextures()
 
 	if (!g_notextures)
 	{
-		Log("%u textures referenced\n", g_RadTextures.size());
+		Log("%u textures referenced\n", static_cast<uint32_t>(g_RadTextures.size()));
 	}
 }
 
