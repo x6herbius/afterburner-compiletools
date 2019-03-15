@@ -67,6 +67,8 @@ public:
 
 private:
 	static bool isSpecialTexturePath(const std::string& path);
+	static bool isPowerOfTwo(uint32_t num);
+
 	const RGB* canvasColourViaPalette(uint32_t sequentialIndex) const;
 	const RGB* canvasColourDirect(uint32_t sequentialIndex) const;
 	void computeAttributesFromName(bool treatAsPath);

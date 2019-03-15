@@ -473,7 +473,8 @@ static void     SaveOutside(const brush_t* const b, const int hull, bface_t* out
 #ifdef HLCSG_EMPTYBRUSH
 		int frontcontents, backcontents;
 		int texinfo = f->texinfo;
-		const char *texname = GetTextureByNumber_CSG (texinfo);
+        const std::string texNameString = GetTextureByNumber_CSG(texinfo);
+		const char *texname = texNameString.c_str();
 		frontcontents = f->contents;
 		if (mirrorcontents == CONTENTS_TOEMPTY)
 		{
@@ -563,7 +564,8 @@ static void     SaveOutside(const brush_t* const b, const int hull, bface_t* out
 		if (!hull)
 		{
 			int texinfo = f->texinfo;
-			const char *texname = GetTextureByNumber_CSG (texinfo);
+            const std::string texNameString = GetTextureByNumber_CSG(texinfo);
+			const char *texname = texNameString.c_str();
 			texinfo_t *tex = &g_texinfo[texinfo];
 
 			if (texinfo != -1 // nullified textures (NULL, BEVEL, aaatrigger, etc.)
@@ -936,7 +938,8 @@ static void CSGBrush(int brushnum)
 #endif
 					)
 				{
-					const char *texname = GetTextureByNumber_CSG (f->texinfo);
+                    const std::string texNameString = GetTextureByNumber_CSG(f->texinfo);
+					const char* texname = texNameString.c_str();
 					if (f->texinfo == -1 || !strncasecmp (texname, BRUSHKEY_SKIP, sizeof(BRUSHKEY_SKIP) - 1) || !strncasecmp (texname, BRUSHKEY_HINT, sizeof(BRUSHKEY_HINT) - 1)
 	#ifdef HLCSG_HLBSP_SOLIDHINT
 						|| !strncasecmp (texname, BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1)
@@ -1124,7 +1127,7 @@ static void CSGBrush(int brushnum)
 							f->backcontents = b2->contents;
 						if (f->contents == CONTENTS_SOLID && f->backcontents == CONTENTS_SOLID
 #ifdef HLCSG_HLBSP_SOLIDHINT
-							&& strncasecmp (GetTextureByNumber_CSG (f->texinfo), BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1)
+							&& strncasecmp (GetTextureByNumber_CSG(f->texinfo).c_str(), BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1)
 #endif
 							)
 						{
@@ -1140,7 +1143,7 @@ static void CSGBrush(int brushnum)
 #endif
                     if (b1->contents > b2->contents
 #ifdef HLCSG_HLBSP_SOLIDHINT
-						|| b1->contents == b2->contents && !strncasecmp (GetTextureByNumber_CSG (f->texinfo), BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1)
+						|| b1->contents == b2->contents && !strncasecmp (GetTextureByNumber_CSG(f->texinfo).c_str(), BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1)
 #endif
 						)
                     {                                      // inside a water brush

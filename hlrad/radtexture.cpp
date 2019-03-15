@@ -251,7 +251,7 @@ bool RadTexture::loadFromRGBAData(uint32_t width, uint32_t height, const RGBA* d
 	invalidate(false);
 
 	if ( width < 1 || height < 1 ||
-		 width % 16 != 0 || height % 16 != 0 ||
+		 !isPowerOfTwo(width) || !isPowerOfTwo(height) ||
 		 !data || dataLengthInPixels < width * height )
 	{
 		return false;
@@ -275,7 +275,7 @@ bool RadTexture::loadFromRGBData(uint32_t width, uint32_t height, const RGB* dat
 	invalidate(false);
 
 	if ( width < 1 || height < 1 ||
-		 width % 16 != 0 || height % 16 != 0 ||
+		 !isPowerOfTwo(width) || !isPowerOfTwo(height) ||
 		 !data || dataLengthInPixels < width * height )
 	{
 		return false;
@@ -345,6 +345,26 @@ void RadTexture::computeAttributesFromName(bool treatAsPath)
 	{
 		m_Attributes |= IsSpecial;
 	}
+}
+
+bool RadTexture::isPowerOfTwo(uint32_t num)
+{
+	bool hasBit = false;
+
+	for ( uint32_t bitIndex = 0; bitIndex < sizeof(uint32_t) * 8; ++bitIndex )
+	{
+		if ( num & (1 << bitIndex) )
+		{
+			if ( hasBit )
+			{
+				return false;
+			}
+
+			hasBit = true;
+		}
+	}
+
+	return true;
 }
 
 bool RadTexture::isSpecialTexturePath(const std::string& path)

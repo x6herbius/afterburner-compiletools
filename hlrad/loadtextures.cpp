@@ -44,7 +44,7 @@ static void LoadPngFromFileData(const char* fullPath, RadTexture& texture, const
 								   reinterpret_cast<const RadTexture::RGBA*>(pngRawData),
 								   static_cast<uint32_t>(width * height)) )
 	{
-		Error("Failed construct texture from %s.\n", fullPath);
+		Error("Failed to construct texture from %s.\n", fullPath);
 	}
 
 	stbi_image_free(pngRawData);

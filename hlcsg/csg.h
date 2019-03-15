@@ -311,7 +311,7 @@ extern int      TexinfoForBrushTexture(const plane_t* const plane, brush_texture
 #endif
 					);
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
-extern const char *GetTextureByNumber_CSG(int texturenumber);
+std::string GetTextureByNumber_CSG(int texturenumber);
 #endif
 
 #ifdef ZHLT_PARANOIA_BSP

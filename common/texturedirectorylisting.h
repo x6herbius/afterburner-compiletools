@@ -30,9 +30,10 @@ public:
 	// Returns the assigned index, or INVALID_TEXTURE_INDEX if the texture did not exist.
 	int32_t assignTextureIndex(const std::string& textureRelPath);
 
-	const char* texturePath(const uint32_t index) const;
+	std::string texturePath(const uint32_t index) const;
 
 	void textureList(std::vector<std::string>& list) const;
+	void referencedTextureList(std::vector<std::string>& list) const;
 	size_t count() const;
 	void clear();
 
@@ -54,7 +55,7 @@ private:
 	TextureIndexMap m_TextureToIndex;
 	int32_t m_NextTextureIndex;
 	uint32_t m_NumTexturePathsSearched;
-	std::vector<const std::string*> m_IndexToTexturePath;
+	std::vector<std::string> m_IndexToTexturePath;
 };
 
 #endif // TEXTUREDIRECTORYLISTING_H

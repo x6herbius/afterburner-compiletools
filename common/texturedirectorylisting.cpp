@@ -72,6 +72,16 @@ void TextureDirectoryListing::textureList(std::vector<std::string>& list) const
 	}
 }
 
+void TextureDirectoryListing::referencedTextureList(std::vector<std::string>& list) const
+{
+	list.clear();
+
+	for ( const std::string& path : m_IndexToTexturePath )
+	{
+		list.push_back(path);
+	}
+}
+
 void TextureDirectoryListing::clear()
 {
 	m_TextureToIndex.clear();
@@ -88,15 +98,14 @@ uint32_t TextureDirectoryListing::texturePathsSearched() const
 	return m_NumTexturePathsSearched;
 }
 
-const char* TextureDirectoryListing::texturePath(const uint32_t index) const
+std::string TextureDirectoryListing::texturePath(const uint32_t index) const
 {
 	if ( index >= m_IndexToTexturePath.size() )
 	{
 		return NULL;
 	}
 
-	const std::string* path = m_IndexToTexturePath[index];
-	return path ? path->c_str() : NULL;
+	return m_IndexToTexturePath[index];
 }
 
 TextureDirectoryListing::TextureIndexMap::const_iterator TextureDirectoryListing::mapBegin() const
@@ -146,7 +155,7 @@ int32_t TextureDirectoryListing::assignTextureIndex(const std::string& textureRe
 		iterator->second = m_NextTextureIndex++;
 
 		hlassert(iterator->second < m_IndexToTexturePath.size());
-		m_IndexToTexturePath[iterator->second] = &iterator->first;
+		m_IndexToTexturePath[iterator->second] = iterator->first;
 
 		Developer(DEVELOPER_LEVEL_MESSAGE, "Assigned index %u to texture %s\n", iterator->second, canonicalPath.c_str());
 	}
@@ -241,7 +250,7 @@ bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 		Developer(DEVELOPER_LEVEL_SPAM, "Discovered texture: %s\n", textureRelPath.c_str());
 	}
 
-	m_IndexToTexturePath.resize(m_TextureToIndex.size(), NULL);
+	m_IndexToTexturePath.resize(m_TextureToIndex.size());
 
 	free(entryList);
 	return true;

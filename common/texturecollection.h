@@ -24,6 +24,7 @@ public:
 	~TextureCollection();
 
 	ItemType itemType(uint32_t index) const;
+	std::string itemName(uint32_t index) const;
 	uint32_t count(ItemType itemType = ItemType::Undefined) const;
 	void clear();
 

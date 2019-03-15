@@ -4,6 +4,7 @@
 #include "hlassert.h"
 #include "checksum.h"
 #include "pngtexturepath.h"
+#include "log.h"
 
 TextureCollectionWriter::TextureCollectionWriter(const TextureCollection& collection) :
 	m_Collection(collection),
@@ -76,6 +77,17 @@ bool TextureCollectionWriter::exportAll()
 	for ( int32_t newIndex : m_IndexMap )
 	{
 		hlassert(newIndex >= 0);
+	}
+
+	if ( g_developer > DEVELOPER_LEVEL_SPAM )
+	{
+		for ( uint32_t index = 0; index < m_IndexMap.size(); ++index )
+		{
+			Developer(DEVELOPER_LEVEL_SPAM, "Texture %u (%s) remapped to index %u on export.\n",
+					  index,
+					  m_Collection.itemName(index).c_str(),
+					  m_IndexMap[index]);
+		}
 	}
 
 	return true;

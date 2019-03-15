@@ -103,19 +103,26 @@ short FaceinfoForTexinfo( const char *landname, const int in_texture_step, const
 // =====================================================================================
 void WriteMiptex()
 {
-   for ( auto iterator = g_TexDirListing.mapBegin(); iterator != g_TexDirListing.mapEnd(); ++iterator )
-   {
-        if ( iterator->second == TextureDirectoryListing::INVALID_TEXTURE_INDEX )
-        {
-            continue;
-        }
+    std::vector<std::string> referencedTextures;
+    g_TexDirListing.referencedTextureList(referencedTextures);
 
-        const uint32_t newIndex = g_TextureCollection.count();
-        g_TextureCollection.allocateAndAppend(1, TextureCollection::ItemType::PngOnDisk);
+    if ( referencedTextures.size() < 1 )
+    {
+        // Should never happen if we have a valid map.
+        Error("WriteMiptex: No textures referenced by map.");
+    }
 
-        PNGTexturePath* const texture = g_TextureCollection.pngTextureAt(newIndex);
-        texture->setPath(iterator->first);
-   }
+    // *Should* always be zero.
+    const uint32_t baseIndex = g_TextureCollection.count();
+    g_TextureCollection.allocateAndAppend(referencedTextures.size(), TextureCollection::ItemType::PngOnDisk);
+
+    for ( uint32_t index = 0; index < referencedTextures.size(); ++index )
+    {
+        PNGTexturePath* const texture = g_TextureCollection.pngTextureAt(index);
+        hlassert(texture);
+
+        texture->setPath(referencedTextures[index]);
+    }
 }
 
 //==========================================================================
@@ -358,14 +365,13 @@ skip:;
 
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
 // Before WriteMiptex(), for each texinfo in g_texinfo, .miptex is a string rather than texture index, so this function should be used instead of GetTextureByNumber.
-const char* GetTextureByNumber_CSG(int texturenumber)
+std::string GetTextureByNumber_CSG(int texturenumber)
 {
     if ( texturenumber < 0 || texturenumber >= g_numtexinfo )
     {
-        return "";
+        return std::string("");
     }
 
-	const char* path = g_TexDirListing.texturePath(texturenumber);
-    return path ? path : "";
+	return g_TexDirListing.texturePath(texturenumber);
 }
 #endif

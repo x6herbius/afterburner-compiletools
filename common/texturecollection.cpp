@@ -21,6 +21,7 @@ public:
 		return m_Type;
 	}
 
+	virtual std::string name() const = 0;
 	virtual bool isExportable() const = 0;
 	virtual size_t bytesInUse() const = 0;
 	virtual size_t exportBytesRequired() const = 0;
@@ -48,6 +49,11 @@ public:
 	inline const MiptexWrapper* miptex() const
 	{
 		return &m_Miptex;
+	}
+
+	virtual std::string name() const override
+	{
+		return std::string(m_Miptex.name());
 	}
 
 	virtual bool isExportable() const override
@@ -90,6 +96,11 @@ public:
 		return &m_Texture;
 	}
 
+	virtual std::string name() const override
+	{
+		return m_Texture.path();
+	}
+
 	virtual bool isExportable() const override
 	{
 		return m_Texture.hasValidPath();
@@ -126,6 +137,16 @@ TextureCollection::ItemType TextureCollection::itemType(uint32_t index) const
 	}
 
 	return m_Items[index]->type();
+}
+
+std::string TextureCollection::itemName(uint32_t index) const
+{
+	if ( index >= m_Items.size() || !m_Items[index].get() )
+	{
+		return std::string();
+	}
+
+	return m_Items[index]->name();
 }
 
 uint32_t TextureCollection::count(ItemType itemType) const
@@ -198,12 +219,22 @@ void TextureCollection::filter(const std::function<bool(uint32_t, TextureCollect
 	{
 		const bool filterResult = callback(index, itemType(index));
 
-		Developer(DEVELOPER_LEVEL_SPAM, "Texture %u remains after filtering: %s\n", index, filterResult ? "true" : "false");
-
 		if ( filterResult )
 		{
 			map[index] = currentRemappedIndex++;
+
+			Developer(DEVELOPER_LEVEL_SPAM, "Texture %u (%s) remains after filtering: true. New index: %u\n",
+					  index,
+					  itemName(index).c_str(),
+					  currentRemappedIndex - 1);
 		}
+		else
+		{
+			Developer(DEVELOPER_LEVEL_SPAM, "Texture %u (%s) remains after filtering: false\n",
+					  index,
+					  itemName(index).c_str());
+		}
+
 	}
 
 	mapItems(map, currentRemappedIndex);
