@@ -282,6 +282,45 @@ static bool CheckForInvisible( entity_t* mapent )
 }
 #endif
 
+#ifdef ZHLT_AFTERBURNER
+static void CheckForBrushFlags(brush_t* brush)
+{
+	// Nightfire .map files have some special (but ugly) syntax for brushes.
+	// Before the plane definition, it's possible for a "BRUSHFLAGS" "..." line to exist.
+	// Currently the only known parameter for this is "DETAIL", which indicates that this should be a detail brush.
+	// The canonical way of creating detail brushes is making them a func_detail pseudo-entity,
+	// but as the NF decompiler outputs the BRUSHFLAGS line I thought it would be useful to parse this too.
+
+	// Note that we don't need to get the next token here, because it'll already have been retrieved.
+
+	if ( strcmp(g_token, "BRUSHFLAGS") != 0 )
+	{
+		// No brush flags, so continue as normal.
+		return;
+	}
+
+	GetToken(false);
+
+	// Right now this is super-idiotically simple.
+	if ( strcmp(g_token, "DETAIL") != 0 )
+	{
+		Error("Parsing BRUSHFLAGS for Entity %i, Brush %i, Side %i : Expecting 'DETAIL' got '%s'",
+#ifdef HLCSG_COUNT_NEW
+			brush->originalentitynum, brush->originalbrushnum,
+#else
+			brush->entitynum, brush->brushnum,
+#endif
+			brush->numsides, g_token);
+	}
+
+	// This brush is a detail brush. Force the detail level.
+	brush->detaillevel = 1;
+
+	// Get the next token, because the rest of the code is expecting it.
+	GetToken(true);
+}
+#endif
+
 // =====================================================================================
 //  ParseBrush
 //      parse a brush from script
@@ -410,6 +449,10 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 		{
 			break;
 		}
+
+#ifdef ZHLT_AFTERBURNER
+		CheckForBrushFlags(b);
+#endif
 
 		hlassume( g_numbrushsides < MAX_MAP_SIDES, assume_MAX_MAP_SIDES );
 		side = &g_brushsides[g_numbrushsides];
