@@ -87,8 +87,8 @@ void CalcAmbientSounds( void )
 				surf = &g_dfaces[g_dmarksurfaces[hit->firstmarksurface + k]];
 				info = &g_texinfo[surf->texinfo];
 
-				const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(info->miptex);
-				const char* name = wrapper ? wrapper->name() : NULL;
+				const std::string nameString = g_TextureCollection.itemName(info->miptex);
+				const char* name = nameString.c_str();
 
 				if( !Q_strnicmp(name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1) )
 				{

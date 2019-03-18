@@ -725,11 +725,10 @@ static facesampleinfo_t facesampleinfo[MAX_MAP_FACES];
 // =====================================================================================
 //  TextureNameFromFace
 // =====================================================================================
-static const char* TextureNameFromFace(const dface_t* const f)
+static std::string TextureNameFromFace(const dface_t* const f)
 {
     const texinfo_t* tx = &g_texinfo[f->texinfo];
-	const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(tx->miptex);
-	return wrapper ? wrapper->name() : NULL;
+	return g_TextureCollection.itemName(tx->miptex);
 }
 
 // =====================================================================================
@@ -821,7 +820,7 @@ static void     CalcFaceExtents(lightinfo_t* l)
 			)
 		{
 			ThreadLock();
-			PrintOnce("\nfor Face %d (texture %s) at ", (int)(s - g_dfaces), TextureNameFromFace(s));
+			PrintOnce("\nfor Face %d (texture %s) at ", (int)(s - g_dfaces), TextureNameFromFace(s).c_str());
 
 			for (i = 0; i < s->numedges; i++)
 			{
@@ -3003,7 +3002,7 @@ void            CreateDirectLights()
 
 #ifdef HLRAD_WATERBACKFACE_FIX
 			dface_t *f = &g_dfaces[p->faceNumber];
-			if (g_face_entity[p->faceNumber] - g_entities != 0 && !strncasecmp(GetTextureByNumber (f->texinfo), SPECIALTEX_LIQUID_PREFIX, sizeof(SPECIALTEX_LIQUID_PREFIX) - 1))
+			if (g_face_entity[p->faceNumber] - g_entities != 0 && !strncasecmp(GetTextureByNumber(f->texinfo).c_str(), SPECIALTEX_LIQUID_PREFIX, sizeof(SPECIALTEX_LIQUID_PREFIX) - 1))
 			{
 				directlight_t *dl2;
 				numdlights++;
@@ -8197,7 +8196,8 @@ void MLH_GetSamples_r (mdllight_t *ml, int nodenum, const float *start, const fl
 		{
 			dface_t *f = &g_dfaces[node->firstface + i];
 			texinfo_t *tex = &g_texinfo[f->texinfo];
-			const char *texname = GetTextureByNumber (f->texinfo);
+			const std::string texNameString = GetTextureByNumber(f->texinfo);
+			const char *texname = texNameString.c_str();
 			if (!strncmp (texname, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1))
 			{
 				continue;

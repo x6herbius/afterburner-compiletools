@@ -1158,10 +1158,11 @@ int CountBlocks ()
 	{
 		dface_t *f = &g_dfaces[k];
 #ifdef ZHLT_EMBEDLIGHTMAP
-		const char *texname =  GetTextureByNumber (ParseTexinfoForFace (f));
+		const std::string texNameString = GetTextureByNumber(ParseTexinfoForFace(f));
 #else
-		const char *texname =  GetTextureByNumber (f->texinfo);
+		const std::string texNameString = GetTextureByNumber(f->texinfo);
 #endif
+		const char *texname =  texNameString.c_str();
 		if (!strncmp (texname, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1) //sky, no lightmap allocation.
 			|| !strncmp (texname, SPECIALTEX_LIQUID_PREFIX, sizeof(SPECIALTEX_LIQUID_PREFIX) - 1)
 			|| !strncasecmp (texname, SPECIALTEX_LIQUID_SUFFIX_WATER, sizeof(SPECIALTEX_LIQUID_SUFFIX_WATER) - 1)
@@ -2152,12 +2153,10 @@ void CDECL dtexdata_free( void )
 	g_ddeluxdata = NULL;
 }
 
-const char* GetTextureByNumber(int texturenumber)
+std::string GetTextureByNumber(int texturenumber)
 {
     const texinfo_t* info = (texturenumber >= 0 && texturenumber < g_numtexinfo) ? &g_texinfo[texturenumber] : NULL;
-    const MiptexWrapper* wrapper = info ? g_TextureCollection.miptexAt(info->miptex) : NULL;
-
-    return wrapper ? wrapper->name() : "";
+    return info ? g_TextureCollection.itemName(info->miptex) : std::string();
 }
 
 // =====================================================================================

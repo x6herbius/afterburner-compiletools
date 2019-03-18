@@ -107,6 +107,7 @@ void LoadTextures()
 
 		if (g_notextures)
 		{
+			Developer(DEVELOPER_LEVEL_SPAM, "RAD textures not enabled, using default for texture %u.\n", textureIndex);
 			texture.setToDefaultTextureImage("DEFAULT");
 		}
 		else

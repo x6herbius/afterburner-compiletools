@@ -634,7 +634,7 @@ static void     ReadLightFile(const char* const filename)
 // =====================================================================================
 //  LightForTexture
 // =====================================================================================
-static void     LightForTexture(const char* const name, vec3_t result)
+static void LightForTexture(const char* const name, vec3_t result)
 {
     texlight_i it;
     for (it = s_texlights.begin(); it != s_texlights.end(); it++)
@@ -694,11 +694,8 @@ static void     BaseLightForFace(const dface_t* const f, vec3_t light)
 	}
 #endif
 	const texinfo_t* texinfo = &g_texinfo[f->texinfo];
-	const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(texinfo->miptex);
-	if ( wrapper )
-	{
-		LightForTexture(wrapper->name(), light);
-	}
+	const std::string textureName = g_TextureCollection.itemName(texinfo->miptex);
+	LightForTexture(textureName.c_str(), light);
 }
 
 // =====================================================================================
@@ -1415,13 +1412,8 @@ void ReadCustomChopValue()
 
 		for (i = 0; i < num; i++)
 		{
-			const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(i);
-			if ( !wrapper )
-			{
-				continue;
-			}
-
-			const char* texname = wrapper->name();
+			const std::string textureNameString = g_TextureCollection.itemName(i);
+			const char* texname = textureNameString.c_str();
 			if ( strcasecmp(texname, SPECIALTEX_ORIGIN) == 0 )
 			{
 				continue;
@@ -1480,13 +1472,8 @@ void ReadCustomSmoothValue()
 
 		for (i = 0; i < num; i++)
 		{
-			const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(i);
-			if ( !wrapper )
-			{
-				continue;
-			}
-
-			const char* texname = wrapper->name();
+			const std::string textureNameString = g_TextureCollection.itemName(i);
+			const char* texname = textureNameString.c_str();
 			if ( strcasecmp(texname, SPECIALTEX_ORIGIN) == 0 )
 			{
 				continue;
@@ -1533,13 +1520,8 @@ void ReadTranslucentTextures()
 
 		for (i = 0; i < num; i++)
 		{
-			const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(i);
-			if ( !wrapper )
-			{
-				continue;
-			}
-
-			const char* texname = wrapper->name();
+			const std::string textureNameString = g_TextureCollection.itemName(i);
+			const char* texname = textureNameString.c_str();
 			if ( strcasecmp(texname, SPECIALTEX_ORIGIN) == 0 )
 			{
 				continue;
@@ -1616,13 +1598,8 @@ void ReadLightingCone ()
 		Developer(DEVELOPER_LEVEL_MESSAGE, "info_angularfade entity detected.\n");
 		for (i = 0; i < num; i++)
 		{
-			const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(i);
-			if ( !wrapper )
-			{
-				continue;
-			}
-
-			const char* texname = wrapper->name();
+			const std::string textureNameString = g_TextureCollection.itemName(i);
+			const char* texname = textureNameString.c_str();
 			if ( strcasecmp(texname, SPECIALTEX_ORIGIN) == 0 )
 			{
 				continue;
@@ -2386,7 +2363,8 @@ static entity_t *FindTexlightEntity (int facenum)
 {
 	dface_t *face = &g_dfaces[facenum];
 	const dplane_t *dplane = getPlaneFromFace (face);
-	const char *texname = GetTextureByNumber (face->texinfo);
+	const std::string texNameString = GetTextureByNumber (face->texinfo);
+	const char *texname = texNameString.c_str();
 	entity_t *faceent = g_face_entity[facenum];
 	vec3_t centroid;
 	Winding *w = new Winding (*face);

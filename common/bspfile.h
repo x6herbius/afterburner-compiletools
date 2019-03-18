@@ -631,7 +631,7 @@ extern int g_max_map_lightdata;
 extern void dtexdata_init();
 extern void CDECL dtexdata_free();
 
-extern const char* GetTextureByNumber( int texturenumber );
+extern std::string GetTextureByNumber( int texturenumber );
 
 extern int GetSurfaceExtent( const dface_t *f );
 extern int GetTextureStep( const dface_t *f );

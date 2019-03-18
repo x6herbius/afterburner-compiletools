@@ -866,35 +866,42 @@ static surfchain_t* SurflistFromValidFaces()
 //  CheckFaceForNull
 //      Returns true if the passed face is facetype null
 // =====================================================================================
-bool            CheckFaceForNull(const face_t* const f)
+bool CheckFaceForNull(const face_t* const f)
 {
 #ifdef HLBSP_SKY_SOLID
 	if (f->contents == CONTENTS_SKY)
     {
-		const char *name = GetTextureByNumber (f->texturenum);
+        const std::string nameString = GetTextureByNumber(f->texturenum);
+		const char *name = nameString.c_str();
         if (!strncasecmp(name, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1)) // for env_rain
+        {
 			return true;
+        }
     }
 #endif
     // null faces are only of facetype face_null if we are using null texture stripping
     if (g_bUseNullTex)
     {
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
-		const char *name = GetTextureByNumber (f->texturenum);
+		const std::string nameString = GetTextureByNumber(f->texturenum);
+		const char *name = nameString.c_str();
+
 		if (!strncasecmp(name, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1) || !strncasecmp(name, SPECIALTEX_NODRAW, sizeof(SPECIALTEX_NODRAW) - 1))
+        {
 			return true;
+        }
+
 		return false;
 #else
         const texinfo_t* texinfo = &g_texinfo[f->texturenum];
-        const MiptexWrapper* miptex = g_TextureCollection.miptexAt(texinfo->miptex);
-        const char* miptexName = miptex ? miptex->name() : NULL;
+        const std::string texName = g_TextureCollection.itemName(texinfo->miptex);
 
-        if (!strcasecmp(miptexName, SPECIALTEX_NULL) || !strcasecmp(miptexName, SPECIALTEX_NODRAW))
+        if (!strcasecmp(texName.c_str(), SPECIALTEX_NULL) || !strcasecmp(texName.c_str(), SPECIALTEX_NODRAW))
         {
             return true;
         }
 	#ifdef HLCSG_CUSTOMHULL
-        else if (!strncasecmp(miptexName, SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1) || !strncasecmp(miptexName, SPECIALTEX_NODRAW, sizeof(SPECIALTEX_NODRAW) - 1))
+        else if (!strncasecmp(texName.c_str(), SPECIALTEX_NULL, sizeof(SPECIALTEX_NULL) - 1) || !strncasecmp(texName.c_str(), SPECIALTEX_NODRAW, sizeof(SPECIALTEX_NODRAW) - 1))
         {
             return true;
         }
@@ -915,13 +922,11 @@ bool            CheckFaceForNull(const face_t* const f)
 static bool CheckFaceTextureForName(const face_t* const face, const char* textureName, size_t maxLength)
 {
 #ifdef HLCSG_HLBSP_VOIDTEXINFO
-	return strncasecmp(GetTextureByNumber(face->texturenum), textureName, maxLength) == 0;
+	return strncasecmp(GetTextureByNumber(face->texturenum).c_str(), textureName, maxLength) == 0;
 #else
         const texinfo_t* texinfo = &g_texinfo[f->texturenum];
-        const MiptexWrapper* miptex = g_TextureCollection.miptexAt(info->miptex);
-        const char* miptexName = miptex ? miptex->name() : NULL;
-
-        return strcasecmp(miptexName, textureName) == 0;
+        const std::string name = g_TextureCollection.itemName(info->miptex);
+        return name.size() > 0 ? strcasecmp(name.c_str(), textureName) == 0 : false;
 #endif
 }
 
@@ -956,7 +961,7 @@ bool CheckFaceForSkip(const face_t* const f)
 #ifdef HLCSG_HLBSP_SOLIDHINT
 bool CheckFaceForDiscardable (const face_t *f)
 {
-	return strncasecmp(GetTextureByNumber(f->texturenum), BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1) == 0;
+	return strncasecmp(GetTextureByNumber(f->texturenum).c_str(), BRUSHKEY_SOLIDHINT, sizeof(BRUSHKEY_SOLIDHINT) - 1) == 0;
 }
 
 #endif
@@ -1070,7 +1075,7 @@ static surfchain_t* ReadSurfs(FILE* file)
 		}
 #endif
 
-        if (!strcasecmp(GetTextureByNumber(g_texinfo), SPECIALTEX_SKIP))
+        if (!strcasecmp(GetTextureByNumber(g_texinfo).c_str(), SPECIALTEX_SKIP))
         {
             Verbose("ReadSurfs (line %i): skipping a surface", line);
 

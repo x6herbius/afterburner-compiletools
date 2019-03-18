@@ -236,10 +236,14 @@ static bool R_GetDirectLightFromSurface( dface_t *surf, const vec3_t point, ligh
 
 	if( tex->flags & TEX_SPECIAL )
 	{
-		const char *texname =  GetTextureByNumber(surf->texinfo);
+		const std::string texNameString = GetTextureByNumber(surf->texinfo);
+		const char *texname =  texNameString.c_str();
 
 		if( !Q_strnicmp( texname, SPECIALTEX_SKY, sizeof(SPECIALTEX_SKY) - 1 ))
+		{
 			info->hitsky = true;
+		}
+
 		return false; // no lightmaps
 	}
 

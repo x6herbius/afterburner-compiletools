@@ -361,7 +361,8 @@ static void     WriteDrawLeaf(const node_t* const node)
 #if defined(HLBSP_HIDDENFACE) || defined(ZHLT_HIDDENSOUNDTEXTURE)
 			bool ishidden = false;
 			{
-				const char *name = GetTextureByNumber (f->texturenum);
+				const std::string nameString = GetTextureByNumber(f->texturenum);
+				const char *name = nameString.c_str();
 				if (strlen (name) >= 7 && !strcasecmp (&name[strlen (name) - 7], "_HIDDEN"))
 				{
 					ishidden = true;
@@ -854,14 +855,8 @@ static void ReduceTextures()
 			continue;
 		}
 
-		const MiptexWrapper* wrapper = g_TextureCollection.miptexAt(index);
-		if ( !wrapper )
-		{
-			continue;
-		}
-
-		const char* textureName = wrapper->name();
-		if ( !textureName )
+		const std::string textureName = g_TextureCollection.itemName(index);
+		if ( textureName.size() < 1 )
 		{
 			continue;
 		}
@@ -871,7 +866,7 @@ static void ReduceTextures()
 			continue;
 		}
 
-		safe_strncpy (name, textureName, MAXWADNAME);
+		safe_strncpy(name, textureName.c_str(), MAXWADNAME);
 
 		if (name[1] == '\0')
 		{
@@ -891,13 +886,13 @@ static void ReduceTextures()
 
 			for (uint32_t otherTextureIndex = 0; otherTextureIndex < textureCount; otherTextureIndex++)
 			{
-				const MiptexWrapper* otherWrapper = g_TextureCollection.miptexAt(otherTextureIndex);
-				if ( !otherWrapper )
+				const std::string otherName = g_TextureCollection.itemName(otherTextureIndex);
+				if ( otherName.size() < 1 )
 				{
 					continue;
 				}
 
-				if (strcasecmp (name, otherWrapper->name()) == 0)
+				if (strcasecmp(name, otherName.c_str()) == 0)
 				{
 					textureReferenced[otherTextureIndex] = true;
 				}
@@ -929,7 +924,7 @@ static void ReduceTextures()
 // =====================================================================================
 //  FinishBSPFile
 // =====================================================================================
-void            FinishBSPFile()
+void FinishBSPFile()
 {
     Verbose("--- FinishBSPFile ---\n");
 
