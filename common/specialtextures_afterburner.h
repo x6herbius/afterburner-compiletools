@@ -6,14 +6,14 @@
 		special/bevel		-> bevel
 		special/bsp			-> ?
 		special/clip		-> clip
-		special/enemyclip	-> ?
+		special/enemyclip	-> NEW
 		special/hint		-> hint
 		special/nodraw		-> null?
-		special/npcclip		-> ?
+		special/npcclip		-> NEW
 		special/null		-> null
 		special/opaque		-> ?
 		special/origin		-> origin
-		special/playerclip	-> ?
+		special/playerclip	-> NEW
 		special/portal		-> ?
 		special/rain		-> ?
 		special/skip		-> skip
@@ -76,6 +76,15 @@
 
 #define SPECIALTEX_CLIP SPECIALTEX_GLOBAL_PREFIX "clip"
 #define BRUSHKEY_CLIP SPECIALTEX_CLIP
+
+#define SPECIALTEX_PLAYERCLIP SPECIALTEX_GLOBAL_PREFIX "playerclip"
+#define BRUSHKEY_PLAYERCLIP SPECIALTEX_PLAYERCLIP
+
+#define SPECIALTEX_ENEMYCLIP SPECIALTEX_GLOBAL_PREFIX "enemyclip"
+#define BRUSHKEY_ENEMYCLIP SPECIALTEX_ENEMYCLIP
+
+#define SPECIALTEX_NPCCLIP SPECIALTEX_GLOBAL_PREFIX "npcclip"
+#define BRUSHKEY_NPCCLIP SPECIALTEX_NPCCLIP
 
 #define BRUSHKEY_WATER SPECIALTEX_LIQUID_WATER
 

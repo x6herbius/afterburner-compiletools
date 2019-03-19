@@ -1627,7 +1627,20 @@ static contents_t TextureContents(const char* const name)
 
 #ifndef HLCSG_CUSTOMHULL
     if (!strncasecmp(name, SPECIALTEX_CLIP, sizeof(SPECIALTEX_CLIP) - 1))
+	{
         return CONTENTS_CLIP;
+	}
+
+	if (!strncasecmp(name, SPECIALTEX_PLAYERCLIP, sizeof(SPECIALTEX_PLAYERCLIP) - 1))
+	{
+        return CONTENTS_PLAYERCLIP;
+	}
+
+	if (!strncasecmp(name, SPECIALTEX_ENEMYCLIP, sizeof(SPECIALTEX_ENEMYCLIP) - 1) ||
+		!strncasecmp(name, SPECIALTEX_NPCCLIP, sizeof(SPECIALTEX_NPCCLIP) - 1))
+	{
+        return CONTENTS_NPCCLIP;
+	}
 #endif
 
 #ifdef HLCSG_HLBSP_SOLIDHINT
@@ -1694,6 +1707,10 @@ const char* ContentsToString(const contents_t type)
 #ifndef HLCSG_CUSTOMHULL
     case CONTENTS_CLIP:
         return "CLIP";
+	case CONTENTS_PLAYERCLIP:
+		return "PLAYERCLIP";
+	case NPCCLIP:
+		return "NPCCLIP";
 #endif
     case CONTENTS_CURRENT_0:
         return "CURRENT_0";
@@ -1885,6 +1902,8 @@ contents_t      CheckBrushContents(const brush_t* const b)
 #endif
 #ifndef HLCSG_CUSTOMHULL
         case CONTENTS_CLIP:
+		case CONTENTS_PLAYERCLIP:
+		case CONTENTS_NPCCLIP:
 #endif
 #ifdef HLCSG_ALLOWHINTINENTITY
 		case CONTENTS_HINT:
@@ -2033,10 +2052,10 @@ void CreateBrush(const int brushnum)
     }
 
     // clip brushes don't stay in the drawing hull
-    if (contents == CONTENTS_CLIP)
+    if (contents == CONTENTS_CLIP || contents == CONTENTS_PLAYERCLIP || contents == CONTENTS_NPCCLIP)
     {
         b->hulls[0].faces = NULL;
-        b->contents = CONTENTS_SOLID;
+        b->contents = contents == CONTENTS_CLIP ? CONTENTS_SOLID : contents;
     }
 }
 #endif /*HLCSG_CUSTOMHULL*/

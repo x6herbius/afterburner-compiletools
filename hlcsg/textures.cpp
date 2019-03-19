@@ -181,6 +181,7 @@ int TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, cons
 
 #ifndef HLCSG_CUSTOMHULL
         || strncasecmp(bt->name, SPECIALTEX_CLIP, sizeof(SPECIALTEX_CLIP) - 1) == 0
+        || strncasecmp(bt->name, SPECIALTEX_PLAYERCLIP, sizeof(SPECIALTEX_PLAYERCLIP) - 1)
 #endif
         || strncasecmp(bt->name, SPECIALTEX_ORIGIN, sizeof(SPECIALTEX_ORIGIN) - 1) == 0
 #ifdef ZHLT_NULLTEX // AJM
