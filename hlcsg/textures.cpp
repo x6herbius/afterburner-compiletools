@@ -372,6 +372,7 @@ std::string GetTextureByNumber_CSG(int texturenumber)
         return std::string("");
     }
 
-	return g_TexDirListing.texturePath(texturenumber);
+    const texinfo_t* texInfo = &g_texinfo[texturenumber];
+	return g_TexDirListing.texturePath(texInfo->miptex);
 }
 #endif

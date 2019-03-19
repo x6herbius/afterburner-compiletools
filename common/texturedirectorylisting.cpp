@@ -102,7 +102,7 @@ std::string TextureDirectoryListing::texturePath(const uint32_t index) const
 {
 	if ( index >= m_IndexToTexturePath.size() )
 	{
-		return NULL;
+		return std::string();
 	}
 
 	return m_IndexToTexturePath[index];
