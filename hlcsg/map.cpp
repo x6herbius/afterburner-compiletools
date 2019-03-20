@@ -1157,7 +1157,8 @@ bool ParseMapEntity( void )
 #endif
 
 #ifndef HLCSG_COPYBRUSH
-			if(( contents != CONTENTS_CLIP ) && ( contents != CONTENTS_ORIGIN )
+			if( contents != CONTENTS_CLIP && contents != CONTENTS_ORIGIN &&
+			    contents != CONTENTS_PLAYERCLIP && contents != CONTENTS_NPCCLIP
 #ifdef HLCSG_HLBSP_CUSTOMBOUNDINGBOX
 				&& contents != CONTENTS_BOUNDINGBOX
 #endif
@@ -1196,7 +1197,7 @@ bool ParseMapEntity( void )
 #ifdef HLCSG_CUSTOMHULL
 			brush->cliphull == 0
 #else
-			brush->contents != CONTENTS_CLIP
+			(brush->contents != CONTENTS_CLIP && brush->contents != CONTENTS_PLAYERCLIP && brush->contents != CONTENTS_NPCCLIP)
 #endif
 			&& brush->contents != CONTENTS_ORIGIN
 #ifdef HLCSG_HLBSP_CUSTOMBOUNDINGBOX
