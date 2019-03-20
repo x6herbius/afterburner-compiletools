@@ -1783,7 +1783,9 @@ contents_t      CheckBrushContents(const brush_t* const b)
 	// Difference between SKIP, ContentEmpty:
 	// SKIP doesn't split space in bsp process, ContentEmpty splits space normally.
 	if (!(strncasecmp (s->td.name, SPECIALTEX_CUSTOMCONTENT_PREFIX, sizeof(SPECIALTEX_CUSTOMCONTENT_PREFIX) - 1) && strncasecmp (s->td.name, SPECIALTEX_SKIP, sizeof(SPECIALTEX_SKIP) - 1)))
+	{
 		assigned = true;
+	}
 #endif
     s++;
 	for (i = 1; i < b->numsides; i++, s++)

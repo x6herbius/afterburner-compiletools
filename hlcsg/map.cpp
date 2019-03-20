@@ -531,7 +531,10 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 			side->bevel = true;
 		}
 
-		if( !strncasecmp( g_token, BRUSHKEY_CLIP, sizeof(BRUSHKEY_CLIP) - 1 ))
+		if( !strncasecmp( g_token, BRUSHKEY_CLIP, sizeof(BRUSHKEY_CLIP) - 1 ) ||
+			!strncasecmp( g_token, BRUSHKEY_PLAYERCLIP, sizeof(BRUSHKEY_PLAYERCLIP) - 1 ) ||
+			!strncasecmp( g_token, BRUSHKEY_ENEMYCLIP, sizeof(BRUSHKEY_ENEMYCLIP) - 1 ) ||
+			!strncasecmp( g_token, BRUSHKEY_NPCCLIP, sizeof(BRUSHKEY_NPCCLIP) - 1 ) )
 		{
 			int	h;
 
@@ -1163,7 +1166,9 @@ bool ParseMapEntity( void )
 				&& contents != CONTENTS_BOUNDINGBOX
 #endif
 				)
+			{
 				all_clip = false;
+			}
 #endif
 		}
 		else	// else assume an epair
