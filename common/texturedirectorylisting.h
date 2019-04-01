@@ -3,6 +3,7 @@
 
 #include <string>
 #include <map>
+#include <unordered_map>
 #include <cstdint>
 #include <vector>
 #include "dirent.h"
@@ -10,7 +11,6 @@
 class TextureDirectoryListing
 {
 public:
-	typedef std::map<std::string, int32_t> TextureIndexMap;
 	static constexpr int32_t INVALID_TEXTURE_INDEX = -1;
 
 	TextureDirectoryListing();
@@ -21,6 +21,8 @@ public:
 	bool makeListing();
 	uint32_t texturePathsSearched() const;
 
+	// For any functions that take a texture path as input,
+	// the path is treated as case-insensitive.
 	bool containsTexture(const std::string& textureRelPath) const;
 	bool textureIsReferenced(const std::string& textureRelPath) const;
 
@@ -37,22 +39,24 @@ public:
 	size_t count() const;
 	void clear();
 
-	TextureIndexMap::const_iterator mapBegin() const;
-	TextureIndexMap::const_iterator mapEnd() const;
-
+	// The input path here is not case-insensitive.
 	std::string makeFullTexturePath(const std::string textureRelPath) const;
 
 private:
 	typedef struct dirent dirent_t;
+	typedef std::map<std::string, int32_t> TextureIndexMap;
+	typedef std::unordered_map<std::string, std::string> PathCaseMap;
 
 	static std::string makeSystemCanonicalTexturePath(const std::string& origPath);
 	static bool fileNameIsPNG(const char* path);
 	static std::string fileNameWithoutExtension(const char* origName);
 
 	bool readTexturesFromDirectory(const std::string& path);
+	PathCaseMap::const_iterator caseSensPathIterator(const std::string& path, bool convertToLower = true) const;
 
 	std::string m_TextureDirPath;
 	TextureIndexMap m_TextureToIndex;
+	PathCaseMap m_InsensToSensPath;
 	int32_t m_NextTextureIndex;
 	uint32_t m_NumTexturePathsSearched;
 	std::vector<std::string> m_IndexToTexturePath;

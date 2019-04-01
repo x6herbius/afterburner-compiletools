@@ -10,7 +10,7 @@
 
 namespace
 {
-	static inline void ltrim(std::string &str)
+	static inline void ltrim(std::string& str)
 	{
 		str.erase(str.begin(), std::find_if(str.begin(), str.end(), [](int ch)
 		{
@@ -18,7 +18,7 @@ namespace
 		}));
 	}
 
-	static inline void rtrim(std::string &str)
+	static inline void rtrim(std::string& str)
 	{
 		str.erase(std::find_if(str.rbegin(), str.rend(), [](int ch)
 		{
@@ -26,10 +26,18 @@ namespace
 		}).base(), str.end());
 	}
 
-	static inline void trim(std::string &str)
+	static inline void trim(std::string& str)
 	{
 		ltrim(str);
 		rtrim(str);
+	}
+
+	static inline void toLower(std::string& str)
+	{
+		std::for_each(str.begin(), str.end(), [](char & c)
+		{
+			c = ::tolower(c);
+		});
 	}
 }
 
@@ -108,31 +116,33 @@ std::string TextureDirectoryListing::texturePath(const uint32_t index) const
 	return m_IndexToTexturePath[index];
 }
 
-TextureDirectoryListing::TextureIndexMap::const_iterator TextureDirectoryListing::mapBegin() const
-{
-	return m_TextureToIndex.begin();
-}
-
-TextureDirectoryListing::TextureIndexMap::const_iterator TextureDirectoryListing::mapEnd() const
-{
-	return m_TextureToIndex.end();
-}
-
 bool TextureDirectoryListing::containsTexture(const std::string& textureRelPath) const
 {
-	return m_TextureToIndex.find(makeSystemCanonicalTexturePath(textureRelPath)) != m_TextureToIndex.end();
+	return caseSensPathIterator(makeSystemCanonicalTexturePath(textureRelPath)) != m_InsensToSensPath.end();
 }
 
 bool TextureDirectoryListing::textureIsReferenced(const std::string& textureRelPath) const
 {
-	TextureIndexMap::const_iterator iterator = m_TextureToIndex.find(makeSystemCanonicalTexturePath(textureRelPath));
-	return iterator != m_TextureToIndex.end() && iterator->second != INVALID_TEXTURE_INDEX;
+	PathCaseMap::const_iterator iterator = caseSensPathIterator(makeSystemCanonicalTexturePath(textureRelPath));
+	if ( iterator == m_InsensToSensPath.end() )
+	{
+		return false;
+	}
+
+	TextureIndexMap::const_iterator indexIt = m_TextureToIndex.find(iterator->second);
+	return indexIt != m_TextureToIndex.end() && indexIt->second != INVALID_TEXTURE_INDEX;
 }
 
 int32_t TextureDirectoryListing::textureIndex(const std::string& textureRelPath) const
 {
-	TextureIndexMap::const_iterator iterator = m_TextureToIndex.find(makeSystemCanonicalTexturePath(textureRelPath));
-	return iterator != m_TextureToIndex.end() ? iterator->second : INVALID_TEXTURE_INDEX;
+	PathCaseMap::const_iterator iterator = caseSensPathIterator(makeSystemCanonicalTexturePath(textureRelPath));
+	if ( iterator == m_InsensToSensPath.end() )
+	{
+		return false;
+	}
+
+	TextureIndexMap::const_iterator indexIt = m_TextureToIndex.find(iterator->second);
+	return indexIt != m_TextureToIndex.end() ? indexIt->second : INVALID_TEXTURE_INDEX;
 }
 
 int32_t TextureDirectoryListing::assignTextureIndex(const std::string& textureRelPath)
@@ -144,28 +154,31 @@ int32_t TextureDirectoryListing::assignTextureIndex(const std::string& textureRe
 	}
 
 	const std::string canonicalPath = makeSystemCanonicalTexturePath(textureRelPath);
-	TextureIndexMap::iterator iterator = m_TextureToIndex.find(canonicalPath);
-	if ( iterator == m_TextureToIndex.end() )
+	PathCaseMap::const_iterator iterator = caseSensPathIterator(canonicalPath);
+	if ( iterator == m_InsensToSensPath.end() )
 	{
 		return INVALID_TEXTURE_INDEX;
 	}
 
-	if ( iterator->second == INVALID_TEXTURE_INDEX )
+	TextureIndexMap::iterator texIt = m_TextureToIndex.find(iterator->second);
+
+	if ( texIt->second == INVALID_TEXTURE_INDEX )
 	{
-		iterator->second = m_NextTextureIndex++;
+		texIt->second = m_NextTextureIndex++;
 
-		hlassert(iterator->second < m_IndexToTexturePath.size());
-		m_IndexToTexturePath[iterator->second] = iterator->first;
+		hlassert(texIt->second < m_IndexToTexturePath.size());
+		m_IndexToTexturePath[texIt->second] = texIt->first;
 
-		Developer(DEVELOPER_LEVEL_MESSAGE, "Assigned index %u to texture %s\n", iterator->second, canonicalPath.c_str());
+		Developer(DEVELOPER_LEVEL_MESSAGE, "Assigned index %u to texture %s\n", texIt->second, canonicalPath.c_str());
 	}
 
-	return iterator->second;
+	return texIt->second;
 }
 
 bool TextureDirectoryListing::makeListing()
 {
 	m_TextureToIndex.clear();
+	m_InsensToSensPath.clear();
 	m_NumTexturePathsSearched = 0;
 
 	if ( m_TextureDirPath.empty() )
@@ -245,9 +258,20 @@ bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 		}
 
 		textureRelPath += fileNameWithoutExtension(entryList[index]->d_name);
-		m_TextureToIndex[textureRelPath] = TextureDirectoryListing::INVALID_TEXTURE_INDEX;
+		std::string lowercasePath = textureRelPath;
+		toLower(lowercasePath);
 
-		Developer(DEVELOPER_LEVEL_SPAM, "Discovered texture: %s\n", textureRelPath.c_str());
+		if ( caseSensPathIterator(lowercasePath, false) == m_InsensToSensPath.end() )
+		{
+			Developer(DEVELOPER_LEVEL_SPAM, "Discovered texture: %s\n", textureRelPath.c_str());
+
+			m_TextureToIndex[textureRelPath] = TextureDirectoryListing::INVALID_TEXTURE_INDEX;
+			m_InsensToSensPath[lowercasePath] = textureRelPath;
+		}
+		else
+		{
+			WARNING("Duplicate texture found: %s. Note that texture paths are case-insensitive.\n", textureRelPath.c_str());
+		}
 	}
 
 	m_IndexToTexturePath.resize(m_TextureToIndex.size());
@@ -259,12 +283,7 @@ bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 bool TextureDirectoryListing::fileNameIsPNG(const char* path)
 {
 	std::string extension(FS_FileExtension(path));
-
-	std::for_each(extension.begin(), extension.end(), [](char & c)
-	{
-		c = ::tolower(c);
-	});
-
+	toLower(extension);
 	return extension == std::string("png");
 }
 
@@ -306,4 +325,16 @@ std::string TextureDirectoryListing::makeSystemCanonicalTexturePath(const std::s
 	FlipSlashes(buffer.data());
 
 	return std::string(buffer.data());
+}
+
+TextureDirectoryListing::PathCaseMap::const_iterator TextureDirectoryListing::caseSensPathIterator(const std::string& path, bool convertToLower) const
+{
+	std::string lowercasePath = path;
+
+	if ( convertToLower )
+	{
+		toLower(lowercasePath);
+	}
+
+	return m_InsensToSensPath.find(lowercasePath);
 }

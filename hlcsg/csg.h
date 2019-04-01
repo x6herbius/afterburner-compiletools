@@ -146,7 +146,7 @@ typedef struct
 {
 	char		txcommand;
 	vects_union	vects;
-	char		name[32];
+	char		name[MAX_TEXTURE_NAME_LENGTH];
 #ifdef ZHLT_PARANOIA_BSP
 	short		faceinfo;           // terrain stuff
 #endif
