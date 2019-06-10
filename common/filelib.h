@@ -6,6 +6,15 @@
 #pragma once
 #endif
 
+typedef struct _DirectoryEntry
+{
+	char name[_MAX_PATH + 1];
+	bool isDirectory;	// True = dir, false = file
+
+	struct _DirectoryEntry* prev;
+	struct _DirectoryEntry* next;
+} DirectoryEntry_t;
+
 extern time_t   getfiletime(const char* const filename);
 extern long     getfilesize(const char* const filename);
 extern long     getfiledata(const char* const filename, char* buffer, const int buffersize);
@@ -31,5 +40,8 @@ const char *FS_FileWithoutPath( const char *in );
 byte *FS_LoadFile( const char *path, long *filesizeptr, bool gamedironly );
 bool FS_FileExists( const char *filename, bool gamedironly );
 long FS_FileTime( const char *filename, bool gamedironly );
+
+DirectoryEntry_t* FS_ListDirectory(const char* dirPath, size_t* count);
+void FS_FreeDirectoryEntries(DirectoryEntry_t* entryList);
 
 #endif //**/ FILELIB_H__

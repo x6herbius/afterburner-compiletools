@@ -1656,3 +1656,105 @@ long FS_FileTime( const char *filename, bool gamedironly )
 
 	return -1; // doesn't exist
 }
+
+static DirectoryEntry_t* CreateNewDirectoryEntry(const char* name, bool isDirectory)
+{
+	DirectoryEntry_t* newItem = (DirectoryEntry_t*)Alloc(sizeof(DirectoryEntry_t));
+	memset(newItem, 0, sizeof(*newItem));
+
+	Q_strncpy(newItem->name, name, sizeof(newItem->name));
+	newItem->isDirectory = isDirectory;
+
+	return newItem;
+}
+
+static void AppendEntryToList(DirectoryEntry_t* newItem, DirectoryEntry_t*& listHead, DirectoryEntry_t*& lastCreated)
+{
+	if ( !listHead )
+	{
+		listHead = newItem;
+	}
+	else
+	{
+		newItem->prev = lastCreated;
+		lastCreated->next = newItem;
+	}
+
+	lastCreated = newItem;
+}
+
+DirectoryEntry_t* FS_ListDirectory(const char* dirPath, size_t* count)
+{
+	DirectoryEntry_t* list = NULL;
+	DirectoryEntry_t* lastCreated = NULL;
+
+#ifndef _WIN32
+	DIR* directory = opendir(dirPath);
+
+	if ( directory )
+	{
+		for ( dirent_t* entry = readdir(directory); entry; entry = readdir(directory) )
+		{
+			DirectoryEntry_t* newItem = CreateNewDirectoryEntry(entry->d_name, entry->d_type == DT_DIR);
+			AppendEntryToList(newItem, list, lastCreated);
+
+			if ( count )
+			{
+				++(*count);
+			}
+		}
+
+		closedir(directory);
+	}
+#else
+	// This is slightly duplicated from listdirectory(), but
+	// we need to be more flexible than that function
+	// (we need to check item attributes).
+	char pattern[4096];
+	pattern[0] = '\0';
+
+	Q_strncpy(pattern, dirPath, sizeof(pattern));
+	size_t length = strlen(pattern);
+
+	if ( length > 0 && pattern[length - 1] == '\\' )
+	{
+		pattern[length - 1] = '\0';
+	}
+
+	Q_strncat(pattern, "\\*", sizeof(pattern));
+	pattern[sizeof(pattern) - 1] = '\0';
+
+	struct _finddata_t fileData = { 0 };
+	int fileHandle = _findfirst(pattern, &fileData);
+
+	if( fileHandle != -1 )
+	{
+		do
+		{
+			DirectoryEntry_t* newItem = CreateNewDirectoryEntry(fileData.name, (fileData.attrib & _A_SUBDIR) != 0);
+			AppendEntryToList(newItem, list, lastCreated);
+
+			if ( count )
+			{
+				++(*count);
+			}
+		}
+		while ( _findnext(fileHandle, &fileData) );
+
+		_findclose(fileHandle);
+	}
+
+#endif
+
+	return list;
+}
+
+void FS_FreeDirectoryEntries(DirectoryEntry_t* entryList)
+{
+	while ( entryList )
+	{
+		DirectoryEntry_t* next = entryList->next;
+		Free(entryList);
+		entryList = next;
+	}
+}

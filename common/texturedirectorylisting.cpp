@@ -187,28 +187,12 @@ bool TextureDirectoryListing::makeListing()
 		return false;
 	}
 
-	DIR* directory = opendir(m_TextureDirPath.c_str());
-	if ( !directory )
-	{
-		WARNING("Could not open texture directory: %s", m_TextureDirPath.c_str());
-		return false;
-	}
-
 	std::vector<std::string> dirPaths;
 
-	// Add the root path, because Nightfire has a couple of things in there.
-	dirPaths.push_back("");
-
-	for ( dirent_t* entry = readdir(directory); entry; entry = readdir(directory) )
+	if ( !getTextureDirectories(dirPaths) )
 	{
-		// Note that the current and parent directories show up in this listing, so they should be ignored.
-		if ( entry->d_type == DT_DIR && strncmp(entry->d_name, ".", 1) != 0 && strncmp(entry->d_name, "..", 2) != 0 )
-		{
-			dirPaths.push_back(entry->d_name);
-		}
+		return false;
 	}
-
-	closedir(directory);
 
 	for ( const std::string& path : dirPaths )
 	{
@@ -223,6 +207,29 @@ bool TextureDirectoryListing::makeListing()
 	return true;
 }
 
+bool TextureDirectoryListing::getTextureDirectories(std::vector<std::string>& dirPaths) const
+{
+	DirectoryEntry_t* dirEntries = FS_ListDirectory(m_TextureDirPath.c_str(), NULL);
+
+	if ( !dirEntries )
+	{
+		WARNING("Could not open texture directory: %s", m_TextureDirPath.c_str());
+		return false;
+	}
+
+	for ( DirectoryEntry_t* entry = dirEntries; entry; entry = entry->next )
+	{
+		// Note that the current and parent directories show up in this listing, so they should be ignored.
+		if ( entry->isDirectory && strcmp(entry->name, ".") != 0 && strcmp(entry->name, "..") != 0 )
+		{
+			dirPaths.push_back(entry->name);
+		}
+	}
+
+	FS_FreeDirectoryEntries(dirEntries);
+	return true;
+}
+
 bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 {
 	std::string fullPath = m_TextureDirPath;
@@ -232,24 +239,22 @@ bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 		fullPath += std::string(SYSTEM_SLASH_STR) + path;
 	}
 
-	dirent_t** entryList = NULL;
-	int texturesFound = scandir(
-		fullPath.c_str(),
-		&entryList,
-		[](const dirent_t* entry) -> int
-		{
-			return TextureDirectoryListing::fileNameIsPNG(entry->d_name) ? 1 : 0;
-		},
-		NULL);
+	DirectoryEntry_t* entryList = FS_ListDirectory(fullPath.c_str(), NULL);
 
-	if ( texturesFound < 0 || (texturesFound > 0 && !entryList) )
+	if ( !entryList )
 	{
 		WARNING("Could not scan texture subdirectory %s for texture files.", fullPath.c_str());
 		return false;
 	}
 
-	for ( uint32_t index = 0; index < texturesFound; ++index )
+	uint32_t index = 0;
+	for ( DirectoryEntry_t* entry = entryList; entry; entry = entry->next )
 	{
+		if ( entry->isDirectory || !TextureDirectoryListing::fileNameIsPNG(entry->name) )
+		{
+			continue;
+		}
+
 		std::string textureRelPath;
 
 		if ( path.size() > 0 )
@@ -257,7 +262,7 @@ bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 			textureRelPath += path + std::string(SYSTEM_SLASH_STR);
 		}
 
-		textureRelPath += fileNameWithoutExtension(entryList[index]->d_name);
+		textureRelPath += fileNameWithoutExtension(entry->name);
 		std::string lowercasePath = textureRelPath;
 		toLower(lowercasePath);
 
@@ -276,7 +281,7 @@ bool TextureDirectoryListing::readTexturesFromDirectory(const std::string& path)
 
 	m_IndexToTexturePath.resize(m_TextureToIndex.size());
 
-	free(entryList);
+	FS_FreeDirectoryEntries(entryList);
 	return true;
 }
 

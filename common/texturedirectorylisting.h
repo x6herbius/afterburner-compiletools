@@ -6,7 +6,6 @@
 #include <unordered_map>
 #include <cstdint>
 #include <vector>
-#include "dirent.h"
 
 class TextureDirectoryListing
 {
@@ -43,7 +42,6 @@ public:
 	std::string makeFullTexturePath(const std::string textureRelPath) const;
 
 private:
-	typedef struct dirent dirent_t;
 	typedef std::map<std::string, int32_t> TextureIndexMap;
 	typedef std::unordered_map<std::string, std::string> PathCaseMap;
 
@@ -53,6 +51,7 @@ private:
 
 	bool readTexturesFromDirectory(const std::string& path);
 	PathCaseMap::const_iterator caseSensPathIterator(const std::string& path, bool convertToLower = true) const;
+	bool getTextureDirectories(std::vector<std::string>& dirPaths) const;
 
 	std::string m_TextureDirPath;
 	TextureIndexMap m_TextureToIndex;

@@ -5,6 +5,10 @@
 #pragma once
 #endif
 
+#ifdef _WIN32
+#include <Windows.h>
+#endif
+
 #pragma warning(disable : 4018)	// signed/unsigned mismatch
 #pragma warning(disable : 4101)	// unreferenced local variable
 

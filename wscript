@@ -10,18 +10,11 @@ APPNAME = "afterburner-compiletools"
 # TODO: Probably change these to compilers instead of platforms.
 PLATFORM_CONFIG = \
 {
-	"common":
-	{
-		"DEFINES":
-		[
-			"STDC_HEADERS"
-		]
-	},
-
 	"linux":
 	{
 		"DEFINES":
 		[
+			"STDC_HEADERS",
 			"SYSTEM_POSIX",
 			"HAVE_SYS_TIME_H",
 			"HAVE_UNISTD_H",
@@ -77,6 +70,7 @@ PLATFORM_CONFIG = \
 	{
 		"DEFINES":
 		[
+			"STDC_HEADERS",
 			"SYSTEM_POSIX",
 			"HAVE_SYS_TIME_H",
 			"HAVE_UNISTD_H",
@@ -132,9 +126,50 @@ PLATFORM_CONFIG = \
 			"-Wno-deprecated-declarations",
 			"-Wno-deprecated-register"
 		]
+	},
+
+	"win32":
+	{
+		"DEFINES":
+		[
+			"WIN32",
+			"_CONSOLE",
+			"SYSTEM_WIN32",
+			"STDC_HEADERS"
+		],
+
+		"DEFINES_32":
+		[
+			"VERSION_32BIT"
+		],
+
+		"DEFINES_64":
+		[
+			"VERSION_64BIT"
+		],
+
+		"LINKFLAGS":
+		[
+		],
+
+		"LINKFLAGS_64":
+		[
+			"/MACHINE:X64"
+		],
+
+		"CFLAGS":
+		[
+			"/EHsc"
+		],
+
+		"CXXFLAGS":
+		[
+			"/EHsc"
+		]
 	}
 }
 
+# NOTE: DEFINES_32 and DEFINES_64 are not supported in these extra dicts yet!
 DEBUG_SWITCHES = \
 {
 	"darwin":
@@ -160,6 +195,54 @@ DEBUG_SWITCHES = \
 		"CXXFLAGS":
 		[
 			"-g"
+		]
+	},
+
+	"win32":
+	{
+		"DEFINES":
+		[
+			"_DEBUG"
+		],
+
+		"CFLAGS":
+		[
+			"/MDd",
+			"/ZI",
+			"/FS"
+		],
+
+		"CXXFLAGS":
+		[
+			"/MDd",
+			"/ZI",
+			"/FS"
+		],
+
+		"LINKFLAGS":
+		[
+			"/DEBUG:FASTLINK"
+		]
+	}
+}
+
+RELEASE_SWITCHES = \
+{
+	"win32":
+	{
+		"DEFINES":
+		[
+			"NDEBUG"
+		],
+
+		"CFLAGS":
+		[
+			"/MD"
+		],
+
+		"CXXFLAGS":
+		[
+			"/MD"
 		]
 	}
 }
@@ -187,22 +270,24 @@ def __platformConfigAppendUnique(ctx, target, configKey=None, destOS=None):
 def __setPlatformConfig(ctx):
 	destOS = ctx.env.DEST_OS
 
-	__platformConfigAppendUnique(ctx, "DEFINES", destOS="common")
-
 	if isinstance(destOS, str) and destOS in PLATFORM_CONFIG:
 		__platformConfigAppendUnique(ctx, "DEFINES")
 		__platformConfigAppendUnique(ctx, "LINKFLAGS")
 		__platformConfigAppendUnique(ctx, "CFLAGS")
 		__platformConfigAppendUnique(ctx, "CXXFLAGS")
 
-		if not ctx.env.IS_32BIT:
+		if ctx.env.IS_32BIT:
+			__platformConfigAppendUnique(ctx, "DEFINES", configKey="DEFINES_32")
+			__platformConfigAppendUnique(ctx, "DEFINES", configKey="LINKFLAGS_32")
+		else:
 			__platformConfigAppendUnique(ctx, "DEFINES", configKey="DEFINES_64")
+			__platformConfigAppendUnique(ctx, "DEFINES", configKey="LINKFLAGS_64")
 	else:
 		ctx.fatal(f"Platform '{destOS if isinstance(destOS, str) else '<unknown>'}' is not currently supported by this build script.")
 
-	if ctx.env.BUILD_TYPE == "debug" and destOS in DEBUG_SWITCHES:
-		osDict = DEBUG_SWITCHES[destOS]
+	osDict = DEBUG_SWITCHES[destOS] if ctx.env.BUILD_TYPE == "debug" else RELEASE_SWITCHES
 
+	if destOS in osDict:
 		for category in osDict:
 			ctx.env.append_unique(category, osDict[category])
 
