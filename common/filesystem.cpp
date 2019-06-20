@@ -19,7 +19,7 @@ GNU General Public License for more details.
 #include <windows.h>
 #include <io.h>
 #else
-#include "dirent.h"
+#include <dirent.h>
 #define O_BINARY 0
 #endif
 #include <sys/stat.h>
@@ -1693,7 +1693,7 @@ DirectoryEntry_t* FS_ListDirectory(const char* dirPath, size_t* count)
 
 	if ( directory )
 	{
-		for ( dirent_t* entry = readdir(directory); entry; entry = readdir(directory) )
+		for ( struct dirent* entry = readdir(directory); entry; entry = readdir(directory) )
 		{
 			DirectoryEntry_t* newItem = CreateNewDirectoryEntry(entry->d_name, entry->d_type == DT_DIR);
 			AppendEntryToList(newItem, list, lastCreated);
