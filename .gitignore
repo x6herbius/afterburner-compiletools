@@ -3,6 +3,8 @@ bin*/
 build*/
 waf3-*/
 .waf3-*/
+waf-*/
+.waf-*/
 .lock-waf*
 *.pyc
 

@@ -56,7 +56,7 @@ PLATFORM_CONFIG = \
 			"-msse4",
 			"-mavx",
 			"-floop-interchange",
-			"-mfpmath=sse -g"
+			"-mfpmath=sse"
 		],
 
 		"CXXFLAGS":
@@ -111,7 +111,7 @@ PLATFORM_CONFIG = \
 			"-msse4",
 			"-mavx",
 			"-floop-interchange",
-			"-mfpmath=sse -g",
+			"-mfpmath=sse"
 
 			# These are annoying and (for this codebase) permissible:
 			"-Wno-deprecated-declarations",
@@ -287,9 +287,10 @@ def __setPlatformConfig(ctx):
 
 	osDict = DEBUG_SWITCHES[destOS] if ctx.env.BUILD_TYPE == "debug" else RELEASE_SWITCHES
 
-	if destOS in osDict:
-		for category in osDict:
-			ctx.env.append_unique(category, osDict[category])
+	for category in osDict:
+		ctx.env.append_unique(category, osDict[category])
+
+	print("CXXFLAGS:", ctx.env.CXXFLAGS)
 
 def options(ctx):
 	ctx.load("compiler_cxx")
