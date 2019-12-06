@@ -56,7 +56,7 @@ PLATFORM_CONFIG = \
 			"-msse4",
 			"-mavx",
 			"-floop-interchange",
-			"-mfpmath=sse -g"
+			"-mfpmath=sse"
 		],
 
 		"CXXFLAGS":
@@ -111,7 +111,7 @@ PLATFORM_CONFIG = \
 			"-msse4",
 			"-mavx",
 			"-floop-interchange",
-			"-mfpmath=sse -g",
+			"-mfpmath=sse"
 
 			# These are annoying and (for this codebase) permissible:
 			"-Wno-deprecated-declarations",
