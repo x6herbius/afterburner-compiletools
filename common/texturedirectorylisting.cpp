@@ -1,6 +1,7 @@
 #include "texturedirectorylisting.h"
 #include <vector>
 #include <algorithm>
+#include <cctype>
 #include "log.h"
 #include "filelib.h"
 #include "cmdlib.h"
