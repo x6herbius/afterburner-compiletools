@@ -1725,7 +1725,7 @@ DirectoryEntry_t* FS_ListDirectory(const char* dirPath, size_t* count)
 	pattern[sizeof(pattern) - 1] = '\0';
 
 	struct _finddata_t fileData = { 0 };
-	int fileHandle = _findfirst(pattern, &fileData);
+	intptr_t fileHandle = _findfirst(pattern, &fileData);
 
 	if( fileHandle != -1 )
 	{
@@ -1739,7 +1739,7 @@ DirectoryEntry_t* FS_ListDirectory(const char* dirPath, size_t* count)
 				++(*count);
 			}
 		}
-		while ( _findnext(fileHandle, &fileData) );
+		while ( _findnext(fileHandle, &fileData) == 0 );
 
 		_findclose(fileHandle);
 	}

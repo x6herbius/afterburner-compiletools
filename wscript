@@ -255,17 +255,28 @@ SUBDIRS = \
 	"hlrad"
 ]
 
-def __platformConfigAppendUnique(ctx, target, configKey=None, destOS=None):
-	if configKey is None:
-		configKey = target
+def __platformConfigAppendUnique(ctx, key):
+	commonDict = PLATFORM_CONFIG
+	buildTypeDict = DEBUG_SWITCHES if ctx.env.BUILD_TYPE == "debug" else RELEASE_SWITCHES
+	archSuffix = "_32" if ctx.env.IS_32BIT else "_64"
+	destOS = ctx.env.DEST_OS
 
-	if destOS is None:
-		destOS = ctx.env.DEST_OS
+	itemsToAppend = []
 
-	config = PLATFORM_CONFIG[destOS]
+	for config in (commonDict, buildTypeDict):
+		if destOS not in config:
+			continue
 
-	if configKey in config:
-		ctx.env.append_unique(target, config[configKey])
+		osOptions = config[destOS]
+
+		for indexKey in (key, (key + archSuffix)):
+			if indexKey not in osOptions:
+				continue
+
+			itemsToAppend += osOptions[indexKey]
+
+	ctx.msg(key, ", ".join(itemsToAppend))
+	ctx.env.append_unique(key, itemsToAppend)
 
 def __setPlatformConfig(ctx):
 	destOS = ctx.env.DEST_OS
@@ -275,21 +286,8 @@ def __setPlatformConfig(ctx):
 		__platformConfigAppendUnique(ctx, "LINKFLAGS")
 		__platformConfigAppendUnique(ctx, "CFLAGS")
 		__platformConfigAppendUnique(ctx, "CXXFLAGS")
-
-		if ctx.env.IS_32BIT:
-			__platformConfigAppendUnique(ctx, "DEFINES", configKey="DEFINES_32")
-			__platformConfigAppendUnique(ctx, "DEFINES", configKey="LINKFLAGS_32")
-		else:
-			__platformConfigAppendUnique(ctx, "DEFINES", configKey="DEFINES_64")
-			__platformConfigAppendUnique(ctx, "DEFINES", configKey="LINKFLAGS_64")
 	else:
 		ctx.fatal(f"Platform '{destOS if isinstance(destOS, str) else '<unknown>'}' is not currently supported by this build script.")
-
-	osDict = DEBUG_SWITCHES[destOS] if ctx.env.BUILD_TYPE == "debug" else RELEASE_SWITCHES
-
-	if destOS in osDict:
-		for category in osDict:
-			ctx.env.append_unique(category, osDict[category])
 
 def options(ctx):
 	ctx.load("compiler_cxx")
