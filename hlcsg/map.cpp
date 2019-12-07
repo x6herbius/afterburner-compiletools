@@ -1588,12 +1588,18 @@ bool ParseMapEntity( void )
 		temp = (brush_t *)Alloc( newbrushes * sizeof( brush_t ));
 		memcpy( temp, g_mapbrushes + mapent->firstbrush, newbrushes * sizeof( brush_t ));
 
+		const bool isDetailBrush = strcmp(ValueForKey(mapent, "classname"), "func_detail") == 0;
+
 		for( i = 0; i < newbrushes; i++ )
 		{
 			temp[i].entitynum = 0;
 #ifdef HLCSG_FUNCGROUP_FIX
 			temp[i].brushnum += worldbrushes;
 #endif
+			if ( isDetailBrush )
+			{
+				temp[i].detaillevel = 1;
+			}
 		}
 
 		// make space to move the brushes (overlapped copy)
