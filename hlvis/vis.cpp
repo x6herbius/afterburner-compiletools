@@ -1116,6 +1116,13 @@ static void     LoadPortals(char* portal_image)
 
     token = strtok(portal_image, seperators);
     CheckNullToken(token);
+    if (strcmp(token, "PRT1-AB") != 0)
+    {
+        Error("LoadPortals: failed to read header: identifier");
+    }
+
+    token = strtok(NULL, seperators);
+    CheckNullToken(token);
     if (!sscanf(token, "%u", &g_portalleafs))
     {
         Error("LoadPortals: failed to read header: number of leafs");
