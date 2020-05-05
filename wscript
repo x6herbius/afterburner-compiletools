@@ -215,7 +215,7 @@ DEBUG_SWITCHES = \
 		"CXXFLAGS":
 		[
 			"/MDd",
-			"/ZI",
+			"/Z7",
 			"/FS"
 		],
 

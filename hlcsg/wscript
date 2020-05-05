@@ -1,6 +1,6 @@
 #! /usr/local/env python
 
-from waftools import waftools
+from wafbuildutils import wafbuildutils
 
 DEFINES = \
 [
@@ -16,7 +16,7 @@ def configure(ctx):
 
 def build(bld):
 	bld.load_envs()
-	bld.env = bld.all_envs[waftools.get_subproject_name(bld)]
+	bld.env = bld.all_envs[wafbuildutils.get_subproject_name(bld)]
 
 	parent = bld.path.find_node("..")
 	sources = parent.ant_glob("common/*.cpp")

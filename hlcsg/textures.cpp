@@ -215,9 +215,12 @@ int TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, cons
     else
     {
         // Do some absolute bullshit to calculate the texture vectors here.
-        if (g_nMapFileVersion < 220)
+        if ( g_nMapFileVersion > 0 && g_nMapFileVersion < 220)
         {
+            Error("Map version %d is not supported.", g_nMapFileVersion);
+#if 0
             TextureAxisFromPlane(plane, vecs[0], vecs[1]);
+#endif
         }
 
         if (!bt->vects.valve.scale[0])
@@ -229,8 +232,10 @@ int TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, cons
             bt->vects.valve.scale[1] = 1;
         }
 
-        if (g_nMapFileVersion < 220)
+        if ( g_nMapFileVersion > 0 && g_nMapFileVersion < 220 )
         {
+            Error("Map version %d is not supported.", g_nMapFileVersion);
+#if 0
             // rotate axis
             if (bt->vects.valve.rotate == 0)
             {
@@ -300,6 +305,7 @@ int TexinfoForBrushTexture(const plane_t* const plane, brush_texture_t* bt, cons
                     tx.vecs[i][j] = vecs[i][j] / bt->vects.valve.scale[i];
                 }
             }
+#endif
         }
         else
         {

@@ -564,8 +564,10 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 #endif
 		safe_strncpy( side->td.name, g_token, sizeof( side->td.name ));
 
-		if( g_nMapFileVersion < 220 ) // Worldcraft 2.1-, Radiant
+		if( g_nMapFileVersion > 0 && g_nMapFileVersion < 220 ) // Worldcraft 2.1-, Radiant
 		{
+			Error("Map version %d is not supported.", g_nMapFileVersion);
+#if 0
 			GetToken( false );
 			side->td.vects.valve.shift[0] = atof( g_token );
 			GetToken( false );
@@ -576,6 +578,7 @@ static contents_t ParseBrush( entity_t* mapent, short faceinfo )
 			side->td.vects.valve.scale[0] = atof( g_token );
 			GetToken( false );
 			side->td.vects.valve.scale[1] = atof( g_token );
+#endif
 		}
 		else			// Worldcraft 2.2+
 		{
@@ -1180,6 +1183,9 @@ bool ParseMapEntity( void )
 			// only world entity is supposed to change map version
 			if( !strcmp( e->key, "mapversion" ) && g_numentities == 1 )
 			{
+				// If this key is not specified in the map, we just assume it's a normal Nightfire map.
+				// We don't care about all the backwards-compatible weirdness since these tools are
+				// messy enough as it is, and just need to function for Nightfire maps.
 				g_nMapFileVersion = atoi( e->value );
 			}
 #ifdef HLCSG_NOREDUNDANTKEY
@@ -1275,7 +1281,7 @@ bool ParseMapEntity( void )
 
 		if( ent_move_b || ent_scale_b || ent_gscale_b )
 		{
-			if( g_nMapFileVersion < 220 || g_brushsides[0].td.txcommand != 0 )
+			if( (g_nMapFileVersion > 0 && g_nMapFileVersion < 220) || g_brushsides[0].td.txcommand != 0 )
 			{
 				Warning( "hlcsg scaling hack is not supported in Worldcraft 2.1- or QuArK mode" );
 			}
